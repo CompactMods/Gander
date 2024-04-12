@@ -98,7 +98,7 @@ public abstract class NavigatableSimiScreen extends AbstractSimiScreen {
 		if (backTrack.isHoveredOrFocused()) {
 			MutableComponent translate = Lang.translateDirect(backTrackingLangKey());
 			graphics.drawString(font, translate, 41 - font.width(translate) / 2, height - 16,
-					Theme.i(Theme.Key.TEXT_DARKER), false);
+					Theme.color(Theme.Key.TEXT_DARKER).getRGB(), false);
 			if (Mth.equal(arrowAnimation.getValue(), arrowAnimation.getChaseTarget())) {
 				arrowAnimation.setValue(1);
 				arrowAnimation.setValue(1);// called twice to also set the previous value to 1
@@ -119,10 +119,10 @@ public abstract class NavigatableSimiScreen extends AbstractSimiScreen {
 
 			if (x + 30 < backTrack.getX())
 				UIRenderHelper.breadcrumbArrow(graphics, x + 30, height - 51, 0, maxX - (x + 30), 20, 5,
-						Theme.p(Theme.Key.PONDER_BACK_ARROW));
+						Theme.pair(Theme.Key.PONDER_BACK_ARROW));
 
-			UIRenderHelper.breadcrumbArrow(graphics, x, height - 51, 0, 30, 20, 5, Theme.p(Theme.Key.PONDER_BACK_ARROW));
-			UIRenderHelper.breadcrumbArrow(graphics, x - 30, height - 51, 0, 30, 20, 5, Theme.p(Theme.Key.PONDER_BACK_ARROW));
+			UIRenderHelper.breadcrumbArrow(graphics, x, height - 51, 0, 30, 20, 5, Theme.pair(Theme.Key.PONDER_BACK_ARROW));
+			UIRenderHelper.breadcrumbArrow(graphics, x - 30, height - 51, 0, 30, 20, 5, Theme.pair(Theme.Key.PONDER_BACK_ARROW));
 		}
 
 		if (transition.getChaseTarget() == 0 || transition.settled()) {

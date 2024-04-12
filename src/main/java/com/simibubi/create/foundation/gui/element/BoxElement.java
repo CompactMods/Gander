@@ -1,5 +1,7 @@
 package com.simibubi.create.foundation.gui.element;
 
+import com.simibubi.create.foundation.utility.Pair;
+
 import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -42,7 +44,7 @@ public class BoxElement extends RenderElement {
 		return flatBorder(new Color(color, true));
 	}
 
-	public <T extends BoxElement> T gradientBorder(Couple<Color> colors) {
+	public <T extends BoxElement> T gradientBorder(Pair<Color, Color> colors) {
 		this.borderTop = colors.getFirst();
 		this.borderBot = colors.getSecond();
 		//noinspection unchecked

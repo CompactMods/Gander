@@ -11,7 +11,6 @@ import com.jozufozu.flywheel.lib.util.ShadersModHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.simibubi.create.foundation.block.render.SpriteShiftEntry;
 import com.simibubi.create.foundation.utility.Color;
 
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
@@ -291,43 +290,6 @@ public class SuperByteBuffer implements TransformStack<SuperByteBuffer> {
 
 	public SuperByteBuffer diffuseCalculator(DiffuseLightCalculator diffuseCalculator) {
 		this.diffuseCalculator = diffuseCalculator;
-		return this;
-	}
-
-	public SuperByteBuffer shiftUV(SpriteShiftEntry entry) {
-		spriteShiftFunc = (u, v, output) -> {
-			output.accept(entry.getTargetU(u), entry.getTargetV(v));
-		};
-		return this;
-	}
-
-	public SuperByteBuffer shiftUVScrolling(SpriteShiftEntry entry, float scrollV) {
-		return shiftUVScrolling(entry, 0, scrollV);
-	}
-
-	public SuperByteBuffer shiftUVScrolling(SpriteShiftEntry entry, float scrollU, float scrollV) {
-		spriteShiftFunc = (u, v, output) -> {
-			float targetU = u - entry.getOriginal()
-				.getU0() + entry.getTarget()
-					.getU0()
-				+ scrollU;
-			float targetV = v - entry.getOriginal()
-				.getV0() + entry.getTarget()
-					.getV0()
-				+ scrollV;
-			output.accept(targetU, targetV);
-		};
-		return this;
-	}
-
-	public SuperByteBuffer shiftUVtoSheet(SpriteShiftEntry entry, float uTarget, float vTarget, int sheetSize) {
-		spriteShiftFunc = (u, v, output) -> {
-			float targetU = entry.getTarget()
-				.getU((SpriteShiftEntry.getUnInterpolatedU(entry.getOriginal(), u) / sheetSize) + uTarget * 16);
-			float targetV = entry.getTarget()
-				.getV((SpriteShiftEntry.getUnInterpolatedV(entry.getOriginal(), v) / sheetSize) + vTarget * 16);
-			output.accept(targetU, targetV);
-		};
 		return this;
 	}
 

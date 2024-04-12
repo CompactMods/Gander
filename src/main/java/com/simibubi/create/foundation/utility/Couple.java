@@ -15,6 +15,7 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 
+@Deprecated(forRemoval = true)
 public class Couple<T> extends Pair<T, T> implements Iterable<T> {
 
 	private static final Couple<Boolean> TRUE_AND_FALSE = Couple.create(true, false);
@@ -107,15 +108,6 @@ public class Couple<T> extends Pair<T, T> implements Iterable<T> {
 
 	public Couple<T> swap() {
 		return Couple.create(second, first);
-	}
-
-	public ListTag serializeEach(Function<T, CompoundTag> serializer) {
-		return NBTHelper.writeCompoundList(ImmutableList.of(first, second), serializer);
-	}
-
-	public static <S> Couple<S> deserializeEach(ListTag list, Function<CompoundTag, S> deserializer) {
-		List<S> readCompoundList = NBTHelper.readCompoundList(list, deserializer);
-		return new Couple<>(readCompoundList.get(0), readCompoundList.get(1));
 	}
 
 	@Override

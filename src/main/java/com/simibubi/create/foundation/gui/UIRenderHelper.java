@@ -1,5 +1,7 @@
 package com.simibubi.create.foundation.gui;
 
+import com.simibubi.create.foundation.utility.Pair;
+
 import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -12,7 +14,6 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import com.simibubi.create.foundation.utility.Color;
-import com.simibubi.create.foundation.utility.Couple;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -39,7 +40,7 @@ public class UIRenderHelper {
 	}
 
 	public static void streak(GuiGraphics graphics, float angle, int x, int y, int breadth, int length) {
-		streak(graphics, angle, x, y, breadth, length, Theme.i(Theme.Key.STREAK));
+		streak(graphics, angle, x, y, breadth, length, Theme.color(Theme.Key.STREAK).getRGB());
 	}
 	// angle in degrees; 0° -> fading to the right
 	// x and y specify the middle point of the starting edge
@@ -95,7 +96,9 @@ public class UIRenderHelper {
 		ms.popPose();
 	}
 
-	public static void breadcrumbArrow(GuiGraphics graphics, int x, int y, int z, int width, int height, int indent, Couple<Color> colors) {breadcrumbArrow(graphics, x, y, z, width, height, indent, colors.getFirst(), colors.getSecond());}
+	public static void breadcrumbArrow(GuiGraphics graphics, int x, int y, int z, int width, int height, int indent, Pair<Color, Color> colors) {
+		breadcrumbArrow(graphics, x, y, z, width, height, indent, colors.getFirst(), colors.getSecond());
+	}
 
 	// draws a wide chevron-style breadcrumb arrow pointing left
 	public static void breadcrumbArrow(GuiGraphics graphics, int x, int y, int z, int width, int height, int indent, Color startColor, Color endColor) {

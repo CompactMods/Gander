@@ -29,7 +29,7 @@ public class ChapterLabel extends AbstractSimiWidget {
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		UIRenderHelper.streak(graphics, 0, getX(), getY() + height / 2, height - 2, width);
 		graphics.drawString(Minecraft.getInstance().font, chapter.getTitle(), getX() + 50,
-			getY() + 20, Theme.i(Theme.Key.TEXT_ACCENT_SLIGHT), false);
+			getY() + 20, Theme.color(Theme.Key.TEXT_ACCENT_SLIGHT).getRGB(), false);
 
 		button.doRender(graphics, mouseX, mouseY, partialTicks);
 		super.render(graphics, mouseX, mouseY, partialTicks);

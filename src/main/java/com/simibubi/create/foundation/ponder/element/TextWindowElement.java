@@ -100,13 +100,13 @@ public class TextWindowElement extends AnimatedOverlayElement {
 
 		boolean settled = transform.xRotation.settled() && transform.yRotation.settled();
 		float pY = settled ? (int) sceneToScreen.y : sceneToScreen.y;
-		
+
 		float yDiff = (screen.height / 2f - sceneToScreen.y - 10) / 100f;
 		float targetX = (screen.width * Mth.lerp(yDiff * yDiff, 6f / 8, 5f / 8));
 
 		if (nearScene)
 			targetX = Math.min(targetX, sceneToScreen.x + 50);
-		
+
 		if (settled)
 			targetX = (int) targetX;
 
@@ -128,8 +128,8 @@ public class TextWindowElement extends AnimatedOverlayElement {
 		ms.pushPose();
 		ms.translate(0, pY, 400);
 
-		new BoxElement().withBackground(Theme.c(Theme.Key.PONDER_BACKGROUND_FLAT))
-			.gradientBorder(Theme.p(Theme.Key.TEXT_WINDOW_BORDER))
+		new BoxElement().withBackground(Theme.color(Theme.Key.PONDER_BACKGROUND_FLAT))
+			.gradientBorder(Theme.pair(Theme.Key.TEXT_WINDOW_BORDER))
 			.at(targetX - 10, 3, 100)
 			.withBounds(boxWidth, boxHeight - 1)
 			.render(graphics);

@@ -3,7 +3,6 @@ package com.simibubi.create.foundation.events;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.CreateClient;
-import com.simibubi.create.foundation.item.TooltipModifier;
 import com.simibubi.create.foundation.placement.PlacementHelpers;
 import com.simibubi.create.foundation.ponder.PonderTooltipHandler;
 import com.simibubi.create.foundation.render.SuperRenderTypeBuffer;
@@ -14,7 +13,6 @@ import com.simibubi.create.foundation.utility.worldWrappers.WrappedClientWorld;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
@@ -29,10 +27,7 @@ import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModContainer;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.event.lifecycle.FMLLoadCompleteEvent;
 
 @EventBusSubscriber(Dist.CLIENT)
 public class ClientEvents {
@@ -116,15 +111,7 @@ public class ClientEvents {
 
 	@SubscribeEvent
 	public static void addToItemTooltip(ItemTooltipEvent event) {
-		if (event.getEntity() == null)
-			return;
-
-		Item item = event.getItemStack().getItem();
-		TooltipModifier modifier = TooltipModifier.REGISTRY.get(item);
-		if (modifier != null && modifier != TooltipModifier.EMPTY) {
-			modifier.modify(event);
-		}
-
+		if (event.getEntity() == null) return;
 		PonderTooltipHandler.addToTooltip(event);
 	}
 

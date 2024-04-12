@@ -1,13 +1,10 @@
 package com.simibubi.create.foundation.gui.widget;
 
-import java.util.function.Function;
-
 import com.simibubi.create.foundation.gui.Theme;
 import com.simibubi.create.foundation.gui.Theme.Key;
-import com.simibubi.create.foundation.gui.UIRenderHelper;
 import com.simibubi.create.foundation.gui.element.BoxElement;
 import com.simibubi.create.foundation.utility.Color;
-import com.simibubi.create.foundation.utility.Couple;
+import com.simibubi.create.foundation.utility.Pair;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -24,8 +21,8 @@ public class BoxWidget extends ElementWidget {
 
 	protected Color gradientColor1, gradientColor2;
 	private Color previousColor1, previousColor2;
-	private Color colorTarget1 = Theme.c(getIdleTheme(), true).copy();
-	private Color colorTarget2 = Theme.c(getIdleTheme(), false).copy();
+	private Color colorTarget1 = Theme.pair(getIdleTheme()).getFirst().copy();
+	private Color colorTarget2 = Theme.pair(getIdleTheme()).getSecond().copy();
 
 	public BoxWidget() {
 		this(0, 0);
@@ -51,7 +48,7 @@ public class BoxWidget extends ElementWidget {
 		return (T) this;
 	}
 
-	public <T extends BoxWidget> T withBorderColors(Couple<Color> colors) {
+	public <T extends BoxWidget> T withBorderColors(Pair<Color, Color> colors) {
 		this.customBorderTop = colors.getFirst();
 		this.customBorderBot = colors.getSecond();
 		updateColorsFromState();
@@ -89,8 +86,8 @@ public class BoxWidget extends ElementWidget {
 	public void onClick(double x, double y) {
 		super.onClick(x, y);
 
-		gradientColor1 = Theme.c(getClickTheme(), true);
-		gradientColor2 = Theme.c(getClickTheme(), false);
+		gradientColor1 = Theme.first(getClickTheme());
+		gradientColor2 = Theme.second(getClickTheme());
 		startGradientAnimation(getColorForState(true), getColorForState(false), true, 0.15);
 	}
 
@@ -124,7 +121,7 @@ public class BoxWidget extends ElementWidget {
 			return;
 
 		box.withAlpha(fadeValue);
-		box.withBackground(customBackground != null ? customBackground : Theme.c(Theme.Key.PONDER_BACKGROUND_TRANSPARENT))
+		box.withBackground(customBackground != null ? customBackground : Theme.color(Theme.Key.PONDER_BACKGROUND_TRANSPARENT))
 				.gradientBorder(gradientColor1, gradientColor2)
 				.at(getX(), getY(), z)
 				.withBounds(width, height)
@@ -191,19 +188,19 @@ public class BoxWidget extends ElementWidget {
 
 	private Color getColorForState(boolean first) {
 		if (!active)
-			return Theme.p(getDisabledTheme()).get(first);
+			return first ? Theme.first(getDisabledTheme()) : Theme.second(getDisabledTheme());
 
 		if (isHovered) {
 			if (first)
-				return customBorderTop != null ? customBorderTop.darker() : Theme.c(getHoverTheme(), true);
+				return customBorderTop != null ? customBorderTop.darker() : Theme.first(getHoverTheme());
 			else
-				return customBorderBot != null ? customBorderBot.darker() : Theme.c(getHoverTheme(), false);
+				return customBorderBot != null ? customBorderBot.darker() : Theme.second(getHoverTheme());
 		}
 
 		if (first)
-			return customBorderTop != null ? customBorderTop : Theme.c(getIdleTheme(), true);
+			return customBorderTop != null ? customBorderTop : Theme.first(getIdleTheme());
 		else
-			return customBorderBot != null ? customBorderBot : Theme.c(getIdleTheme(), false);
+			return customBorderBot != null ? customBorderBot : Theme.second(getIdleTheme());
 	}
 
 	public Key getDisabledTheme() {

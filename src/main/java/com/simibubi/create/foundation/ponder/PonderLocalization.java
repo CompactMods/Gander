@@ -6,6 +6,7 @@ import java.util.function.BiConsumer;
 
 import com.google.gson.JsonObject;
 import com.simibubi.create.foundation.utility.Couple;
+import com.simibubi.create.foundation.utility.Pair;
 import com.simibubi.create.infrastructure.ponder.PonderIndex;
 import com.tterrag.registrate.AbstractRegistrate;
 
@@ -14,7 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public class PonderLocalization {
 	static final Map<ResourceLocation, String> SHARED = new HashMap<>();
-	static final Map<ResourceLocation, Couple<String>> TAG = new HashMap<>();
+	static final Map<ResourceLocation, Pair<String, String>> TAG = new HashMap<>();
 	static final Map<ResourceLocation, String> CHAPTER = new HashMap<>();
 	static final Map<ResourceLocation, Map<String, String>> SPECIFIC = new HashMap<>();
 
@@ -25,7 +26,7 @@ public class PonderLocalization {
 	}
 
 	public static void registerTag(ResourceLocation key, String enUS, String description) {
-		TAG.put(key, Couple.create(enUS, description));
+		TAG.put(key, Pair.of(enUS, description));
 	}
 
 	public static void registerChapter(ResourceLocation key, String enUS) {

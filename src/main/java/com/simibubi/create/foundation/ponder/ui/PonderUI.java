@@ -35,7 +35,6 @@ import com.simibubi.create.foundation.ponder.element.TextWindowElement;
 import com.simibubi.create.foundation.render.SuperRenderTypeBuffer;
 import com.simibubi.create.foundation.utility.Color;
 import com.simibubi.create.foundation.utility.Components;
-import com.simibubi.create.foundation.utility.Couple;
 import com.simibubi.create.foundation.utility.FontHelper;
 import com.simibubi.create.foundation.utility.Iterate;
 import com.simibubi.create.foundation.utility.Lang;
@@ -566,7 +565,7 @@ public class PonderUI extends NavigatableSimiScreen {
 		for (GuiEventListener child : children())
 			noWidgetsHovered &= !child.isMouseOver(mouseX, mouseY);
 
-		int tooltipColor = Theme.i(Theme.Key.TEXT_DARKER);
+		int tooltipColor = Theme.color(Theme.Key.TEXT_DARKER).getRGB();
 		renderChapterTitle(graphics, fade, indexDiff, activeScene, tooltipColor);
 		renderNavigationMenu(graphics);
 
@@ -680,7 +679,7 @@ public class PonderUI extends NavigatableSimiScreen {
 
 				String tagName = this.tags.get(i)
 					.getTitle();
-				graphics.drawString(font, tagName, 3, 8, Theme.i(Theme.Key.TEXT_ACCENT_SLIGHT), false);
+				graphics.drawString(font, tagName, 3, 8, Theme.color(Theme.Key.TEXT_ACCENT_SLIGHT).getRGB(), false);
 
 				RenderSystem.disableScissor();
 
@@ -711,8 +710,8 @@ public class PonderUI extends NavigatableSimiScreen {
 			int boxWidth = (Math.max(font.width(nextScene.getTitle()), font.width(Lang.translateDirect(NEXT_UP))) + 5);
 			renderSpeechBox(graphics, 0, 0, boxWidth, 20, right.isHoveredOrFocused(), Pointing.DOWN, false);
 			ms.translate(0, -29, 100);
-			graphics.drawCenteredString(font, Lang.translateDirect(NEXT_UP), 0, 0, Theme.i(Theme.Key.TEXT_DARKER));
-			graphics.drawCenteredString(font, nextScene.getTitle(), 0, 10, Theme.i(Theme.Key.TEXT));
+			graphics.drawCenteredString(font, Lang.translateDirect(NEXT_UP), 0, 0, Theme.color(Theme.Key.TEXT_DARKER).getRGB());
+			graphics.drawCenteredString(font, nextScene.getTitle(), 0, 10, Theme.color(Theme.Key.TEXT).getRGB());
 			ms.popPose();
 		}
 	}
@@ -752,8 +751,8 @@ public class PonderUI extends NavigatableSimiScreen {
 		int streakHeight = 35 - 9 + wordWrappedHeight;
 		UIRenderHelper.streak(graphics, 0, x - 4, y - 12 + streakHeight / 2, streakHeight, (int) (150 * fade));
 		UIRenderHelper.streak(graphics, 180, x - 4, y - 12 + streakHeight / 2, streakHeight, (int) (30 * fade));
-		new BoxElement().withBackground(Theme.c(Theme.Key.PONDER_BACKGROUND_FLAT))
-				.gradientBorder(Theme.p(Theme.Key.PONDER_IDLE))
+		new BoxElement().withBackground(Theme.color(Theme.Key.PONDER_BACKGROUND_FLAT))
+				.gradientBorder(Theme.pair(Theme.Key.PONDER_IDLE))
 				.at(21, 21, 100)
 				.withBounds(30, 30)
 				.render(graphics);
@@ -769,7 +768,7 @@ public class PonderUI extends NavigatableSimiScreen {
 		ms.translate(x, y, 0);
 		ms.mulPose(Axis.XN.rotationDegrees(indexDiff * -75));
 		ms.translate(0, 0, 5);
-		FontHelper.drawSplitString(ms, font, title, 0, 0, left.getX() - 51, Theme.c(Theme.Key.TEXT)
+		FontHelper.drawSplitString(ms, font, title, 0, 0, left.getX() - 51, Theme.color(Theme.Key.TEXT)
 				.scaleAlpha(1 - indexDiff)
 				.getRGB());
 		ms.popPose();
@@ -780,18 +779,18 @@ public class PonderUI extends NavigatableSimiScreen {
 
 			drawRightAlignedString(graphics, ms, Lang.translateDirect(IN_CHAPTER)
 					.getString(), 0, 0, tooltipColor);
-			drawRightAlignedString(graphics, ms, chapter.getTitle(), 0, 12, Theme.i(Theme.Key.TEXT));
+			drawRightAlignedString(graphics, ms, chapter.getTitle(), 0, 12, Theme.color(Theme.Key.TEXT).getRGB());
 
 			ms.popPose();
 		}
 	}
 
 	protected void renderNavigationMenu(GuiGraphics graphics) {
-		Color c1 = Theme.c(Theme.Key.PONDER_BACK_ARROW)
+		Color c1 = Theme.color(Theme.Key.PONDER_BACK_ARROW)
 			.setAlpha(0x40);
-		Color c2 = Theme.c(Theme.Key.PONDER_BACK_ARROW)
+		Color c2 = Theme.color(Theme.Key.PONDER_BACK_ARROW)
 			.setAlpha(0x20);
-		Color c3 = Theme.c(Theme.Key.PONDER_BACK_ARROW)
+		Color c3 = Theme.color(Theme.Key.PONDER_BACK_ARROW)
 			.setAlpha(0x10);
 		UIRenderHelper.breadcrumbArrow(graphics, width / 2 - 20, height - 51, 0, 20, 20, 5, c1, c2);
 		UIRenderHelper.breadcrumbArrow(graphics, width / 2 + 20, height - 51, 0, -20, 20, -5, c1, c2);
@@ -908,7 +907,7 @@ public class PonderUI extends NavigatableSimiScreen {
 		int divotSize = 8;
 		int distance = 1;
 		int divotRadius = divotSize / 2;
-		Couple<Color> borderColors = Theme.p(highlighted ? Theme.Key.PONDER_BUTTON_HOVER : Theme.Key.PONDER_IDLE);
+		var borderColors = Theme.pair(highlighted ? Theme.Key.PONDER_BUTTON_HOVER : Theme.Key.PONDER_IDLE);
 		Color c;
 
 		switch (pointing) {
@@ -927,7 +926,7 @@ public class PonderUI extends NavigatableSimiScreen {
 			boxY -= h / 2;
 			divotX += distance;
 			divotY -= divotRadius;
-			c = Color.mixColors(borderColors, 0.5f);
+			c = Color.mixColors(borderColors.getFirst(), borderColors.getSecond(), 0.5f);
 			break;
 		case RIGHT:
 			divotRotation = 270;
@@ -935,7 +934,7 @@ public class PonderUI extends NavigatableSimiScreen {
 			boxY -= h / 2;
 			divotX -= divotSize + distance;
 			divotY -= divotRadius;
-			c = Color.mixColors(borderColors, 0.5f);
+			c = Color.mixColors(borderColors.getFirst(), borderColors.getSecond(), 0.5f);
 			break;
 		case UP:
 			divotRotation = 180;
@@ -947,7 +946,7 @@ public class PonderUI extends NavigatableSimiScreen {
 			break;
 		}
 
-		new BoxElement().withBackground(Theme.c(Theme.Key.PONDER_BACKGROUND_FLAT))
+		new BoxElement().withBackground(Theme.color(Theme.Key.PONDER_BACKGROUND_FLAT))
 			.gradientBorder(borderColors)
 			.at(boxX, boxY, 100)
 			.withBounds(w, h)

@@ -1,4 +1,4 @@
-package com.simibubi.create.infrastructure.data;
+package com.simibubi.create.datagen;
 
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
@@ -8,7 +8,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.simibubi.create.Create;
 import com.simibubi.create.foundation.ponder.PonderLocalization;
-import com.simibubi.create.foundation.utility.FilesHelper;
 import com.simibubi.create.infrastructure.ponder.GeneralText;
 import com.simibubi.create.infrastructure.ponder.PonderIndex;
 import com.simibubi.create.infrastructure.ponder.SharedText;

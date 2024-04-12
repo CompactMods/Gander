@@ -2,7 +2,6 @@ package com.simibubi.create.foundation.events;
 
 import com.simibubi.create.Create;
 import com.simibubi.create.foundation.ModFilePackResources;
-import com.simibubi.create.foundation.recipe.RecipeFinder;
 import com.simibubi.create.foundation.utility.Components;
 import com.simibubi.create.foundation.utility.ServerSpeedProvider;
 import com.simibubi.create.foundation.utility.WorldAttached;
@@ -13,7 +12,6 @@ import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackSource;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraftforge.event.AddPackFindersEvent;
-import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
@@ -37,11 +35,6 @@ public class CommonEvents {
 	@SubscribeEvent
 	public static void registerCommands(RegisterCommandsEvent event) {
 		AllCommands.register(event.getDispatcher());
-	}
-
-	@SubscribeEvent
-	public static void addReloadListeners(AddReloadListenerEvent event) {
-		event.addListener(RecipeFinder.LISTENER);
 	}
 
 	@SubscribeEvent

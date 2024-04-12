@@ -1,4 +1,4 @@
-package com.simibubi.create.infrastructure.data;
+package com.simibubi.create.datagen;
 
 import java.util.concurrent.CompletableFuture;
 

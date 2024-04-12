@@ -12,8 +12,6 @@ import javax.annotation.Nullable;
 import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.content.schematics.SchematicWorld;
-import com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer;
-import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.mixin.accessor.ParticleEngineAccessor;
 import com.simibubi.create.foundation.ponder.element.WorldSectionElement;
 import com.simibubi.create.foundation.render.SuperRenderTypeBuffer;
@@ -100,7 +98,6 @@ public class PonderWorld extends SchematicWorld {
 		originalEntities.forEach(e -> EntityType.create(e.serializeNBT(), this)
 			.ifPresent(entities::add));
 		particles.clearEffects();
-		fixControllerBlockEntities();
 	}
 
 	public void restoreBlocks(Selection selection) {
@@ -246,36 +243,6 @@ public class PonderWorld extends SchematicWorld {
 	public void addParticle(Particle p) {
 		if (p != null)
 			particles.addParticle(p);
-	}
-
-	@Override
-	protected void onBEadded(BlockEntity blockEntity, BlockPos pos) {
-		super.onBEadded(blockEntity, pos);
-		if (!(blockEntity instanceof SmartBlockEntity))
-			return;
-		SmartBlockEntity smartBlockEntity = (SmartBlockEntity) blockEntity;
-		smartBlockEntity.markVirtual();
-	}
-
-	public void fixControllerBlockEntities() {
-		for (BlockEntity blockEntity : blockEntities.values()) {
-
-			if (blockEntity instanceof IMultiBlockEntityContainer) {
-				IMultiBlockEntityContainer multiBlockEntity = (IMultiBlockEntityContainer) blockEntity;
-				BlockPos lastKnown = multiBlockEntity.getLastKnownPos();
-				BlockPos current = blockEntity.getBlockPos();
-				if (lastKnown == null || current == null)
-					continue;
-				if (multiBlockEntity.isController())
-					continue;
-				if (!lastKnown.equals(current)) {
-					BlockPos newControllerPos = multiBlockEntity.getController()
-						.offset(current.subtract(lastKnown));
-					multiBlockEntity.setController(newControllerPos);
-				}
-			}
-
-		}
 	}
 
 	public void setBlockBreakingProgress(BlockPos pos, int damage) {

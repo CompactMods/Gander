@@ -17,19 +17,11 @@ public class LangBuilder {
 		this.namespace = namespace;
 	}
 
-	public LangBuilder space() {
-		return text(" ");
-	}
-
-	public LangBuilder newLine() {
-		return text("\n");
-	}
-
 	/**
 	 * Appends a localised component<br>
 	 * To add an independently formatted localised component, use add() and a nested
 	 * builder
-	 * 
+	 *
 	 * @param langKey
 	 * @param args
 	 * @return
@@ -40,7 +32,7 @@ public class LangBuilder {
 
 	/**
 	 * Appends a text component
-	 * 
+	 *
 	 * @param literalText
 	 * @return
 	 */
@@ -50,7 +42,7 @@ public class LangBuilder {
 
 	/**
 	 * Appends a colored text component
-	 * 
+	 *
 	 * @param format
 	 * @param literalText
 	 * @return
@@ -61,7 +53,7 @@ public class LangBuilder {
 
 	/**
 	 * Appends a colored text component
-	 * 
+	 *
 	 * @param color
 	 * @param literalText
 	 * @return
@@ -72,7 +64,7 @@ public class LangBuilder {
 
 	/**
 	 * Appends the contents of another builder
-	 * 
+	 *
 	 * @param otherBuilder
 	 * @return
 	 */
@@ -82,7 +74,7 @@ public class LangBuilder {
 
 	/**
 	 * Appends a component
-	 * 
+	 *
 	 * @param customComponent
 	 * @return
 	 */
@@ -95,7 +87,7 @@ public class LangBuilder {
 
 	/**
 	 * Applies the format to all added components
-	 * 
+	 *
 	 * @param format
 	 * @return
 	 */
@@ -107,7 +99,7 @@ public class LangBuilder {
 
 	/**
 	 * Applies the color to all added components
-	 * 
+	 *
 	 * @param color
 	 * @return
 	 */
@@ -116,8 +108,6 @@ public class LangBuilder {
 		component = component.withStyle(s -> s.withColor(color));
 		return this;
 	}
-
-	//
 
 	public MutableComponent component() {
 		assertComponent();
@@ -132,30 +122,9 @@ public class LangBuilder {
 		return Component.Serializer.toJson(component());
 	}
 
-	public void sendStatus(Player player) {
-		player.displayClientMessage(component(), true);
-	}
-
 	public void sendChat(Player player) {
 		player.displayClientMessage(component(), false);
 	}
-
-	public void addTo(List<? super MutableComponent> tooltip) {
-		tooltip.add(component());
-	}
-
-	public void forGoggles(List<? super MutableComponent> tooltip) {
-		forGoggles(tooltip, 0);
-	}
-
-	public void forGoggles(List<? super MutableComponent> tooltip, int indents) {
-		tooltip.add(Lang.builder()
-			.text(Strings.repeat(' ', 4 + indents))
-			.add(this)
-			.component());
-	}
-
-	//
 
 	private void assertComponent() {
 		if (component == null)

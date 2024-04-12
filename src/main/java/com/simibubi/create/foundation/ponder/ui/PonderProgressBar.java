@@ -89,8 +89,8 @@ public class PonderProgressBar extends AbstractSimiWidget {
 		isHovered = clicked(mouseX, mouseY);
 
 		new BoxElement()
-				.withBackground(Theme.c(Theme.Key.PONDER_BACKGROUND_FLAT))
-				.gradientBorder(Theme.p(Theme.Key.PONDER_IDLE))
+				.withBackground(Theme.color(Theme.Key.PONDER_BACKGROUND_FLAT))
+				.gradientBorder(Theme.pair(Theme.Key.PONDER_IDLE))
 				.at(getX(), getY(), 400)
 				.withBounds(width, height)
 				.render(graphics);
@@ -100,8 +100,8 @@ public class PonderProgressBar extends AbstractSimiWidget {
 
 		ms.pushPose();
 		ms.scale((width + 4) * progress.getValue(partialTicks), 1, 1);
-		int c1 = Theme.i(Theme.Key.PONDER_PROGRESSBAR, true);
-		int c2 = Theme.i(Theme.Key.PONDER_PROGRESSBAR, false);
+		int c1 = Theme.first(Theme.Key.PONDER_PROGRESSBAR).getRGB();
+		int c2 = Theme.second(Theme.Key.PONDER_PROGRESSBAR).getRGB();
 		graphics.fillGradient(0, 3, 1, 4, 310, c1, c1);
 		graphics.fillGradient(0, 4, 1, 5, 310, c2, c2);
 		ms.popPose();
@@ -114,10 +114,10 @@ public class PonderProgressBar extends AbstractSimiWidget {
 	private void renderKeyframes(GuiGraphics graphics, int mouseX, float partialTicks) {
 		PonderScene activeScene = ponder.getActiveScene();
 
-		int hoverStartColor = Theme.i(Theme.Key.PONDER_HOVER, true) | 0xa0_000000;
-		int hoverEndColor = Theme.i(Theme.Key.PONDER_HOVER, false) | 0xa0_000000;
-		int idleStartColor = Theme.i(Theme.Key.PONDER_IDLE, true) | 0x40_000000;
-		int idleEndColor = Theme.i(Theme.Key.PONDER_IDLE, false) | 0x40_000000;
+		int hoverStartColor = Theme.first(Theme.Key.PONDER_HOVER).getRGB() | 0xa0_000000;
+		int hoverEndColor = Theme.second(Theme.Key.PONDER_HOVER).getRGB() | 0xa0_000000;
+		int idleStartColor = Theme.first(Theme.Key.PONDER_IDLE).getRGB() | 0x40_000000;
+		int idleEndColor = Theme.second(Theme.Key.PONDER_IDLE).getRGB() | 0x40_000000;
 		int hoverIndex;
 
 		if (isHovered) {

@@ -8,7 +8,6 @@ import com.simibubi.create.foundation.render.CachedBufferer;
 import com.simibubi.create.foundation.render.StitchedSprite;
 import com.simibubi.create.foundation.render.SuperByteBufferCache;
 import com.simibubi.create.foundation.utility.Components;
-import com.simibubi.create.foundation.utility.ModelSwapper;
 import com.simibubi.create.foundation.utility.ghost.GhostBlocks;
 import com.simibubi.create.infrastructure.ponder.PonderIndex;
 
@@ -27,16 +26,12 @@ public class CreateClient {
 	public static final SuperByteBufferCache BUFFER_CACHE = new SuperByteBufferCache();
 	public static final Outliner OUTLINER = new Outliner();
 	public static final GhostBlocks GHOST_BLOCKS = new GhostBlocks();
-	public static final ModelSwapper MODEL_SWAPPER = new ModelSwapper();
-
 	public static final ClientResourceReloadListener RESOURCE_RELOAD_LISTENER = new ClientResourceReloadListener();
 
 	public static void onCtorClient(IEventBus modEventBus, IEventBus forgeEventBus) {
 		modEventBus.addListener(CreateClient::clientInit);
 		modEventBus.addListener(AllParticleTypes::registerFactories);
 		modEventBus.addListener(StitchedSprite::onTextureStitchPost);
-
-		MODEL_SWAPPER.registerListeners(modEventBus);
 	}
 
 	public static void clientInit(final FMLClientSetupEvent event) {

@@ -26,11 +26,6 @@ public final class RegisteredObjects {
 	}
 
 	@NotNull
-	public static ResourceLocation getKeyOrThrow(Block value) {
-		return getKeyOrThrow(ForgeRegistries.BLOCKS, value);
-	}
-
-	@NotNull
 	public static ResourceLocation getKeyOrThrow(Item value) {
 		return getKeyOrThrow(ForgeRegistries.ITEMS, value);
 	}
@@ -41,27 +36,12 @@ public final class RegisteredObjects {
 	}
 
 	@NotNull
-	public static ResourceLocation getKeyOrThrow(EntityType<?> value) {
-		return getKeyOrThrow(ForgeRegistries.ENTITY_TYPES, value);
-	}
-
-	@NotNull
 	public static ResourceLocation getKeyOrThrow(BlockEntityType<?> value) {
 		return getKeyOrThrow(ForgeRegistries.BLOCK_ENTITY_TYPES, value);
 	}
 
 	@NotNull
-	public static ResourceLocation getKeyOrThrow(Potion value) {
-		return getKeyOrThrow(ForgeRegistries.POTIONS, value);
-	}
-
-	@NotNull
 	public static ResourceLocation getKeyOrThrow(ParticleType<?> value) {
 		return getKeyOrThrow(ForgeRegistries.PARTICLE_TYPES, value);
-	}
-
-	@NotNull
-	public static ResourceLocation getKeyOrThrow(RecipeSerializer<?> value) {
-		return getKeyOrThrow(ForgeRegistries.RECIPE_SERIALIZERS, value);
 	}
 }

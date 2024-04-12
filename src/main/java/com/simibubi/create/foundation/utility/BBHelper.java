@@ -11,10 +11,4 @@ public class BBHelper {
 			Math.max(bb.maxZ(), pos.getZ()));
 	}
 
-	public static BoundingBox encapsulate(BoundingBox bb, BoundingBox bb2) {
-		return new BoundingBox(Math.min(bb.minX(), bb2.minX()), Math.min(bb.minY(), bb2.minY()),
-			Math.min(bb.minZ(), bb2.minZ()), Math.max(bb.maxX(), bb2.maxX()), Math.max(bb.maxY(), bb2.maxY()),
-			Math.max(bb.maxZ(), bb2.maxZ()));
-	}
-
 }

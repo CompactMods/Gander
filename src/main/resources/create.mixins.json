@@ -23,8 +23,6 @@
     "accessor.HumanoidArmorLayerAccessor",
     "accessor.ParticleEngineAccessor",
     "client.BlockDestructionProgressMixin",
-    "client.GameRendererMixin",
-    "client.HeavyBootsOnPlayerMixin",
     "client.LevelRendererMixin",
     "client.MapRendererMapInstanceMixin",
     "client.WindowResizeMixin"

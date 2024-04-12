@@ -1,7 +1,6 @@
 package com.simibubi.create.foundation.gui;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,26 +10,11 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.simibubi.create.foundation.utility.Color;
-import com.simibubi.create.foundation.utility.Couple;
+import com.simibubi.create.foundation.utility.Pair;
 
 public class Theme {
 
 	private static final List<Theme> THEMES = new ArrayList<>();
-	public static final Theme BASE = addTheme(new Theme());
-
-	public static Theme addTheme(@Nonnull Theme theme) {
-		THEMES.add(theme);
-		THEMES.sort(Comparator.comparingInt(Theme::getPriority).reversed());
-		return theme;
-	}
-
-	public static void removeTheme(Theme theme) {
-		THEMES.remove(theme);
-	}
-
-	public static void reload() {
-		THEMES.forEach(Theme::init);
-	}
 
 	private static ColorHolder resolve(String key) {
 		return THEMES
@@ -42,29 +26,28 @@ public class Theme {
 				.orElse(ColorHolder.MISSING);
 	}
 
-	@Nonnull public static Couple<Color> p(@Nonnull Key key) {return p(key.get());}
-	@Nonnull public static Couple<Color> p(String key) {return resolve(key).asPair();}
-
-	@Nonnull public static Color c(@Nonnull Key key, boolean first) {return c(key.get(), first);}
-	@Nonnull public static Color c(String key, boolean first) {return p(key).get(first);}
-
-	public static int i(@Nonnull Key key, boolean first) {return i(key.get(), first);}
-	public static int i(String key, boolean first) {return p(key).get(first).getRGB();}
-
-	@Nonnull public static Color c(@Nonnull Key key) {return c(key.get());}
-	@Nonnull public static Color c(String key) {return resolve(key).get();}
-
-	public static int i(@Nonnull Key key) {return i(key.get());}
-	public static int i(String key) {return resolve(key).get().getRGB();}
+	@Nonnull public static Color color(@Nonnull Key key) {return color(key.get());}
+	@Nonnull public static Color color(String key) {return resolve(key).get();}
 
 	//-----------//
 
 	protected final Map<String, ColorHolder> colors;
-	private int priority = 0;
 
 	protected Theme() {
 		colors = new HashMap<>();
 		init();
+	}
+
+	public static Pair<Color, Color> pair(Key key) {
+		return resolve(key.s).colors;
+	}
+
+	public static Color first(Key key) {
+		return pair(key).getFirst();
+	}
+
+	public static Color second(Key key) {
+		return pair(key).getSecond();
 	}
 
 	/*
@@ -134,15 +117,6 @@ public class Theme {
 		return colors.get(key);
 	}
 
-	public int getPriority() {
-		return priority;
-	}
-
-	public Theme setPriority(int priority) {
-		this.priority = priority;
-		return this;
-	}
-
 	public static class Key {
 
 		public static final Key BUTTON_IDLE = new Key();
@@ -202,18 +176,18 @@ public class Theme {
 
 		private static final ColorHolder MISSING = ColorHolder.single(Color.BLACK);
 
-		private Couple<Color> colors;
+		private Pair<Color, Color> colors;
 		private String lookupKey;
 
 		private static ColorHolder single(Color c) {
 			ColorHolder h = new ColorHolder();
-			h.colors = Couple.create(c.setImmutable(), c.setImmutable());
+			h.colors = Pair.of(c.setImmutable(), c.setImmutable());
 			return h;
 		}
 
 		private static ColorHolder pair(Color first, Color second) {
 			ColorHolder h = new ColorHolder();
-			h.colors = Couple.create(first.setImmutable(), second.setImmutable());
+			h.colors = Pair.of(first.setImmutable(), second.setImmutable());
 			return h;
 		}
 
@@ -226,10 +200,5 @@ public class Theme {
 		private Color get() {
 			return colors.getFirst();
 		}
-
-		private Couple<Color> asPair() {
-			return colors;
-		}
-
 	}
 }

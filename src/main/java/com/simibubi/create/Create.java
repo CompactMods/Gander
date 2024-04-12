@@ -8,12 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.logging.LogUtils;
 import com.simibubi.create.foundation.data.CreateRegistrate;
-import com.simibubi.create.foundation.item.ItemDescription;
-import com.simibubi.create.foundation.item.KineticStats;
-import com.simibubi.create.foundation.item.TooltipHelper.Palette;
-import com.simibubi.create.foundation.item.TooltipModifier;
-import com.simibubi.create.foundation.utility.AttachedRegistry;
-import com.simibubi.create.infrastructure.data.CreateDatagen;
+import com.simibubi.create.datagen.CreateDatagen;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
@@ -52,13 +47,6 @@ public class Create {
 	 */
 	public static final CreateRegistrate REGISTRATE = CreateRegistrate.create(ID);
 
-	static {
-		REGISTRATE.setTooltipModifierFactory(item -> {
-			return new ItemDescription.Modifier(item, Palette.STANDARD_CREATE)
-				.andThen(TooltipModifier.mapNull(KineticStats.create(item)));
-		});
-	}
-
 	public Create() {
 		onCtor();
 	}
@@ -88,11 +76,6 @@ public class Create {
 
 	public static void init(final FMLCommonSetupEvent event) {
 		AllFluids.registerFluidInteractions();
-
-		event.enqueueWork(() -> {
-			// TODO: custom registration should all happen in one place
-			AttachedRegistry.unwrapAll();
-		});
 	}
 
 	public static ResourceLocation asResource(String path) {

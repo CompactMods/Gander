@@ -73,10 +73,4 @@ public class BlockHelper {
 
 		world.setBlockAndUpdate(pos, fluidState.createLegacyBlock());
 	}
-
-	public static boolean hasBlockSolidSide(BlockState p_220056_0_, BlockGetter p_220056_1_, BlockPos p_220056_2_,
-		Direction p_220056_3_) {
-		return !p_220056_0_.is(BlockTags.LEAVES)
-			&& Block.isFaceFull(p_220056_0_.getCollisionShape(p_220056_1_, p_220056_2_), p_220056_3_);
-	}
 }

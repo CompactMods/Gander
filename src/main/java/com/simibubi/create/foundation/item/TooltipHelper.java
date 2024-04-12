@@ -10,6 +10,8 @@ import com.simibubi.create.foundation.utility.Components;
 import com.simibubi.create.foundation.utility.Couple;
 import com.simibubi.create.foundation.utility.Lang;
 
+import com.simibubi.create.foundation.utility.Pair;
+
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -105,14 +107,14 @@ public class TooltipHelper {
 		MutableComponent lineStart = Components.literal(Strings.repeat(" ", indent));
 		lineStart.withStyle(primaryStyle);
 		List<Component> formattedLines = new ArrayList<>(lines.size());
-		Couple<Style> styles = Couple.create(highlightStyle, primaryStyle);
+		Pair<Style, Style> styles = Pair.of(highlightStyle, primaryStyle);
 
 		boolean currentlyHighlighted = false;
 		for (String string : lines) {
 			MutableComponent currentComponent = lineStart.plainCopy();
 			String[] split = string.split("_");
 			for (String part : split) {
-				currentComponent.append(Components.literal(part).withStyle(styles.get(currentlyHighlighted)));
+				currentComponent.append(Components.literal(part).withStyle(currentlyHighlighted ? styles.getFirst() : styles.getSecond()));
 				currentlyHighlighted = !currentlyHighlighted;
 			}
 

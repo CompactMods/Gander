@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 
 import com.simibubi.create.foundation.networking.SimplePacketBase;
-import com.simibubi.create.foundation.utility.DyeHelper;
 import com.simibubi.create.foundation.utility.Lang;
 import com.simibubi.create.infrastructure.debugInfo.element.DebugInfoSection;
 
@@ -84,8 +83,7 @@ public class ServerDebugInfoPacket extends SimplePacketBase {
 		String text = output.toString();
 		Minecraft.getInstance().keyboardHandler.setClipboard(text);
 		Lang.translate("command.debuginfo.saved_to_clipboard")
-			.color(DyeHelper.DYE_TABLE.get(DyeColor.LIME)
-				.getFirst())
+			.color(DyeColor.LIME.getTextColor())
 			.sendChat(player);
 	}
 }

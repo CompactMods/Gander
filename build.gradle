@@ -66,6 +66,11 @@ minecraft {
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
 
+            if (!System.getenv().containsKey("CI")) {
+                // JetBrains Runtime Hotswap
+                jvmArgs("-XX:+AllowEnhancedClassRedefinition")
+            }
+
             mods {
                 create {
                     source sourceSets.main

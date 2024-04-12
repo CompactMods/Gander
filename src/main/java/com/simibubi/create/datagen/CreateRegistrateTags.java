@@ -1,4 +1,4 @@
-package com.simibubi.create.infrastructure.data;
+package com.simibubi.create.datagen;
 
 import com.simibubi.create.AllTags.AllBlockTags;
 import com.simibubi.create.AllTags.AllEntityTags;
