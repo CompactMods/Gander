@@ -11,8 +11,6 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.simibubi.create.content.kinetics.belt.BeltBlock;
-import com.simibubi.create.content.kinetics.belt.BeltBlockEntity;
 import com.simibubi.create.content.schematics.SchematicWorld;
 import com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
@@ -198,7 +196,7 @@ public class PonderWorld extends SchematicWorld {
 
 	public void tick() {
 		currentlyTickingEntities = true;
-		
+
 		particles.tick();
 
 		for (Iterator<Entity> iterator = entities.iterator(); iterator.hasNext();) {
@@ -209,14 +207,14 @@ public class PonderWorld extends SchematicWorld {
 			entity.yOld = entity.getY();
 			entity.zOld = entity.getZ();
 			entity.tick();
-			
+
 			if (entity.getY() <= -.5f)
 				entity.discard();
 
 			if (!entity.isAlive())
 				iterator.remove();
 		}
-		
+
 		currentlyTickingEntities = false;
 	}
 
@@ -261,21 +259,7 @@ public class PonderWorld extends SchematicWorld {
 
 	public void fixControllerBlockEntities() {
 		for (BlockEntity blockEntity : blockEntities.values()) {
-			
-			if (blockEntity instanceof BeltBlockEntity) {
-				BeltBlockEntity beltBlockEntity = (BeltBlockEntity) blockEntity;
-				if (!beltBlockEntity.isController())
-					continue;
-				BlockPos controllerPos = blockEntity.getBlockPos();
-				for (BlockPos blockPos : BeltBlock.getBeltChain(this, controllerPos)) {
-					BlockEntity blockEntity2 = getBlockEntity(blockPos);
-					if (!(blockEntity2 instanceof BeltBlockEntity))
-						continue;
-					BeltBlockEntity belt2 = (BeltBlockEntity) blockEntity2;
-					belt2.setController(controllerPos);
-				}
-			}
-			
+
 			if (blockEntity instanceof IMultiBlockEntityContainer) {
 				IMultiBlockEntityContainer multiBlockEntity = (IMultiBlockEntityContainer) blockEntity;
 				BlockPos lastKnown = multiBlockEntity.getLastKnownPos();

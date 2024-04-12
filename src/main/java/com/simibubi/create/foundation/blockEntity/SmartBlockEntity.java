@@ -8,10 +8,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import com.simibubi.create.api.event.BlockEntityBehaviourEvent;
-import com.simibubi.create.content.schematics.requirement.ISpecialBlockEntityItemRequirement;
-import com.simibubi.create.content.schematics.requirement.ItemRequirement;
-import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
-import com.simibubi.create.foundation.advancement.CreateAdvancement;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.utility.IInteractionChecker;
@@ -19,16 +15,13 @@ import com.simibubi.create.foundation.utility.IPartialSafeNBT;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 public abstract class SmartBlockEntity extends CachedRenderBBBlockEntity
-	implements IPartialSafeNBT, IInteractionChecker, ISpecialBlockEntityItemRequirement {
+	implements IPartialSafeNBT, IInteractionChecker {
 
 	private final Map<BehaviourType<?>, BlockEntityBehaviour> behaviours = new HashMap<>();
 	private boolean initialized = false;
@@ -183,23 +176,6 @@ public abstract class SmartBlockEntity extends CachedRenderBBBlockEntity
 		return behaviours.values();
 	}
 
-	protected void attachBehaviourLate(BlockEntityBehaviour behaviour) {
-		behaviours.put(behaviour.getType(), behaviour);
-		behaviour.initialize();
-	}
-
-	public ItemRequirement getRequiredItems(BlockState state) {
-		return getAllBehaviours().stream()
-			.reduce(ItemRequirement.NONE, (r, b) -> r.union(b.getRequiredItems()), (r, r1) -> r.union(r1));
-	}
-
-	protected void removeBehaviour(BehaviourType<?> type) {
-		BlockEntityBehaviour remove = behaviours.remove(type);
-		if (remove != null) {
-			remove.unload();
-		}
-	}
-
 	public void setLazyTickRate(int slowTickRate) {
 		this.lazyTickRate = slowTickRate;
 		this.lazyTickCounter = slowTickRate;
@@ -213,10 +189,6 @@ public abstract class SmartBlockEntity extends CachedRenderBBBlockEntity
 		return virtualMode;
 	}
 
-	public boolean isChunkUnloaded() {
-		return chunkUnloaded;
-	}
-
 	@Override
 	public boolean canPlayerUse(Player player) {
 		if (level == null || level.getBlockEntity(worldPosition) != this)
@@ -224,45 +196,4 @@ public abstract class SmartBlockEntity extends CachedRenderBBBlockEntity
 		return player.distanceToSqr(worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D,
 			worldPosition.getZ() + 0.5D) <= 64.0D;
 	}
-
-	public void sendToMenu(FriendlyByteBuf buffer) {
-		buffer.writeBlockPos(getBlockPos());
-		buffer.writeNbt(getUpdateTag());
-	}
-
-	@SuppressWarnings("deprecation")
-	public void refreshBlockState() {
-		setBlockState(getLevel().getBlockState(getBlockPos()));
-	}
-
-	protected boolean isItemHandlerCap(Capability<?> cap) {
-		return cap == ForgeCapabilities.ITEM_HANDLER;
-	}
-
-	protected boolean isFluidHandlerCap(Capability<?> cap) {
-		return cap == ForgeCapabilities.FLUID_HANDLER;
-	}
-
-	public void registerAwardables(List<BlockEntityBehaviour> behaviours, CreateAdvancement... advancements) {
-		for (BlockEntityBehaviour behaviour : behaviours) {
-			if (behaviour instanceof AdvancementBehaviour ab) {
-				ab.add(advancements);
-				return;
-			}
-		}
-		behaviours.add(new AdvancementBehaviour(this, advancements));
-	}
-
-	public void award(CreateAdvancement advancement) {
-		AdvancementBehaviour behaviour = getBehaviour(AdvancementBehaviour.TYPE);
-		if (behaviour != null)
-			behaviour.awardPlayer(advancement);
-	}
-
-	public void awardIfNear(CreateAdvancement advancement, int range) {
-		AdvancementBehaviour behaviour = getBehaviour(AdvancementBehaviour.TYPE);
-		if (behaviour != null)
-			behaviour.awardPlayerIfNear(advancement, range);
-	}
-
 }

@@ -19,8 +19,6 @@ import com.simibubi.create.foundation.utility.AngleHelper;
 import com.simibubi.create.foundation.utility.VecHelper;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat.Chaser;
-import com.simibubi.create.infrastructure.config.AllConfigs;
-import com.simibubi.create.infrastructure.config.CClient;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -209,12 +207,8 @@ public class PlacementHelpers {
 
 		float length = 10;
 
-		CClient.PlacementIndicatorSetting mode = AllConfigs.client().placementIndicator.get();
 		PoseStack ms = graphics.pose();
-		if (mode == CClient.PlacementIndicatorSetting.TRIANGLE)
-			fadedArrow(ms, centerX, centerY, r, g, b, a, length, snappedAngle);
-		else if (mode == CClient.PlacementIndicatorSetting.TEXTURE)
-			textured(ms, centerX, centerY, a, snappedAngle);
+		fadedArrow(ms, centerX, centerY, r, g, b, a, length, snappedAngle);
 	}
 
 	private static void fadedArrow(PoseStack ms, float centerX, float centerY, float r, float g, float b, float a,
@@ -227,9 +221,6 @@ public class PlacementHelpers {
 		ms.pushPose();
 		ms.translate(centerX, centerY, 5);
 		ms.mulPose(Axis.ZP.rotationDegrees(angle.getValue(0)));
-		// RenderSystem.rotatef(snappedAngle, 0, 0, 1);
-		double scale = AllConfigs.client().indicatorScale.get();
-		ms.scale((float) scale, (float) scale, 1);
 
 		Tesselator tessellator = Tesselator.getInstance();
 		BufferBuilder bufferbuilder = tessellator.getBuilder();
@@ -269,58 +260,4 @@ public class PlacementHelpers {
 //		RenderSystem.enableTexture();
 		ms.popPose();
 	}
-
-	@OnlyIn(Dist.CLIENT)
-	public static void textured(PoseStack ms, float centerX, float centerY, float alpha, float snappedAngle) {
-//		RenderSystem.enableTexture();
-		AllGuiTextures.PLACEMENT_INDICATOR_SHEET.bind();
-		RenderSystem.enableDepthTest();
-		RenderSystem.enableBlend();
-		RenderSystem.defaultBlendFunc();
-		RenderSystem.setShader(GameRenderer::getPositionColorTexShader);
-
-		ms.pushPose();
-		ms.translate(centerX, centerY, 50);
-		float scale = AllConfigs.client().indicatorScale.get()
-			.floatValue() * .75f;
-		ms.scale(scale, scale, 1);
-		ms.scale(12, 12, 1);
-
-		float index = snappedAngle / 22.5f;
-		float tex_size = 16f / 256f;
-
-		float tx = 0;
-		float ty = index * tex_size;
-		float tw = 1f;
-		float th = tex_size;
-
-		Tesselator tessellator = Tesselator.getInstance();
-		BufferBuilder buffer = tessellator.getBuilder();
-		buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-
-		Matrix4f mat = ms.last()
-			.pose();
-		buffer.vertex(mat, -1, -1, 0)
-			.color(1f, 1f, 1f, alpha)
-			.uv(tx, ty)
-			.endVertex();
-		buffer.vertex(mat, -1, 1, 0)
-			.color(1f, 1f, 1f, alpha)
-			.uv(tx, ty + th)
-			.endVertex();
-		buffer.vertex(mat, 1, 1, 0)
-			.color(1f, 1f, 1f, alpha)
-			.uv(tx + tw, ty + th)
-			.endVertex();
-		buffer.vertex(mat, 1, -1, 0)
-			.color(1f, 1f, 1f, alpha)
-			.uv(tx + tw, ty)
-			.endVertex();
-
-		tessellator.end();
-
-		RenderSystem.disableBlend();
-		ms.popPose();
-	}
-
 }

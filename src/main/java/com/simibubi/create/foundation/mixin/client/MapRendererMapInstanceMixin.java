@@ -32,12 +32,4 @@ public class MapRendererMapInstanceMixin {
 			renderer.render(poseStack, bufferSource, active, packedLight, data, index);
 		}
 	}
-
-	@Group(name = "custom_decoration_rendering")
-	@Inject(method = "draw(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ZI)V", at = @At(value = "FIELD", target = "net/optifine/reflect/Reflector.ForgeMapDecoration_render:Lnet/optifine/reflect/ReflectorMethod;", opcode = Opcodes.GETSTATIC, ordinal = 1, remap = false), locals = LocalCapture.CAPTURE_FAILHARD)
-	private void create$onDrawOptifine(PoseStack poseStack, MultiBufferSource bufferSource, boolean active, int packedLight, CallbackInfo ci, int i, int j, float f, Matrix4f matrix4f, VertexConsumer vertexConsumer, int index, Iterator<MapDecoration> iterator, MapDecoration decoration) {
-		if (decoration instanceof CustomRenderedMapDecoration renderer) {
-			renderer.render(poseStack, bufferSource, active, packedLight, data, index);
-		}
-	}
 }

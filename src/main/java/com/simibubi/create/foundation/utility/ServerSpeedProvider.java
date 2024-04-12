@@ -4,7 +4,6 @@ import com.simibubi.create.AllPackets;
 import com.simibubi.create.foundation.networking.SimplePacketBase;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat.Chaser;
-import com.simibubi.create.infrastructure.config.AllConfigs;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
@@ -39,8 +38,8 @@ public class ServerSpeedProvider {
 		clientTimer++;
 	}
 
-	public static Integer getSyncInterval() {
-		return AllConfigs.server().tickrateSyncTimer.get();
+	public static int getSyncInterval() {
+		return 20;
 	}
 
 	public static float get() {

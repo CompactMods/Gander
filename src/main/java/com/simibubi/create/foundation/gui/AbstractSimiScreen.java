@@ -1,8 +1,5 @@
 package com.simibubi.create.foundation.gui;
 
-import java.util.Collection;
-import java.util.List;
-
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.foundation.gui.widget.AbstractSimiWidget;
@@ -13,11 +10,12 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+
+import java.util.List;
 
 @OnlyIn(Dist.CLIENT)
 public abstract class AbstractSimiScreen extends Screen {
@@ -32,22 +30,6 @@ public abstract class AbstractSimiScreen extends Screen {
 
 	protected AbstractSimiScreen() {
 		this(Components.immutableEmpty());
-	}
-
-	/**
-	 * This method must be called before {@code super.init()}!
-	 */
-	protected void setWindowSize(int width, int height) {
-		windowWidth = width;
-		windowHeight = height;
-	}
-
-	/**
-	 * This method must be called before {@code super.init()}!
-	 */
-	protected void setWindowOffset(int xOffset, int yOffset) {
-		windowXOffset = xOffset;
-		windowYOffset = yOffset;
 	}
 
 	@Override
@@ -73,42 +55,17 @@ public abstract class AbstractSimiScreen extends Screen {
 			setFocused(null);
 		return super.mouseClicked(pMouseX, pMouseY, pButton);
 	}
-	
+
 	@Override
 	public boolean isPauseScreen() {
 		return false;
-	}
-
-	@SuppressWarnings("unchecked")
-	protected <W extends GuiEventListener & Renderable & NarratableEntry> void addRenderableWidgets(W... widgets) {
-		for (W widget : widgets) {
-			addRenderableWidget(widget);
-		}
-	}
-
-	protected <W extends GuiEventListener & Renderable & NarratableEntry> void addRenderableWidgets(Collection<W> widgets) {
-		for (W widget : widgets) {
-			addRenderableWidget(widget);
-		}
-	}
-
-	protected void removeWidgets(GuiEventListener... widgets) {
-		for (GuiEventListener widget : widgets) {
-			removeWidget(widget);
-		}
-	}
-
-	protected void removeWidgets(Collection<? extends GuiEventListener> widgets) {
-		for (GuiEventListener widget : widgets) {
-			removeWidget(widget);
-		}
 	}
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		partialTicks = minecraft.getFrameTime();
 		PoseStack ms = graphics.pose();
-		
+
 		ms.pushPose();
 
 		prepareFrame();
@@ -170,7 +127,7 @@ public abstract class AbstractSimiScreen extends Screen {
 	@Override
 	public GuiEventListener getFocused() {
 		GuiEventListener focused = super.getFocused();
-		if (focused instanceof AbstractWidget && !((AbstractWidget) focused).isFocused())
+		if (focused instanceof AbstractWidget && !focused.isFocused())
 			focused = null;
 		setFocused(focused);
 		return focused;

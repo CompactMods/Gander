@@ -1,7 +1,5 @@
 {
   "values": [
-    "create:blaze_burner",
-    "create:lit_blaze_burner",
     "minecraft:magma_block",
     "minecraft:lava",
     "#minecraft:campfires",

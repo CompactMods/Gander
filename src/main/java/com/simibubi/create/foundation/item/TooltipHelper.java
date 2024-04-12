@@ -6,7 +6,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.google.common.base.Strings;
-import com.simibubi.create.content.equipment.goggles.IHaveGoggleInformation;
 import com.simibubi.create.foundation.utility.Components;
 import com.simibubi.create.foundation.utility.Couple;
 import com.simibubi.create.foundation.utility.Lang;
@@ -22,24 +21,6 @@ public class TooltipHelper {
 
 	public static final int MAX_WIDTH_PER_LINE = 200;
 
-	public static MutableComponent holdShift(Palette palette, boolean highlighted) {
-		return Lang.translateDirect("tooltip.holdForDescription", Lang.translateDirect("tooltip.keyShift")
-			.withStyle(ChatFormatting.GRAY))
-			.withStyle(ChatFormatting.DARK_GRAY);
-	}
-
-	public static void addHint(List<Component> tooltip, String hintKey, Object... messageParams) {
-		Component spacing = IHaveGoggleInformation.componentSpacing;
-		tooltip.add(spacing.plainCopy()
-			.append(Lang.translateDirect(hintKey + ".title"))
-			.withStyle(ChatFormatting.GOLD));
-		Component hint = Lang.translateDirect(hintKey);
-		List<Component> cutComponent = cutTextComponent(hint, Palette.GRAY_AND_WHITE);
-		for (Component component : cutComponent)
-			tooltip.add(spacing.plainCopy()
-				.append(component));
-	}
-
 	public static String makeProgressBar(int length, int filledLength) {
 		String bar = " ";
 		int emptySpaces = length - filledLength;
@@ -53,7 +34,7 @@ public class TooltipHelper {
 	public static Style styleFromColor(ChatFormatting color) {
 		return Style.EMPTY.applyFormat(color);
 	}
-	
+
 	public static Style styleFromColor(int hex) {
 		return Style.EMPTY.withColor(hex);
 	}

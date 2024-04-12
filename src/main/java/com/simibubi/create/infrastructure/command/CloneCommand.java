@@ -7,7 +7,6 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.Dynamic2CommandExceptionType;
-import com.simibubi.create.content.contraptions.glue.SuperGlueEntity;
 import com.simibubi.create.foundation.utility.Components;
 
 import net.minecraft.commands.CommandSourceStack;
@@ -23,8 +22,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.pattern.BlockInWorld;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 
 public class CloneCommand {
 
@@ -74,29 +71,12 @@ public class CloneCommand {
 			destinationArea.minY() - sourceArea.minY(), destinationArea.minZ() - sourceArea.minZ());
 
 		int blockPastes = cloneBlocks ? cloneBlocks(sourceArea, world, diffToTarget) : 0;
-		int gluePastes = cloneGlue(sourceArea, world, diffToTarget);
 
 		if (cloneBlocks)
 			source.sendSuccess(() -> Components.literal("Successfully cloned " + blockPastes + " Blocks"), true);
 
-		source.sendSuccess(() -> Components.literal("Successfully applied glue " + gluePastes + " times"), true);
-		return blockPastes + gluePastes;
+		return blockPastes;
 
-	}
-
-	private static int cloneGlue(BoundingBox sourceArea, ServerLevel world, BlockPos diffToTarget) {
-		int gluePastes = 0;
-
-		AABB bb = new AABB(sourceArea.minX(), sourceArea.minY(), sourceArea.minZ(), sourceArea.maxX() + 1,
-			sourceArea.maxY() + 1, sourceArea.maxZ() + 1);
-		for (SuperGlueEntity g : SuperGlueEntity.collectCropped(world, bb)) {
-			g.setPos(g.position()
-				.add(Vec3.atLowerCornerOf(diffToTarget)));
-			world.addFreshEntity(g);
-			gluePastes++;
-		}
-
-		return gluePastes;
 	}
 
 	private static int cloneBlocks(BoundingBox sourceArea, ServerLevel world, BlockPos diffToTarget) {

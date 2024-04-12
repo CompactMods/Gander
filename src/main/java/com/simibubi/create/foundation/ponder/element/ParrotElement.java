@@ -6,7 +6,6 @@ import com.jozufozu.flywheel.lib.transform.TransformStack;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.Create;
-import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.ponder.PonderScene;
 import com.simibubi.create.foundation.ponder.PonderWorld;
 import com.simibubi.create.foundation.ponder.ui.PonderUI;
@@ -202,27 +201,6 @@ public class ParrotElement extends AnimatedSceneElement {
 			entity.flapSpeed = Mth.sin(f) + 1;
 			if (length == 0)
 				entity.flapSpeed = 0;
-		}
-
-	}
-
-	public static class SpinOnComponentPose extends ParrotPose {
-
-		private BlockPos componentPos;
-
-		public SpinOnComponentPose(BlockPos componentPos) {
-			this.componentPos = componentPos;
-		}
-
-		@Override
-		void tick(PonderScene scene, Parrot entity, Vec3 location) {
-			BlockEntity blockEntity = scene.getWorld()
-				.getBlockEntity(componentPos);
-			if (!(blockEntity instanceof KineticBlockEntity))
-				return;
-			float rpm = ((KineticBlockEntity) blockEntity).getSpeed();
-			entity.yRotO = entity.getYRot();
-			entity.setYRot(entity.getYRot() + (rpm * .3f));
 		}
 
 	}

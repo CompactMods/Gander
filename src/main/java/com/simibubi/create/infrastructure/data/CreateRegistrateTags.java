@@ -5,13 +5,10 @@ import com.simibubi.create.AllTags.AllEntityTags;
 import com.simibubi.create.AllTags.AllFluidTags;
 import com.simibubi.create.AllTags.AllItemTags;
 import com.simibubi.create.Create;
-import com.simibubi.create.foundation.data.TagGen;
 import com.simibubi.create.foundation.data.TagGen.CreateTagsProvider;
-import com.simibubi.create.foundation.data.recipe.Mods;
 import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.providers.RegistrateTagsProvider;
 
-import net.minecraft.data.tags.TagsProvider.TagAppender;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.EntityType;
@@ -33,7 +30,7 @@ public class CreateRegistrateTags {
 
 	private static void genBlockTags(RegistrateTagsProvider<Block> provIn) {
 		CreateTagsProvider<Block> prov = new CreateTagsProvider<>(provIn, Block::builtInRegistryHolder);
-		
+
 		prov.tag(AllBlockTags.BRITTLE.tag)
 			.add(Blocks.BELL, Blocks.COCOA, Blocks.FLOWER_POT)
 			.addTag(BlockTags.BEDS)
@@ -92,13 +89,6 @@ public class CreateRegistrateTags {
 			.addTag(BlockTags.PRESSURE_PLATES)
 			.addTag(BlockTags.RAILS);
 
-		// COMPAT
-
-		TagGen.addOptional(prov.tag(AllBlockTags.NON_MOVABLE.tag), Mods.IE,
-				"connector_lv", "connector_lv_relay", "connector_mv", "connector_mv_relay",
-				"connector_hv", "connector_hv_relay", "connector_bundled", "connector_structural",
-				"connector_redstone", "connector_probe", "breaker_switch");
-
 		// VALIDATE
 
 		for (AllBlockTags tag : AllBlockTags.values()) {
@@ -110,7 +100,7 @@ public class CreateRegistrateTags {
 
 	private static void genItemTags(RegistrateTagsProvider<Item> provIn) {
 		CreateTagsProvider<Item> prov = new CreateTagsProvider<>(provIn, Item::builtInRegistryHolder);
-		
+
 		prov.tag(AllItemTags.SLEEPERS.tag)
 			.add(Items.STONE_SLAB, Items.SMOOTH_STONE_SLAB, Items.ANDESITE_SLAB);
 
@@ -121,7 +111,7 @@ public class CreateRegistrateTags {
 		prov.tag(AllItemTags.STRIPPED_WOOD.tag)
 			.addTag(AllItemTags.VANILLA_STRIPPED_WOOD.tag)
 			.addTag(AllItemTags.MODDED_STRIPPED_WOOD.tag);
-		
+
 		prov.tag(AllItemTags.DEPLOYABLE_DRINK.tag)
 			.add(Items.MILK_BUCKET, Items.POTION);
 
@@ -148,10 +138,6 @@ public class CreateRegistrateTags {
 		prov.tag(Tags.Items.INGOTS)
 			.addTag(AllItemTags.CREATE_INGOTS.tag);
 
-		// COMPAT
-
-		genStrippedWoodItemTags(prov);
-
 		// VALIDATE
 
 		for (AllItemTags tag : AllItemTags.values()) {
@@ -161,45 +147,9 @@ public class CreateRegistrateTags {
 		}
 	}
 
-	private static void genStrippedWoodItemTags(CreateTagsProvider<Item> prov) {
-		TagAppender<Item> logAppender = prov.tag(AllItemTags.MODDED_STRIPPED_LOGS.tag);
-		TagAppender<Item> woodAppender = prov.tag(AllItemTags.MODDED_STRIPPED_WOOD.tag);
-		StrippedWoodHelper helper = new StrippedWoodHelper(logAppender, woodAppender);
-
-		helper.add(Mods.ARS_N, "blue_archwood", "purple_archwood", "green_archwood", "red_archwood");
-		helper.add(Mods.BTN, "livingwood", "dreamwood");
-		helper.add(Mods.FA, "cherrywood", "mysterywood");
-		helper.add(Mods.HEX, "akashic");
-		helper.add(Mods.ID, "menril");
-		helper.add(Mods.BYG, "aspen", "baobab", "enchanted", "cherry", "cika", "cypress", "ebony", "ether",
-			"fir", "green_enchanted", "holly", "jacaranda", "lament", "mahogany", "mangrove", "maple", "nightshade",
-			"palm", "palo_verde", "pine", "rainbow_eucalyptus", "redwood", "skyris", "willow", "witch_hazel",
-			"zelkova");
-		helper.add(Mods.SG, "netherwood");
-		helper.add(Mods.TF, "twilight_oak", "canopy", "mangrove", "dark", "time", "transformation", "mining",
-			"sorting");
-		helper.add(Mods.TIC, "greenheart", "skyroot", "bloodshroom");
-		helper.add(Mods.AP, "twisted");
-		helper.add(Mods.Q, "azalea", "blossom");
-		helper.add(Mods.ECO, "coconut", "walnut", "azalea");
-		helper.add(Mods.BOP, "fir", "redwood", "cherry", "mahogany", "jacaranda", "palm", "willow", "dead",
-			"magic", "umbran", "hellbark");
-		helper.add(Mods.BSK, "bluebright", "starlit", "frostbright", "lunar", "dusk", "maple", "cherry");
-		helper.add(Mods.ENV, "cherry", "willow", "wisteria");
-		helper.add(Mods.ATM, "aspen", "kousa", "yucca", "morado");
-		helper.add(Mods.ATM_2, "rosewood", "grimwood");
-		helper.add(Mods.GOOD, "muddy_oak", "cypress");
-		helper.add(Mods.BMK, "blighted_balsa", "willow", "swamp_cypress", "ancient_oak");
-
-		TagGen.addOptional(logAppender, Mods.IX, "stripped_luminous_stem");
-		TagGen.addOptional(woodAppender, Mods.IX, "stripped_luminous_hyphae");
-		TagGen.addOptional(logAppender, Mods.BYG, "stripped_bulbis_stem");
-		TagGen.addOptional(woodAppender, Mods.BYG, "stripped_bulbis_wood");
-	}
-
 	private static void genFluidTags(RegistrateTagsProvider<Fluid> provIn) {
 		CreateTagsProvider<Fluid> prov = new CreateTagsProvider<>(provIn, Fluid::builtInRegistryHolder);
-		
+
 		prov.tag(AllFluidTags.BOTTOMLESS_ALLOW.tag)
 			.add(Fluids.WATER, Fluids.LAVA);
 
@@ -220,7 +170,7 @@ public class CreateRegistrateTags {
 
 	private static void genEntityTags(RegistrateTagsProvider<EntityType<?>> provIn) {
 		CreateTagsProvider<EntityType<?>> prov = new CreateTagsProvider<>(provIn, EntityType::builtInRegistryHolder);
-		
+
 		prov.tag(AllEntityTags.BLAZE_BURNER_CAPTURABLE.tag)
 			.add(EntityType.BLAZE);
 
@@ -229,25 +179,6 @@ public class CreateRegistrateTags {
 		for (AllEntityTags tag : AllEntityTags.values()) {
 			if (tag.alwaysDatagen) {
 				prov.getOrCreateRawBuilder(tag.tag);
-			}
-		}
-	}
-
-	private static class StrippedWoodHelper {
-		protected final TagAppender<Item> logAppender;
-		protected final TagAppender<Item> woodAppender;
-
-		public StrippedWoodHelper(TagAppender<Item> logAppender, TagAppender<Item> woodAppender) {
-			this.logAppender = logAppender;
-			this.woodAppender = woodAppender;
-		}
-
-		public void add(Mods mod, String... woodTypes) {
-			for (String type : woodTypes) {
-				String strippedPre = mod.strippedIsSuffix ? "" : "stripped_";
-				String strippedPost = mod.strippedIsSuffix ? "_stripped" : "";
-				TagGen.addOptional(logAppender, mod, strippedPre + type + "_log" + strippedPost);
-				TagGen.addOptional(woodAppender, mod, strippedPre + type + (mod.omitWoodSuffix ? "" : "_wood") + strippedPost);
 			}
 		}
 	}

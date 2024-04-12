@@ -1,12 +1,8 @@
 package com.simibubi.create.foundation.gui;
 
 import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.platform.GlConst;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -42,21 +38,6 @@ public class UIRenderHelper {
 			framebuffer.resize(mainWindow.getWidth(), mainWindow.getHeight(), Minecraft.ON_OSX);
 	}
 
-	public static void drawFramebuffer(float alpha) {
-		framebuffer.renderWithAlpha(alpha);
-	}
-
-	/**
-	 * Switch from src to dst, after copying the contents of src to dst.
-	 */
-	public static void swapAndBlitColor(RenderTarget src, RenderTarget dst) {
-		GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, src.frameBufferId);
-		GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, dst.frameBufferId);
-		GlStateManager._glBlitFrameBuffer(0, 0, src.viewWidth, src.viewHeight, 0, 0, dst.viewWidth, dst.viewHeight, GL30.GL_COLOR_BUFFER_BIT, GL20.GL_LINEAR);
-
-		GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, dst.frameBufferId);
-	}
-
 	public static void streak(GuiGraphics graphics, float angle, int x, int y, int breadth, int length) {
 		streak(graphics, angle, x, y, breadth, length, Theme.i(Theme.Key.STREAK));
 	}
@@ -68,7 +49,7 @@ public class UIRenderHelper {
 		int a1 = 0xa0 << 24;
 		int a2 = 0x80 << 24;
 		int a3 = 0x10 << 24;
-		int a4 = 0x00 << 24;
+		int a4 = 0;
 
 		color &= 0x00FFFFFF;
 		int c1 = a1 | color;
@@ -86,50 +67,12 @@ public class UIRenderHelper {
 		ms.popPose();
 	}
 
-	public static void streak(GuiGraphics graphics, float angle, int x, int y, int breadth, int length, Color c) {
-		Color color = c.copy().setImmutable();
-		int c1 = color.scaleAlpha(0.625f).getRGB();
-		int c2 = color.scaleAlpha(0.5f).getRGB();
-		int c3 = color.scaleAlpha(0.0625f).getRGB();
-		int c4 = color.scaleAlpha(0f).getRGB();
-
-		PoseStack ms = graphics.pose();
-		ms.pushPose();
-		ms.translate(x, y, 0);
-		ms.mulPose(Axis.ZP.rotationDegrees(angle - 90));
-
-		streak(graphics, breadth / 2, length, c1, c2, c3, c4);
-
-		ms.popPose();
-	}
-
 	private static void streak(GuiGraphics graphics, int width, int height, int c1, int c2, int c3, int c4) {
 		double split1 = .5;
 		double split2 = .75;
 		graphics.fillGradient(-width, 0, width, (int) (split1 * height), 0, c1, c2);
 		graphics.fillGradient(-width, (int) (split1 * height), width, (int) (split2 * height), 0, c2, c3);
 		graphics.fillGradient(-width, (int) (split2 * height), width, height, 0, c3, c4);
-	}
-
-	/**
-	 * @see #angledGradient(MatrixStack, float, int, int, int, int, int, Color, Color)
-	 */
-	public static void angledGradient(GuiGraphics graphics, float angle, int x, int y, int breadth, int length, Couple<Color> c) {
-		angledGradient(graphics, angle, x, y, 0, breadth, length, c);
-	}
-
-	/**
-	 * @see #angledGradient(MatrixStack, float, int, int, int, int, int, Color, Color)
-	 */
-	public static void angledGradient(GuiGraphics graphics, float angle, int x, int y, int z, int breadth, int length, Couple<Color> c) {
-		angledGradient(graphics, angle, x, y, z, breadth, length, c.getFirst(), c.getSecond());
-	}
-
-	/**
-	 * @see #angledGradient(MatrixStack, float, int, int, int, int, int, Color, Color)
-	 */
-	public static void angledGradient(GuiGraphics graphics, float angle, int x, int y, int breadth, int length, Color color1, Color color2) {
-		angledGradient(graphics, angle, x, y, 0, breadth, length, color1, color2);
 	}
 
 	/**
@@ -243,20 +186,6 @@ public class UIRenderHelper {
 
 	public static void drawColoredTexture(GuiGraphics graphics, Color c, int x, int y, int z, float tex_left, float tex_top, int width, int height, int sheet_width, int sheet_height) {
 		drawColoredTexture(graphics, c, x, x + width, y, y + height, z, width, height, tex_left, tex_top, sheet_width, sheet_height);
-	}
-
-	public static void drawStretched(GuiGraphics graphics, int left, int top, int w, int h, int z, AllGuiTextures tex) {
-		tex.bind();
-		drawTexturedQuad(graphics.pose().last()
-			.pose(), Color.WHITE, left, left + w, top, top + h, z, tex.startX / 256f, (tex.startX + tex.width) / 256f,
-			tex.startY / 256f, (tex.startY + tex.height) / 256f);
-	}
-
-	public static void drawCropped(GuiGraphics graphics, int left, int top, int w, int h, int z, AllGuiTextures tex) {
-		tex.bind();
-		drawTexturedQuad(graphics.pose().last()
-			.pose(), Color.WHITE, left, left + w, top, top + h, z, tex.startX / 256f, (tex.startX + w) / 256f,
-			tex.startY / 256f, (tex.startY + h) / 256f);
 	}
 
 	private static void drawColoredTexture(GuiGraphics graphics, Color c, int left, int right, int top, int bot, int z, int tex_width, int tex_height, float tex_left, float tex_top, int sheet_width, int sheet_height) {

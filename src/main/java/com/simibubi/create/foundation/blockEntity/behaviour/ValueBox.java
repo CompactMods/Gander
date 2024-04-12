@@ -1,9 +1,7 @@
 package com.simibubi.create.foundation.blockEntity.behaviour;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.simibubi.create.content.logistics.filter.FilterItem;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueBoxTransform.Sided;
-import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.INamedIconOptions;
 import com.simibubi.create.foundation.gui.AllIcons;
 import com.simibubi.create.foundation.outliner.ChasingAABBOutline;
 import com.simibubi.create.foundation.render.SuperRenderTypeBuffer;
@@ -30,7 +28,7 @@ public class ValueBox extends ChasingAABBOutline {
 	protected Vec3 labelOffset = Vec3.ZERO;
 
 	public int overrideColor = -1;
-	
+
 	public boolean isPassive;
 
 	protected BlockPos pos;
@@ -64,7 +62,7 @@ public class ValueBox extends ChasingAABBOutline {
 		this.isPassive = passive;
 		return this;
 	}
-	
+
 	public ValueBox withColor(int color) {
 		this.overrideColor = color;
 		return this;
@@ -94,7 +92,7 @@ public class ValueBox extends ChasingAABBOutline {
 		float fontScale = hasTransform ? -transform.getFontScale() : -1 / 64f;
 		ms.scale(fontScale, fontScale, fontScale);
 		renderContents(ms, buffer);
-		
+
 		ms.popPose();
 	}
 
@@ -134,7 +132,6 @@ public class ValueBox extends ChasingAABBOutline {
 			Component countString = Components.literal(wildcard ? "*" : count + "");
 			ms.translate(17.5f, -5f, 7f);
 
-			boolean isFilter = stack.getItem() instanceof FilterItem;
 			boolean isEmpty = stack.isEmpty();
 
 			ItemRenderer itemRenderer = Minecraft.getInstance()
@@ -146,9 +143,7 @@ public class ValueBox extends ChasingAABBOutline {
 			float scale = 1.5f;
 			ms.translate(-font.width(countString), 0, 0);
 
-			if (isFilter)
-				ms.translate(-5, 8, 7.25f);
-			else if (isEmpty) {
+			if (isEmpty) {
 				ms.translate(-15, -1f, -2.75f);
 				scale = 1.65f;
 			} else
@@ -158,7 +153,7 @@ public class ValueBox extends ChasingAABBOutline {
 				ms.translate(-1, 3f, 0);
 
 			ms.scale(scale, scale, scale);
-			drawString(ms, buffer, countString, 0, 0, isFilter ? 0xFFFFFF : 0xEDEDED);
+			drawString(ms, buffer, countString, 0, 0, 0xEDEDED);
 			ms.translate(0, 0, -1 / 16f);
 			drawString(ms, buffer, countString, 1 - 1 / 8f, 1 - 1 / 8f, 0x4F4F4F);
 		}
@@ -198,27 +193,6 @@ public class ValueBox extends ChasingAABBOutline {
 
 			int overrideColor = transform.getOverrideColor();
 			renderHoveringText(ms, buffer, text, overrideColor != -1 ? overrideColor : 0xEDEDED);
-		}
-
-	}
-
-	public static class IconValueBox extends ValueBox {
-		AllIcons icon;
-
-		public IconValueBox(Component label, INamedIconOptions iconValue, AABB bb, BlockPos pos) {
-			super(label, bb, pos);
-			icon = iconValue.getIcon();
-		}
-
-		@Override
-		public void renderContents(PoseStack ms, MultiBufferSource buffer) {
-			super.renderContents(ms, buffer);
-			float scale = 2 * 16;
-			ms.scale(scale, scale, scale);
-			ms.translate(-.5f, -.5f, 5 / 32f);
-			
-			int overrideColor = transform.getOverrideColor();
-			icon.render(ms, buffer, overrideColor != -1 ? overrideColor : 0xFFFFFF);
 		}
 
 	}

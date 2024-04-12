@@ -45,11 +45,6 @@ public class InputWindowElement extends AnimatedOverlayElement {
 		return this;
 	}
 
-	public InputWindowElement withWrench() {
-		item = AllItems.WRENCH.asStack();
-		return this;
-	}
-
 	public InputWindowElement scroll() {
 		icon = AllIcons.I_SCROLL;
 		return this;

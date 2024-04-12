@@ -1,7 +1,5 @@
 package com.simibubi.create.foundation.block;
 
-import com.simibubi.create.content.decoration.slidingDoor.SlidingDoorBlock;
-import com.simibubi.create.content.trains.track.TrackBlock;
 import com.simibubi.create.foundation.utility.AnimationTickHolder;
 import com.simibubi.create.foundation.utility.RaycastHelper;
 import com.simibubi.create.foundation.utility.VecHelper;
@@ -11,7 +9,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -47,11 +44,6 @@ public class BigOutlines {
 					p.set(pos.getX() + x, pos.getY(), pos.getZ() + z);
 					BlockState blockState = mc.level.getBlockState(p);
 
-					// Could be a dedicated interface for big blocks
-					if (!(blockState.getBlock() instanceof TrackBlock)
-						&& !(blockState.getBlock() instanceof SlidingDoorBlock))
-						continue;
-
 					BlockHitResult hit = blockState.getInteractionShape(mc.level, p)
 						.clip(origin, target, p.immutable());
 					if (hit == null)
@@ -84,17 +76,4 @@ public class BigOutlines {
 		if (result != null)
 			mc.hitResult = result;
 	}
-
-	static boolean isValidPos(Player player, BlockPos pos) {
-		// verify that the server will accept the fake result
-		double x = player.getX() - (pos.getX() + .5);
-		double y = player.getY() - (pos.getY() + .5) + 1.5;
-		double z = player.getZ() - (pos.getZ() + .5);
-		double distSqr = x * x + y * y + z * z;
-		double maxDist = player.getAttribute(ForgeMod.BLOCK_REACH.get())
-			.getValue() + 1;
-		maxDist *= maxDist;
-		return distSqr <= maxDist;
-	}
-
 }

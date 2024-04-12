@@ -2,7 +2,6 @@ package com.simibubi.create.foundation.blockEntity.behaviour;
 
 import java.util.ConcurrentModificationException;
 
-import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 
 import net.minecraft.core.BlockPos;
@@ -10,7 +9,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
 
 public abstract class BlockEntityBehaviour {
 
@@ -47,18 +45,6 @@ public abstract class BlockEntityBehaviour {
 
 	public boolean isSafeNBT() {
 		return false;
-	}
-
-	public ItemRequirement getRequiredItems() {
-		return ItemRequirement.NONE;
-	}
-
-	public void onBlockChanged(BlockState oldState) {
-
-	}
-
-	public void onNeighborChanged(BlockPos neighborPos) {
-
 	}
 
 	/**

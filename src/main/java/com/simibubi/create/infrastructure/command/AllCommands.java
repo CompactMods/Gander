@@ -16,8 +16,6 @@ import net.minecraftforge.fml.loading.FMLLoader;
 
 public class AllCommands {
 
-	public static final Predicate<CommandSourceStack> SOURCE_IS_PLAYER = cs -> cs.getEntity() instanceof Player;
-
 	public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
 
 		LiteralCommandNode<CommandSourceStack> util = buildUtilityCommands();
@@ -25,27 +23,12 @@ public class AllCommands {
 		LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("create")
 				.requires(cs -> cs.hasPermission(0))
 				// general purpose
-				.then(new ToggleDebugCommand().register())
-				.then(FabulousWarningCommand.register())
-				.then(OverlayConfigCommand.register())
-				.then(DumpRailwaysCommand.register())
-				.then(FixLightingCommand.register())
-				.then(DebugInfoCommand.register())
 				.then(HighlightCommand.register())
-				.then(KillTrainCommand.register())
-				.then(PassengerCommand.register())
-				.then(CouplingCommand.register())
-				.then(ConfigCommand.register())
 				.then(PonderCommand.register())
 				.then(CloneCommand.register())
-				.then(GlueCommand.register())
-
 
 				// utility
 				.then(util);
-
-		if (!FMLLoader.isProduction() && FMLLoader.getDist() == Dist.CLIENT)
-			root.then(CreateTestCommand.register());
 
 		LiteralCommandNode<CommandSourceStack> createRoot = dispatcher.register(root);
 
@@ -63,13 +46,7 @@ public class AllCommands {
 	private static LiteralCommandNode<CommandSourceStack> buildUtilityCommands() {
 
 		return Commands.literal("util")
-				.then(ReplaceInCommandBlocksCommand.register())
 				.then(ClearBufferCacheCommand.register())
-				.then(CameraDistanceCommand.register())
-				.then(CameraAngleCommand.register())
-				.then(FlySpeedCommand.register())
-				//.then(DebugValueCommand.register())
-				//.then(KillTPSCommand.register())
 				.build();
 
 	}

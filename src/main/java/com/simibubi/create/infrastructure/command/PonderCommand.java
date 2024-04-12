@@ -9,6 +9,8 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.simibubi.create.AllPackets;
 import com.simibubi.create.foundation.ponder.PonderRegistry;
 
+import com.simibubi.create.infrastructure.ponder.OpenPonderPacket;
+
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -49,7 +51,7 @@ public class PonderCommand {
 
 			AllPackets.getChannel().send(
 					PacketDistributor.PLAYER.with(() -> player),
-					new SConfigureConfigPacket(SConfigureConfigPacket.Actions.openPonder.name(), sceneId));
+					new OpenPonderPacket(sceneId));
 		}
 		return Command.SINGLE_SUCCESS;
 	}

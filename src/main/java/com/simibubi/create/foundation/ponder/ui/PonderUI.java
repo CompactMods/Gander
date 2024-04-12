@@ -44,7 +44,6 @@ import com.simibubi.create.foundation.utility.Pointing;
 import com.simibubi.create.foundation.utility.RegisteredObjects;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat.Chaser;
-import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.ponder.DebugScenes;
 import com.simibubi.create.infrastructure.ponder.PonderIndex;
 
@@ -109,7 +108,7 @@ public class PonderUI extends NavigatableSimiScreen {
 	private int index = 0;
 	private PonderTag referredToByTag;
 
-	private PonderButton left, right, scan, chap, userMode, close, replay, slowMode;
+	private PonderButton left, right, scan, userMode, close, replay;
 	private int skipCooling = 0;
 
 	private int extendedTickLength = 0;
@@ -222,10 +221,6 @@ public class PonderUI extends NavigatableSimiScreen {
 			}));
 		scan.atZLevel(600);
 
-		addRenderableWidget(slowMode = new PonderButton(width - 20 - 31, bY).showing(AllIcons.I_MTD_SLOW_MODE)
-			.enableFade(0, 5)
-			.withCallback(() -> setComfyReadingEnabled(!isComfyReadingEnabled())));
-
 		if (PonderIndex.editingModeActive()) {
 			addRenderableWidget(userMode = new PonderButton(width - 50 - 31, bY).showing(AllIcons.I_MTD_USER_MODE)
 				.enableFade(0, 5)
@@ -296,8 +291,7 @@ public class PonderUI extends NavigatableSimiScreen {
 		PonderScene activeScene = scenes.get(index);
 
 		extendedTickLength = 0;
-		if (isComfyReadingEnabled())
-			activeScene.forEachVisible(TextWindowElement.class, twe -> extendedTickLength = 2);
+		activeScene.forEachVisible(TextWindowElement.class, twe -> extendedTickLength = 2);
 
 		if (extendedTickTimer == 0) {
 			if (!identifyMode) {
@@ -452,7 +446,7 @@ public class PonderUI extends NavigatableSimiScreen {
 		PoseStack ms = graphics.pose();
 		ms.pushPose();
 		ms.translate(0, 0, -800);
-		
+
 		scene.getTransform()
 			.updateScreenParams(width, height, slide);
 		scene.getTransform()
@@ -462,7 +456,7 @@ public class PonderUI extends NavigatableSimiScreen {
 
 		scene.getTransform()
 			.updateSceneRVE(partialTicks);
-		
+
 		scene.renderScene(buffer, ms, partialTicks);
 		buffer.draw();
 
@@ -577,7 +571,7 @@ public class PonderUI extends NavigatableSimiScreen {
 		renderNavigationMenu(graphics);
 
 		PoseStack ms = graphics.pose();
-		
+
 		if (identifyMode) {
 			if (noWidgetsHovered && mouseY < height - 80) {
 				ms.pushPose();
@@ -612,11 +606,6 @@ public class PonderUI extends NavigatableSimiScreen {
 			else
 				userMode.dim();
 		}
-
-		if (isComfyReadingEnabled())
-			slowMode.flash();
-		else
-			slowMode.dim();
 
 		renderSceneOverlay(graphics, partialTicks, lazyIndexValue, indexDiff);
 
@@ -656,7 +645,7 @@ public class PonderUI extends NavigatableSimiScreen {
 
 	protected void renderPonderTags(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks, float fade, PonderScene activeScene) {
 		PoseStack ms = graphics.pose();
-		
+
 		// Tags
 		List<PonderTag> sceneTags = activeScene.getTags();
 		boolean highlightAll = sceneTags.contains(PonderTag.HIGHLIGHT_ALL);
@@ -701,7 +690,7 @@ public class PonderUI extends NavigatableSimiScreen {
 
 	protected void renderSceneOverlay(GuiGraphics graphics, float partialTicks, float lazyIndexValue, float indexDiff) {
 		PoseStack ms = graphics.pose();
-		
+
 		// Scene overlay
 		float scenePT = skipCooling > 0 ? 0 : partialTicks;
 		ms.pushPose();
@@ -714,7 +703,7 @@ public class PonderUI extends NavigatableSimiScreen {
 
 	protected void jumpToNextScene(GuiGraphics graphics, float partialTicks, PonderScene nextScene) {
 		PoseStack ms = graphics.pose();
-		
+
 		if (nextScene != null && nextUp.getValue() > 1 / 16f && !nextScene.getId()
 				.equals(Create.asResource("creative_motor_mojang"))) {
 			ms.pushPose();
@@ -743,8 +732,6 @@ public class PonderUI extends NavigatableSimiScreen {
 			graphics.drawCenteredString(font, Lang.translateDirect(NEXT), right.getX() + 10, tooltipY, tooltipColor);
 		if (replay.isHoveredOrFocused())
 			graphics.drawCenteredString(font, Lang.translateDirect(REPLAY), replay.getX() + 10, tooltipY, tooltipColor);
-		if (slowMode.isHoveredOrFocused())
-			graphics.drawCenteredString(font, Lang.translateDirect(SLOW_TEXT), slowMode.getX() + 5, tooltipY, tooltipColor);
 		if (PonderIndex.editingModeActive() && userMode.isHoveredOrFocused())
 			graphics.drawCenteredString(font, "Editor View", userMode.getX() + 10, tooltipY, tooltipColor);
 		ms.popPose();
@@ -752,7 +739,7 @@ public class PonderUI extends NavigatableSimiScreen {
 
 	protected void renderChapterTitle(GuiGraphics graphics, float fade, float indexDiff, PonderScene activeScene, int tooltipColor) {
 		PoseStack ms = graphics.pose();
-		
+
 		// Chapter title
 		ms.pushPose();
 		ms.translate(0, 0, 400);
@@ -789,7 +776,6 @@ public class PonderUI extends NavigatableSimiScreen {
 		if (chapter != null) {
 			ms.pushPose();
 
-			ms.translate(chap.getX() - 8, chap.getY(), 0);
 			UIRenderHelper.streak(graphics, 180, 4, 10, 26, (int) (150 * fade));
 
 			drawRightAlignedString(graphics, ms, Lang.translateDirect(IN_CHAPTER)
@@ -1040,13 +1026,4 @@ public class PonderUI extends NavigatableSimiScreen {
 	public void drawRightAlignedString(GuiGraphics graphics, PoseStack ms, String string, int x, int y, int color) {
 		graphics.drawString(font, string, (float) (x - font.width(string)), (float) y, color, false);
 	}
-
-	public boolean isComfyReadingEnabled() {
-		return AllConfigs.client().comfyReading.get();
-	}
-
-	public void setComfyReadingEnabled(boolean slowTextMode) {
-		AllConfigs.client().comfyReading.set(slowTextMode);
-	}
-
 }

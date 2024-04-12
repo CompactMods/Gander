@@ -4,10 +4,6 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import com.simibubi.create.content.contraptions.bearing.IBearingBlockEntity;
-import com.simibubi.create.content.contraptions.pulley.PulleyBlockEntity;
-import com.simibubi.create.content.kinetics.deployer.DeployerBlockEntity;
-import com.simibubi.create.content.trains.bogey.AbstractBogeyBlockEntity;
 import com.simibubi.create.foundation.ponder.PonderScene;
 import com.simibubi.create.foundation.ponder.PonderWorld;
 
@@ -23,36 +19,6 @@ public class AnimateBlockEntityInstruction extends TickingInstruction {
 
 	private BiConsumer<PonderWorld, Float> setter;
 	private Function<PonderWorld, Float> getter;
-
-	public static AnimateBlockEntityInstruction bearing(BlockPos location, float totalDelta, int ticks) {
-		return new AnimateBlockEntityInstruction(location, totalDelta, ticks,
-			(w, f) -> castIfPresent(w, location, IBearingBlockEntity.class).ifPresent(bte -> bte.setAngle(f)),
-			(w) -> castIfPresent(w, location, IBearingBlockEntity.class).map(bte -> bte.getInterpolatedAngle(0))
-				.orElse(0f));
-	}
-
-	public static AnimateBlockEntityInstruction bogey(BlockPos location, float totalDelta, int ticks) {
-		float movedPerTick = totalDelta / ticks;
-		return new AnimateBlockEntityInstruction(location, totalDelta, ticks,
-			(w, f) -> castIfPresent(w, location, AbstractBogeyBlockEntity.class)
-				.ifPresent(bte -> bte.animate(f.equals(totalDelta) ? 0 : movedPerTick)),
-			(w) -> 0f);
-	}
-
-	public static AnimateBlockEntityInstruction pulley(BlockPos location, float totalDelta, int ticks) {
-		return new AnimateBlockEntityInstruction(location, totalDelta, ticks,
-			(w, f) -> castIfPresent(w, location, PulleyBlockEntity.class).ifPresent(pulley -> pulley.animateOffset(f)),
-			(w) -> castIfPresent(w, location, PulleyBlockEntity.class).map(pulley -> pulley.offset)
-				.orElse(0f));
-	}
-
-	public static AnimateBlockEntityInstruction deployer(BlockPos location, float totalDelta, int ticks) {
-		return new AnimateBlockEntityInstruction(location, totalDelta, ticks,
-			(w, f) -> castIfPresent(w, location, DeployerBlockEntity.class)
-				.ifPresent(deployer -> deployer.setAnimatedOffset(f)),
-			(w) -> castIfPresent(w, location, DeployerBlockEntity.class).map(deployer -> deployer.getHandOffset(1))
-				.orElse(0f));
-	}
 
 	protected AnimateBlockEntityInstruction(BlockPos location, float totalDelta, int ticks,
 		BiConsumer<PonderWorld, Float> setter, Function<PonderWorld, Float> getter) {

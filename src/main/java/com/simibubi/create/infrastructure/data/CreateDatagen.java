@@ -6,17 +6,9 @@ import java.util.function.BiConsumer;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.Create;
-import com.simibubi.create.foundation.advancement.AllAdvancements;
-import com.simibubi.create.foundation.data.DamageTypeTagGen;
-import com.simibubi.create.foundation.data.recipe.MechanicalCraftingRecipeGen;
-import com.simibubi.create.foundation.data.recipe.ProcessingRecipeGen;
-import com.simibubi.create.foundation.data.recipe.SequencedAssemblyRecipeGen;
-import com.simibubi.create.foundation.data.recipe.StandardRecipeGen;
 import com.simibubi.create.foundation.ponder.PonderLocalization;
 import com.simibubi.create.foundation.utility.FilesHelper;
-import com.simibubi.create.infrastructure.ponder.AllPonderTags;
 import com.simibubi.create.infrastructure.ponder.GeneralText;
 import com.simibubi.create.infrastructure.ponder.PonderIndex;
 import com.simibubi.create.infrastructure.ponder.SharedText;
@@ -37,22 +29,8 @@ public class CreateDatagen {
 		CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 		ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
 
-		if (event.includeClient()) {
-			generator.addProvider(true, AllSoundEvents.provider(generator));
-		}
-
 		if (event.includeServer()) {
-			GeneratedEntriesProvider generatedEntriesProvider = new GeneratedEntriesProvider(output, lookupProvider);
-			lookupProvider = generatedEntriesProvider.getRegistryProvider();
-			generator.addProvider(true, generatedEntriesProvider);
-			
 			generator.addProvider(true, new CreateRecipeSerializerTagsProvider(output, lookupProvider, existingFileHelper));
-			generator.addProvider(true, new DamageTypeTagGen(output, lookupProvider, existingFileHelper));
-			generator.addProvider(true, new AllAdvancements(output));
-			generator.addProvider(true, new StandardRecipeGen(output));
-			generator.addProvider(true, new MechanicalCraftingRecipeGen(output));
-			generator.addProvider(true, new SequencedAssemblyRecipeGen(output));
-			ProcessingRecipeGen.registerAll(generator, output);
 		}
 	}
 
@@ -64,8 +42,6 @@ public class CreateDatagen {
 
 			provideDefaultLang("interface", langConsumer);
 			provideDefaultLang("tooltips", langConsumer);
-			AllAdvancements.provideLang(langConsumer);
-			AllSoundEvents.provideLang(langConsumer);
 			providePonderLang(langConsumer);
 		});
 	}
@@ -86,7 +62,6 @@ public class CreateDatagen {
 
 	private static void providePonderLang(BiConsumer<String, String> consumer) {
 		// Register these since FMLClientSetupEvent does not run during datagen
-		AllPonderTags.register();
 		PonderIndex.register();
 
 		SharedText.gatherText();

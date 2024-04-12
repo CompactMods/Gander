@@ -31,11 +31,11 @@ public abstract class NavigatableSimiScreen extends AbstractSimiScreen {
 
 	protected int depthPointX, depthPointY;
 	public final LerpedFloat transition = LerpedFloat.linear()
-		.startWithValue(0)
-		.chase(0, .1f, LerpedFloat.Chaser.LINEAR);
+			.startWithValue(0)
+			.chase(0, .1f, LerpedFloat.Chaser.LINEAR);
 	protected final LerpedFloat arrowAnimation = LerpedFloat.linear()
-		.startWithValue(0)
-		.chase(0, 0.075f, LerpedFloat.Chaser.LINEAR);
+			.startWithValue(0)
+			.chase(0, 0.075f, LerpedFloat.Chaser.LINEAR);
 	protected PonderButton backTrack;
 
 	public NavigatableSimiScreen() {
@@ -98,7 +98,7 @@ public abstract class NavigatableSimiScreen extends AbstractSimiScreen {
 		if (backTrack.isHoveredOrFocused()) {
 			MutableComponent translate = Lang.translateDirect(backTrackingLangKey());
 			graphics.drawString(font, translate, 41 - font.width(translate) / 2, height - 16,
-				Theme.i(Theme.Key.TEXT_DARKER), false);
+					Theme.i(Theme.Key.TEXT_DARKER), false);
 			if (Mth.equal(arrowAnimation.getValue(), arrowAnimation.getChaseTarget())) {
 				arrowAnimation.setValue(1);
 				arrowAnimation.setValue(1);// called twice to also set the previous value to 1
@@ -119,7 +119,7 @@ public abstract class NavigatableSimiScreen extends AbstractSimiScreen {
 
 			if (x + 30 < backTrack.getX())
 				UIRenderHelper.breadcrumbArrow(graphics, x + 30, height - 51, 0, maxX - (x + 30), 20, 5,
-					Theme.p(Theme.Key.PONDER_BACK_ARROW));
+						Theme.p(Theme.Key.PONDER_BACK_ARROW));
 
 			UIRenderHelper.breadcrumbArrow(graphics, x, height - 51, 0, 30, 20, 5, Theme.p(Theme.Key.PONDER_BACK_ARROW));
 			UIRenderHelper.breadcrumbArrow(graphics, x - 30, height - 51, 0, 30, 20, 5, Theme.p(Theme.Key.PONDER_BACK_ARROW));
@@ -133,17 +133,17 @@ public abstract class NavigatableSimiScreen extends AbstractSimiScreen {
 		renderBackground(graphics);
 
 		PoseStack ms = graphics.pose();
-		
+
 //		Screen lastScreen = ScreenOpener.getPreviouslyRenderedScreen();
 		float transitionValue = transition.getValue(partialTicks);
 		float scale = 1 + 0.5f * transitionValue;
 
-		
+
 		/*
 		 * Looks like this stopped working sometime before 1.18
 		 * Now commented as it does mess with the background alpha since 1.20
 		 */
-		
+
 		// draw last screen into buffer
 //		if (lastScreen != null && lastScreen != this && !transition.settled()) {
 //			ms.pushPose();
@@ -212,7 +212,8 @@ public abstract class NavigatableSimiScreen extends AbstractSimiScreen {
 		return false;
 	}
 
-	public void shareContextWith(NavigatableSimiScreen other) {}
+	public void shareContextWith(NavigatableSimiScreen other) {
+	}
 
 	protected void renderZeloBreadcrumbs(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		List<Screen> history = ScreenOpener.getScreenHistory();
@@ -223,12 +224,12 @@ public abstract class NavigatableSimiScreen extends AbstractSimiScreen {
 		int spacing = 20;
 
 		List<String> names = history.stream()
-			.map(NavigatableSimiScreen::screenTitle)
-			.collect(Collectors.toList());
+				.map(NavigatableSimiScreen::screenTitle)
+				.collect(Collectors.toList());
 
 		int bWidth = names.stream()
-			.mapToInt(s -> font.width(s) + spacing)
-			.sum();
+				.mapToInt(s -> font.width(s) + spacing)
+				.sum();
 
 		MutableInt x = new MutableInt(width - bWidth);
 		MutableInt y = new MutableInt(height - 18);
@@ -260,6 +261,6 @@ public abstract class NavigatableSimiScreen extends AbstractSimiScreen {
 
 	protected String getBreadcrumbTitle() {
 		return this.getClass()
-			.getSimpleName();
+				.getSimpleName();
 	}
 }

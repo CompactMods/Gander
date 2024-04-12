@@ -6,7 +6,6 @@ import com.simibubi.create.foundation.gui.Theme;
 import com.simibubi.create.foundation.gui.Theme.Key;
 import com.simibubi.create.foundation.gui.UIRenderHelper;
 import com.simibubi.create.foundation.gui.element.BoxElement;
-import com.simibubi.create.foundation.gui.element.DelegatedStencilElement;
 import com.simibubi.create.foundation.utility.Color;
 import com.simibubi.create.foundation.utility.Couple;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat;
@@ -14,8 +13,6 @@ import com.simibubi.create.foundation.utility.animation.LerpedFloat;
 import net.minecraft.client.gui.GuiGraphics;
 
 public class BoxWidget extends ElementWidget {
-
-	public static final Function<BoxWidget, DelegatedStencilElement.ElementRenderer> gradientFactory = (box) -> (ms, w, h, alpha) -> UIRenderHelper.angledGradient(ms, 90, w/2, -2, w + 4, h + 4, box.gradientColor1, box.gradientColor2);
 
 	protected BoxElement box;
 
