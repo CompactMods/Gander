@@ -12,7 +12,7 @@ import net.minecraftforge.fml.DistExecutor;
 
 public class ClearBufferCacheCommand {
 
-	static ArgumentBuilder<CommandSourceStack, ?> register() {
+	public static ArgumentBuilder<CommandSourceStack, ?> register() {
 		return Commands.literal("clearRenderBuffers")
 			.requires(cs -> cs.hasPermission(0))
 			.executes(ctx -> {

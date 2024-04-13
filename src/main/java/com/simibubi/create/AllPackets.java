@@ -6,8 +6,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.simibubi.create.infrastructure.command.HighlightCommand;
 import com.simibubi.create.networking.SimplePacketBase;
-import com.simibubi.create.infrastructure.command.HighlightPacket;
 import com.simibubi.create.infrastructure.ponder.OpenPonderPacket;
 
 import com.simibubi.create.utility.ServerSpeedProvider;
@@ -22,7 +22,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 public enum AllPackets {
 
 	SERVER_SPEED(ServerSpeedProvider.Packet.class, ServerSpeedProvider.Packet::new, PLAY_TO_CLIENT),
-	BLOCK_HIGHLIGHT(HighlightPacket.class, HighlightPacket::new, PLAY_TO_CLIENT),
+	BLOCK_HIGHLIGHT(HighlightCommand.HighlightPacket.class, HighlightCommand.HighlightPacket::new, PLAY_TO_CLIENT),
 	OPEN_PONDER_SCENE(OpenPonderPacket.class, OpenPonderPacket::new, PLAY_TO_CLIENT)
 
 	;

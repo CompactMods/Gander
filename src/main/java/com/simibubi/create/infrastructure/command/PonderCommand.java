@@ -5,6 +5,7 @@ import java.util.Collection;
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.ArgumentBuilder;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.simibubi.create.AllPackets;
 import com.simibubi.create.ponder.PonderRegistry;
@@ -25,7 +26,7 @@ import net.minecraftforge.network.PacketDistributor;
 public class PonderCommand {
 	public static final SuggestionProvider<CommandSourceStack> ITEM_PONDERS = SuggestionProviders.register(new ResourceLocation("all_ponders"), (iSuggestionProviderCommandContext, builder) -> SharedSuggestionProvider.suggestResource(PonderRegistry.ALL.keySet().stream(), builder));
 
-	static ArgumentBuilder<CommandSourceStack, ?> register() {
+	public static LiteralArgumentBuilder<CommandSourceStack> make() {
 		return Commands.literal("ponder")
 				.requires(cs -> cs.hasPermission(0))
 				.executes(ctx -> openScene("index", ctx.getSource().getPlayerOrException()))

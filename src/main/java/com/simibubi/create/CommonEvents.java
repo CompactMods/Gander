@@ -1,12 +1,13 @@
 package com.simibubi.create;
 
-import com.simibubi.create.Create;
-import com.simibubi.create.ModFilePackResources;
+import com.simibubi.create.infrastructure.command.ClearBufferCacheCommand;
+import com.simibubi.create.infrastructure.command.HighlightCommand;
+import com.simibubi.create.infrastructure.command.PonderCommand;
 import com.simibubi.create.utility.Components;
 import com.simibubi.create.utility.ServerSpeedProvider;
 import com.simibubi.create.utility.WorldAttached;
-import com.simibubi.create.infrastructure.command.AllCommands;
 
+import net.minecraft.commands.Commands;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.packs.repository.PackSource;
@@ -34,7 +35,16 @@ public class CommonEvents {
 
 	@SubscribeEvent
 	public static void registerCommands(RegisterCommandsEvent event) {
-		AllCommands.register(event.getDispatcher());
+		var dispatcher = event.getDispatcher();
+		var createRoot = Commands.literal("create")
+				.requires(cs -> cs.hasPermission(0))
+				.then(HighlightCommand.register())
+				.then(ClearBufferCacheCommand.register());
+
+		var ponderRoot = PonderCommand.make();
+
+		dispatcher.register(createRoot);
+		dispatcher.register(ponderRoot);
 	}
 
 	@SubscribeEvent
