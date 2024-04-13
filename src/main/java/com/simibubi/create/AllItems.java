@@ -1,6 +1,5 @@
 package com.simibubi.create;
 
-import static com.simibubi.create.AllTags.AllItemTags.CREATE_INGOTS;
 import static com.simibubi.create.AllTags.forgeItemTag;
 import static com.simibubi.create.Create.REGISTRATE;
 
@@ -12,8 +11,7 @@ import net.minecraft.world.item.Item;
 public class AllItems {
 	public static final ItemEntry<Item> BRASS_HAND = ingredient("brass_hand");
 
-	public static final ItemEntry<Item> BRASS_INGOT = taggedIngredient("brass_ingot",
-			forgeItemTag("ingots/brass"), CREATE_INGOTS.tag);
+	public static final ItemEntry<Item> BRASS_INGOT = taggedIngredient("brass_ingot", forgeItemTag("ingots/brass"));
 
 	private static ItemEntry<Item> ingredient(String name) {
 		return REGISTRATE.item(name, Item::new)

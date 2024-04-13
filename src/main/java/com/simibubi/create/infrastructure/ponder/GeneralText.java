@@ -3,9 +3,8 @@ package com.simibubi.create.infrastructure.ponder;
 import java.util.function.BiConsumer;
 
 import com.simibubi.create.Create;
-import com.simibubi.create.foundation.ponder.PonderTooltipHandler;
-import com.simibubi.create.foundation.ponder.ui.PonderTagScreen;
-import com.simibubi.create.foundation.ponder.ui.PonderUI;
+import com.simibubi.create.ponder.PonderTooltipHandler;
+import com.simibubi.create.ponder.ui.PonderUI;
 
 public class GeneralText {
 	public static void provideLang(BiConsumer<String, String> consumer) {
@@ -13,7 +12,6 @@ public class GeneralText {
 		consume(consumer, PonderTooltipHandler.SUBJECT, "Subject of this scene");
 		consume(consumer, PonderUI.PONDERING, "Pondering about...");
 		consume(consumer, PonderUI.IDENTIFY_MODE, "Identify mode active.\nUnpause with [%1$s]");
-		consume(consumer, PonderTagScreen.ASSOCIATED, "Associated Entries");
 
 		consume(consumer, PonderUI.CLOSE, "Close");
 		consume(consumer, PonderUI.IDENTIFY, "Identify");

@@ -1,12 +1,12 @@
 package com.simibubi.create.infrastructure.ponder;
 
 import com.simibubi.create.Create;
-import com.simibubi.create.foundation.gui.ScreenOpener;
-import com.simibubi.create.foundation.networking.SimplePacketBase;
+import com.simibubi.create.gui.ScreenOpener;
+import com.simibubi.create.networking.SimplePacketBase;
 
-import com.simibubi.create.foundation.ponder.PonderRegistry;
+import com.simibubi.create.ponder.PonderRegistry;
 
-import com.simibubi.create.foundation.ponder.ui.PonderUI;
+import com.simibubi.create.ponder.ui.PonderUI;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;

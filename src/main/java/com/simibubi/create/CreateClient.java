@@ -1,14 +1,13 @@
 package com.simibubi.create;
 
-import com.simibubi.create.foundation.ClientResourceReloadListener;
-import com.simibubi.create.foundation.gui.UIRenderHelper;
-import com.simibubi.create.foundation.outliner.Outliner;
-import com.simibubi.create.foundation.ponder.element.WorldSectionElement;
-import com.simibubi.create.foundation.render.CachedBufferer;
-import com.simibubi.create.foundation.render.StitchedSprite;
-import com.simibubi.create.foundation.render.SuperByteBufferCache;
-import com.simibubi.create.foundation.utility.Components;
-import com.simibubi.create.foundation.utility.ghost.GhostBlocks;
+import com.simibubi.create.ClientResourceReloadListener;
+import com.simibubi.create.gui.UIRenderHelper;
+import com.simibubi.create.outliner.Outliner;
+import com.simibubi.create.ponder.element.WorldSectionElement;
+import com.simibubi.create.render.CachedBufferer;
+import com.simibubi.create.render.StitchedSprite;
+import com.simibubi.create.render.SuperByteBufferCache;
+import com.simibubi.create.utility.Components;
 import com.simibubi.create.infrastructure.ponder.PonderIndex;
 
 import net.minecraft.ChatFormatting;
@@ -25,12 +24,10 @@ public class CreateClient {
 
 	public static final SuperByteBufferCache BUFFER_CACHE = new SuperByteBufferCache();
 	public static final Outliner OUTLINER = new Outliner();
-	public static final GhostBlocks GHOST_BLOCKS = new GhostBlocks();
 	public static final ClientResourceReloadListener RESOURCE_RELOAD_LISTENER = new ClientResourceReloadListener();
 
 	public static void onCtorClient(IEventBus modEventBus, IEventBus forgeEventBus) {
 		modEventBus.addListener(CreateClient::clientInit);
-		modEventBus.addListener(AllParticleTypes::registerFactories);
 		modEventBus.addListener(StitchedSprite::onTextureStitchPost);
 	}
 

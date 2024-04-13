@@ -7,7 +7,7 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.simibubi.create.AllPackets;
-import com.simibubi.create.foundation.ponder.PonderRegistry;
+import com.simibubi.create.ponder.PonderRegistry;
 
 import com.simibubi.create.infrastructure.ponder.OpenPonderPacket;
 

@@ -6,12 +6,11 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import com.simibubi.create.foundation.networking.ISyncPersistentData;
-import com.simibubi.create.foundation.networking.SimplePacketBase;
-import com.simibubi.create.foundation.utility.ServerSpeedProvider;
+import com.simibubi.create.networking.SimplePacketBase;
 import com.simibubi.create.infrastructure.command.HighlightPacket;
-import com.simibubi.create.infrastructure.debugInfo.ServerDebugInfoPacket;
 import com.simibubi.create.infrastructure.ponder.OpenPonderPacket;
+
+import com.simibubi.create.utility.ServerSpeedProvider;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;

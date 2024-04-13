@@ -2,29 +2,15 @@
   "required": true,
   "minVersion": "0.8",
   "priority": 1100,
-  "package": "com.simibubi.create.foundation.mixin",
+  "package": "com.simibubi.create.mixin",
   "compatibilityLevel": "JAVA_17",
   "refmap": "create.refmap.json",
   "mixins": [
     "CustomItemUseEffectsMixin",
-    "accessor.AbstractProjectileDispenseBehaviorAccessor",
-    "accessor.DispenserBlockAccessor",
-    "accessor.EntityAccessor",
-    "accessor.FallingBlockEntityAccessor",
-    "accessor.GameTestHelperAccessor",
-    "accessor.LivingEntityAccessor",
-    "accessor.NbtAccounterAccessor",
-    "accessor.ServerLevelAccessor",
-    "accessor.SystemReportAccessor"
+    "accessor.ParticleEngineAccessor"
   ],
   "client": [
-    "accessor.AgeableListModelAccessor",
-    "accessor.GameRendererAccessor",
-    "accessor.HumanoidArmorLayerAccessor",
-    "accessor.ParticleEngineAccessor",
-    "client.BlockDestructionProgressMixin",
     "client.LevelRendererMixin",
-    "client.MapRendererMapInstanceMixin",
     "client.WindowResizeMixin"
   ],
   "injectors": {

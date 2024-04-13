@@ -1,8 +1,7 @@
 package com.simibubi.create.infrastructure.command;
 
-import com.simibubi.create.AllSpecialTextures;
 import com.simibubi.create.CreateClient;
-import com.simibubi.create.foundation.networking.SimplePacketBase;
+import com.simibubi.create.networking.SimplePacketBase;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -47,9 +46,7 @@ public class HighlightPacket extends SimplePacketBase {
 				.bounds()
 				.move(pos), 200)
 				.lineWidth(1 / 32f)
-				.colored(0xEeEeEe)
-				// .colored(0x243B50)
-				.withFaceTexture(AllSpecialTextures.SELECTION);
+				.colored(0xEeEeEe);
 	}
 
 }

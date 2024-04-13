@@ -2,7 +2,7 @@ package com.simibubi.create.infrastructure.command;
 
 import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.simibubi.create.CreateClient;
-import com.simibubi.create.foundation.utility.Components;
+import com.simibubi.create.utility.Components;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

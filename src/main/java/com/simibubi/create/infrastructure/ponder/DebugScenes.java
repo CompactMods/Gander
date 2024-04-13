@@ -1,19 +1,19 @@
 package com.simibubi.create.infrastructure.ponder;
 
 import com.simibubi.create.AllItems;
-import com.simibubi.create.foundation.item.ItemHelper;
-import com.simibubi.create.foundation.ponder.ElementLink;
-import com.simibubi.create.foundation.ponder.PonderPalette;
-import com.simibubi.create.foundation.ponder.PonderStoryBoardEntry.PonderStoryBoard;
-import com.simibubi.create.foundation.ponder.SceneBuilder;
-import com.simibubi.create.foundation.ponder.SceneBuildingUtil;
-import com.simibubi.create.foundation.ponder.Selection;
-import com.simibubi.create.foundation.ponder.element.InputWindowElement;
-import com.simibubi.create.foundation.ponder.element.ParrotElement.DancePose;
-import com.simibubi.create.foundation.ponder.element.ParrotElement.FacePointOfInterestPose;
-import com.simibubi.create.foundation.ponder.element.WorldSectionElement;
-import com.simibubi.create.foundation.ponder.instruction.EmitParticlesInstruction.Emitter;
-import com.simibubi.create.foundation.utility.Pointing;
+import com.simibubi.create.ItemHelper;
+import com.simibubi.create.ponder.ElementLink;
+import com.simibubi.create.ponder.PonderPalette;
+import com.simibubi.create.ponder.PonderStoryBoard;
+import com.simibubi.create.ponder.SceneBuilder;
+import com.simibubi.create.ponder.SceneBuildingUtil;
+import com.simibubi.create.ponder.Selection;
+import com.simibubi.create.ponder.element.InputWindowElement;
+import com.simibubi.create.ponder.element.ParrotElement.DancePose;
+import com.simibubi.create.ponder.element.ParrotElement.FacePointOfInterestPose;
+import com.simibubi.create.ponder.element.WorldSectionElement;
+import com.simibubi.create.ponder.instruction.EmitParticlesInstruction.Emitter;
+import com.simibubi.create.utility.Pointing;
 import com.tterrag.registrate.util.entry.ItemEntry;
 
 import net.minecraft.core.BlockPos;
@@ -48,9 +48,7 @@ public class DebugScenes {
 	private static void add(PonderStoryBoard sb) {
 		ItemEntry<Item> item = AllItems.BRASS_HAND;
 		String schematicPath = "debug/scene_" + index;
-		PonderIndex.HELPER.addStoryBoard(item, schematicPath, sb)
-				.highlightAllTags()
-				.chapter(PonderIndex.HELPER.getOrCreateChapter("debug"));
+		PonderIndex.HELPER.addStoryBoard(item, schematicPath, sb);
 		index++;
 	}
 
@@ -94,10 +92,8 @@ public class DebugScenes {
 				.independent(10)
 				.text("Blocks can be modified");
 		scene.idle(20);
-		scene.world.replaceBlocks(util.select.fromTo(1, 1, 3, 2, 2, 4),
-				Blocks.STONE.defaultBlockState(), true);
-		scene.idle(10);
 		scene.world.replaceBlocks(util.select.position(3, 1, 1), Blocks.GOLD_BLOCK.defaultBlockState(), true);
+		scene.idle(5);
 		scene.rotateCameraY(180);
 		scene.markAsFinished();
 	}
@@ -128,7 +124,7 @@ public class DebugScenes {
 		for (int i = 0; i < 10; i++) {
 			scene.overlay.chaseBoundingBoxOutline(PonderPalette.RED, outlineSlot,
 					i % 2 == 0 ? boundingBox1 : boundingBox2, 15);
-			scene.idle(3);
+			scene.idle(1);
 			scene.special.movePointOfInterest(i % 2 == 0 ? poi1 : poi2);
 			scene.idle(12);
 		}

@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.logging.LogUtils;
-import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.simibubi.create.datagen.CreateDatagen;
 
 import net.minecraft.resources.ResourceLocation;
@@ -63,7 +62,6 @@ public class Create {
 		AllTags.init();
 		AllItems.register();
 		AllFluids.register();
-		AllParticleTypes.register(modEventBus);
 		AllPackets.registerPackets();
 
 		ForgeMod.enableMilkFluid();

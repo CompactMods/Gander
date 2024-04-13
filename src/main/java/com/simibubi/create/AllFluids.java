@@ -5,13 +5,14 @@ import static com.simibubi.create.Create.REGISTRATE;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import com.simibubi.create.utility.Color;
+
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.simibubi.create.AllTags.AllFluidTags;
-import com.simibubi.create.foundation.utility.Color;
 import com.tterrag.registrate.builders.FluidBuilder.FluidTypeFactory;
 import com.tterrag.registrate.util.entry.FluidEntry;
 
