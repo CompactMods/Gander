@@ -2,7 +2,6 @@ package com.simibubi.create.ponder.element;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.simibubi.create.AllItems;
 import com.simibubi.create.Create;
 import com.simibubi.create.gui.AllIcons;
 import com.simibubi.create.gui.element.GuiGameElement;

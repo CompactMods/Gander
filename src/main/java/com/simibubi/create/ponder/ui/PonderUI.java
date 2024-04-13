@@ -116,15 +116,6 @@ public class PonderUI extends NavigatableSimiScreen {
 			stack = new ItemStack(ForgeRegistries.BLOCKS.getValue(component));
 
 		this.scenes = scenes;
-		if (scenes.isEmpty()) {
-			var empty = PonderStoryBoardEntry.builder(DebugScenes::empty)
-					.schematicLocation(Create.ID, "debug/scene_1")
-					.component(Items.STICK)
-					.build();
-
-			List<PonderStoryBoardEntry> l = Collections.singletonList(empty);
-			scenes.addAll(PonderRegistry.compile(l));
-		}
 		lazyIndex = LerpedFloat.linear()
 				.startWithValue(index);
 		fadeIn = LerpedFloat.linear()
@@ -141,10 +132,6 @@ public class PonderUI extends NavigatableSimiScreen {
 
 	public static PonderUI of(ResourceLocation id) {
 		return new PonderUI(PonderRegistry.compile(id));
-	}
-
-	public static PonderUI of(ItemStack item) {
-		return new PonderUI(PonderRegistry.compile(RegisteredObjects.getKeyOrThrow(item.getItem())));
 	}
 
 	@Override

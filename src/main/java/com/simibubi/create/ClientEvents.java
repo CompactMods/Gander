@@ -2,8 +2,6 @@ package com.simibubi.create;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.simibubi.create.CreateClient;
-import com.simibubi.create.ponder.PonderTooltipHandler;
 import com.simibubi.create.render.SuperRenderTypeBuffer;
 import com.simibubi.create.utility.AnimationTickHolder;
 import com.simibubi.create.utility.CameraAngleAnimationService;
@@ -41,7 +39,6 @@ public class ClientEvents {
 		}
 
 		AnimationTickHolder.tick();
-		PonderTooltipHandler.tick();
 		ServerSpeedProvider.clientTick();
 		CreateClient.OUTLINER.tickOutlines();
 		CameraAngleAnimationService.tick();
@@ -98,17 +95,6 @@ public class ClientEvents {
 
 		if (CameraAngleAnimationService.isPitchAnimating())
 			event.setPitch(CameraAngleAnimationService.getPitch(partialTicks));
-	}
-
-	@SubscribeEvent
-	public static void getItemTooltipColor(RenderTooltipEvent.Color event) {
-		PonderTooltipHandler.handleTooltipColor(event);
-	}
-
-	@SubscribeEvent
-	public static void addToItemTooltip(ItemTooltipEvent event) {
-		if (event.getEntity() == null) return;
-		PonderTooltipHandler.addToTooltip(event);
 	}
 
 	protected static boolean isGameActive() {

@@ -1,10 +1,12 @@
 package com.simibubi.create.infrastructure.ponder;
 
-import com.simibubi.create.AllItems;
+import com.simibubi.create.Create;
 import com.simibubi.create.ItemHelper;
 import com.simibubi.create.ponder.ElementLink;
 import com.simibubi.create.ponder.PonderPalette;
+import com.simibubi.create.ponder.PonderRegistry;
 import com.simibubi.create.ponder.PonderStoryBoard;
+import com.simibubi.create.ponder.PonderStoryBoardEntry;
 import com.simibubi.create.ponder.SceneBuilder;
 import com.simibubi.create.ponder.SceneBuildingUtil;
 import com.simibubi.create.ponder.Selection;
@@ -14,7 +16,6 @@ import com.simibubi.create.ponder.element.ParrotElement.FacePointOfInterestPose;
 import com.simibubi.create.ponder.element.WorldSectionElement;
 import com.simibubi.create.ponder.instruction.EmitParticlesInstruction.Emitter;
 import com.simibubi.create.utility.Pointing;
-import com.tterrag.registrate.util.entry.ItemEntry;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -30,39 +31,26 @@ import net.minecraft.world.phys.Vec3;
 
 public class DebugScenes {
 
-	private static int index;
-
 	public static void registerAll() {
-		index = 1;
-		add(DebugScenes::coordinateScene);
-		add(DebugScenes::blocksScene);
-		add(DebugScenes::fluidsScene);
+		add(DebugScenes::coordinateScene, "debug/scene_coordinates");
+		// add(DebugScenes::blocksScene, "debug/scene_" + index);
+		// add(DebugScenes::fluidsScene, "debug/scene_" + index);
 		add(DebugScenes::renderers, "debug/renderers");
-		add(DebugScenes::offScreenScene);
-		add(DebugScenes::particleScene);
-		add(DebugScenes::controlsScene);
-		add(DebugScenes::birbScene);
-		add(DebugScenes::sectionsScene);
-		add(DebugScenes::itemScene);
-	}
-
-	private static void add(PonderStoryBoard sb) {
-		ItemEntry<Item> item = AllItems.BRASS_HAND;
-		String schematicPath = "debug/scene_" + index;
-		PonderIndex.HELPER.addStoryBoard(item, schematicPath, sb);
-		index++;
+		// add(DebugScenes::offScreenScene, "debug/scene_" + index);
+		// add(DebugScenes::particleScene, "debug/scene_" + index);
+		// add(DebugScenes::controlsScene, "debug/scene_" + index);
+		add(DebugScenes::birbScene, "debug/scene_birbs");
+		// add(DebugScenes::sectionsScene, "debug/scene_" + index);
+		// add(DebugScenes::itemScene, "debug/scene_" + index);
 	}
 
 	private static void add(PonderStoryBoard sb, String schematicPath) {
-		ItemEntry<Item> item = AllItems.BRASS_HAND;
-		PonderIndex.HELPER.addStoryBoard(Items.ARROW, schematicPath, sb);
-		index++;
-	}
+		PonderStoryBoardEntry entry = PonderStoryBoardEntry.builder(sb)
+				.schematicLocation(Create.ID, schematicPath)
+				.component(Create.asResource(schematicPath))
+				.build();
 
-	public static void empty(SceneBuilder scene, SceneBuildingUtil util) {
-		scene.title("debug_empty", "Missing Content");
-		scene.showBasePlate();
-		scene.idle(5);
+		PonderRegistry.addStoryBoard(entry);
 	}
 
 	public static void coordinateScene(SceneBuilder scene, SceneBuildingUtil util) {
@@ -408,7 +396,7 @@ public class DebugScenes {
 		scene.idle(10);
 		scene.world.showSection(util.select.layersFrom(1), Direction.DOWN);
 
-		ItemStack brassItem = AllItems.BRASS_INGOT.asStack();
+		ItemStack brassItem = new ItemStack(Items.STICK);
 		ItemStack copperItem = new ItemStack(Items.COPPER_INGOT);
 
 		for (int z = 4; z >= 2; z--) {

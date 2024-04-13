@@ -40,12 +40,6 @@ public class Create {
 	@Deprecated
 	public static final Random RANDOM = new Random();
 
-	/**
-	 * <b>Other mods should not use this field!</b> If you are an addon developer, create your own instance of
-	 * {@link CreateRegistrate}.
-	 */
-	public static final CreateRegistrate REGISTRATE = CreateRegistrate.create(ID);
-
 	public Create() {
 		onCtor();
 	}
@@ -57,23 +51,14 @@ public class Create {
 			.getModEventBus();
 		IEventBus forgeEventBus = MinecraftForge.EVENT_BUS;
 
-		REGISTRATE.registerEventListeners(modEventBus);
-
 		AllTags.init();
-		AllItems.register();
-		AllFluids.register();
 		AllPackets.registerPackets();
 
 		ForgeMod.enableMilkFluid();
 
-		modEventBus.addListener(Create::init);
 		modEventBus.addListener(EventPriority.LOWEST, CreateDatagen::gatherData);
 
 		DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> CreateClient.onCtorClient(modEventBus, forgeEventBus));
-	}
-
-	public static void init(final FMLCommonSetupEvent event) {
-		AllFluids.registerFluidInteractions();
 	}
 
 	public static ResourceLocation asResource(String path) {
