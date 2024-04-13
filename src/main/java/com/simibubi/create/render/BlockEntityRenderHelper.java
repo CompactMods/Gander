@@ -51,8 +51,6 @@ public class BlockEntityRenderHelper {
 		Iterator<BlockEntity> iterator = customRenderBEs.iterator();
 		while (iterator.hasNext()) {
 			BlockEntity blockEntity = iterator.next();
-			if (BackendManager.isBackendOn() && VisualizationHelper.shouldSkipRender(blockEntity))
-				continue;
 
 			BlockEntityRenderer<BlockEntity> renderer = Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(blockEntity);
 			if (renderer == null) {

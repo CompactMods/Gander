@@ -27,21 +27,25 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -79,7 +83,7 @@ public class PonderWorld extends SchematicWorld {
 		blocks.forEach((k, v) -> originalBlocks.put(k, v));
 		blockEntities.forEach((k, v) -> originalBlockEntities.put(k, v.saveWithFullMetadata()));
 		entities.forEach(e -> EntityType.create(e.serializeNBT(), this)
-			.ifPresent(originalEntities::add));
+				.ifPresent(originalEntities::add));
 	}
 
 	public void restore() {
@@ -96,7 +100,7 @@ public class PonderWorld extends SchematicWorld {
 			renderedBlockEntities.add(blockEntity);
 		});
 		originalEntities.forEach(e -> EntityType.create(e.serializeNBT(), this)
-			.ifPresent(entities::add));
+				.ifPresent(entities::add));
 		particles.clearEffects();
 	}
 
@@ -175,15 +179,15 @@ public class PonderWorld extends SchematicWorld {
 	}
 
 	private void renderEntity(Entity entity, double x, double y, double z, float pt, PoseStack ms,
-		MultiBufferSource buffer) {
+							  MultiBufferSource buffer) {
 		double d0 = Mth.lerp((double) pt, entity.xOld, entity.getX());
 		double d1 = Mth.lerp((double) pt, entity.yOld, entity.getY());
 		double d2 = Mth.lerp((double) pt, entity.zOld, entity.getZ());
 		float f = Mth.lerp(pt, entity.yRotO, entity.getYRot());
 		EntityRenderDispatcher renderManager = Minecraft.getInstance()
-			.getEntityRenderDispatcher();
+				.getEntityRenderDispatcher();
 		int light = renderManager.getRenderer(entity)
-			.getPackedLightCoords(entity, pt);
+				.getPackedLightCoords(entity, pt);
 		renderManager.render(entity, d0 - x, d1 - y, d2 - z, f, pt, ms, buffer, light);
 	}
 
@@ -191,12 +195,38 @@ public class PonderWorld extends SchematicWorld {
 		particles.renderParticles(ms, buffer, ari, pt);
 	}
 
+	public void animateTick() {
+		blocks.keySet()
+				.stream()
+				.filter(p -> random.nextIntBetweenInclusive(1, 10) <= 3)
+				.forEach(this::animateBlockTick);
+	}
+
+	protected void animateBlockTick(BlockPos pBlockPos) {
+		BlockState blockstate = this.getBlockState(pBlockPos);
+		blockstate.getBlock().animateTick(blockstate, this, pBlockPos, random);
+		FluidState fluidstate = this.getFluidState(pBlockPos);
+		if (!fluidstate.isEmpty()) {
+			fluidstate.animateTick(this, pBlockPos, random);
+		}
+
+		if (!blockstate.isCollisionShapeFullBlock(this, pBlockPos)) {
+			this.getBiome(pBlockPos)
+					.value()
+					.getAmbientParticle()
+					.filter(aps -> aps.canSpawn(random))
+					.ifPresent((p_264703_) -> {
+						this.addParticle(p_264703_.getOptions(), (double) pBlockPos.getX() + this.random.nextDouble(), (double) pBlockPos.getY() + this.random.nextDouble(), (double) pBlockPos.getZ() + this.random.nextDouble(), 0.0D, 0.0D, 0.0D);
+					});
+		}
+	}
+
 	public void tick() {
 		currentlyTickingEntities = true;
 
 		particles.tick();
 
-		for (Iterator<Entity> iterator = entities.iterator(); iterator.hasNext();) {
+		for (Iterator<Entity> iterator = entities.iterator(); iterator.hasNext(); ) {
 			Entity entity = iterator.next();
 
 			entity.tickCount++;
@@ -228,11 +258,11 @@ public class PonderWorld extends SchematicWorld {
 	@Nullable
 	@SuppressWarnings("unchecked")
 	private <T extends ParticleOptions> Particle makeParticle(T data, double x, double y, double z, double mx, double my,
-		double mz) {
+															  double mz) {
 		ResourceLocation key = RegisteredObjects.getKeyOrThrow(data.getType());
 		ParticleProvider<T> particleProvider = (ParticleProvider<T>) particleProviders.get(key);
 		return particleProvider == null ? null
-			: particleProvider.createParticle(data, asClientWorld.get(), x, y, z, mx, my, mz);
+				: particleProvider.createParticle(data, asClientWorld.get(), x, y, z, mx, my, mz);
 	}
 
 	@Override
@@ -279,7 +309,7 @@ public class PonderWorld extends SchematicWorld {
 					double d8 = d5 * d2 + bb.minY;
 					double d9 = d6 * d3 + bb.minZ;
 					addParticle(new BlockParticleOption(ParticleTypes.BLOCK, state), pos.getX() + d7, pos.getY() + d8,
-						pos.getZ() + d9, d4 - 0.5D, d5 - 0.5D, d6 - 0.5D);
+							pos.getZ() + d9, d4 - 0.5D, d5 - 0.5D, d6 - 0.5D);
 				}
 			}
 		}
