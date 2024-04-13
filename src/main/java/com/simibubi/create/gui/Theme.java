@@ -1,6 +1,7 @@
 package com.simibubi.create.gui;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,12 +10,13 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Lists;
 import com.simibubi.create.utility.Color;
 import com.simibubi.create.utility.Pair;
 
 public class Theme {
 
-	private static final List<Theme> THEMES = new ArrayList<>();
+	private static final List<Theme> THEMES = List.of(new Theme());
 
 	private static ColorHolder resolve(String key) {
 		return THEMES
@@ -26,8 +28,13 @@ public class Theme {
 				.orElse(ColorHolder.MISSING);
 	}
 
-	@Nonnull public static Color color(@Nonnull Key key) {return color(key.get());}
-	@Nonnull public static Color color(String key) {return resolve(key).get();}
+	@Nonnull public static Color color(@Nonnull Key key) {
+		return color(key.get());
+	}
+
+	@Nonnull public static Color color(String key) {
+		return resolve(key).get();
+	}
 
 	//-----------//
 
