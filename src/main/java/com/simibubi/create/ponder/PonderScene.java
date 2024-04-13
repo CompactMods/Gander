@@ -130,6 +130,10 @@ public class PonderScene {
 		setPointOfInterest(new Vec3(0, 4, 0));
 	}
 
+	public SceneCamera camera() {
+		return this.camera;
+	}
+
 	public void deselect() {
 		forEach(WorldSectionElement.class, WorldSectionElement::resetSelectedBlock);
 	}
@@ -280,6 +284,7 @@ public class PonderScene {
 
 		outliner.tickOutlines();
 		world.tick();
+		world.animateTick();
 		transform.tick();
 		forEach(e -> e.tick(this));
 

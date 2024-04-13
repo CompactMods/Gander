@@ -37,6 +37,7 @@ public class DebugScenes {
 		add(DebugScenes::coordinateScene);
 		add(DebugScenes::blocksScene);
 		add(DebugScenes::fluidsScene);
+		add(DebugScenes::renderers, "debug/renderers");
 		add(DebugScenes::offScreenScene);
 		add(DebugScenes::particleScene);
 		add(DebugScenes::controlsScene);
@@ -49,6 +50,12 @@ public class DebugScenes {
 		ItemEntry<Item> item = AllItems.BRASS_HAND;
 		String schematicPath = "debug/scene_" + index;
 		PonderIndex.HELPER.addStoryBoard(item, schematicPath, sb);
+		index++;
+	}
+
+	private static void add(PonderStoryBoard sb, String schematicPath) {
+		ItemEntry<Item> item = AllItems.BRASS_HAND;
+		PonderIndex.HELPER.addStoryBoard(Items.ARROW, schematicPath, sb);
 		index++;
 	}
 
@@ -136,6 +143,23 @@ public class DebugScenes {
 				.text("wut?")
 				.pointAt(parrotPos.add(-.25f, 0.25f, .25f));
 
+	}
+
+	private static void renderers(SceneBuilder scene, SceneBuildingUtil util) {
+		scene.title("debug_renderers", "Renderers");
+		scene.configureBasePlate(0, 0, 7);
+		scene.showBasePlate();
+
+		Selection blocksExceptBasePlate = util.select.layersFrom(1)
+				.substract(util.select.layer(0));
+
+		scene.scaleSceneView(0.5f);
+		scene.rotateCameraY(15);
+		scene.idle(10);
+		scene.world.showSection(blocksExceptBasePlate, Direction.DOWN);
+		scene.idle(20);
+
+		scene.markAsFinished();
 	}
 
 	public static void offScreenScene(SceneBuilder scene, SceneBuildingUtil util) {

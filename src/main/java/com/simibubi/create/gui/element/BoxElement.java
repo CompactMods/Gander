@@ -1,7 +1,5 @@
 package com.simibubi.create.gui.element;
 
-import com.simibubi.create.utility.Pair;
-
 import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -11,7 +9,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.simibubi.create.utility.Color;
-import com.simibubi.create.utility.Couple;
+import com.simibubi.create.utility.Pair;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.GameRenderer;

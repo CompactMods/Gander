@@ -106,13 +106,8 @@ public class PonderButton extends BoxWidget {
 	}
 
 	@Override
-	public Key getDisabledTheme() {
-		return Theme.Key.PONDER_BUTTON_DISABLE;
-	}
-
-	@Override
 	public Key getIdleTheme() {
-		return Theme.Key.PONDER_BUTTON_IDLE;
+		return Key.PONDER_BUTTON_IDLE;
 	}
 
 	@Override
