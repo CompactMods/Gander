@@ -1,31 +1,37 @@
 modLoader="javafml"
-loaderVersion="[47,)"
-issueTrackerURL="https://github.com/Creators-of-Create/Create/issues"
-license="MIT"
+loaderVersion="${loader_version_range}" #mandatory
+license="${mod_license}"
 
 [[mods]]
-modId="create"
-# The Implementation-Version property in the jar's MANIFEST.MF file will be used as the mod version at runtime
-version="${file.jarVersion}"
-displayName="Create"
-#updateJSONURL=""
-displayURL="https://www.curseforge.com/minecraft/mc-mods/create"
-logoFile="logo.png"
-#credits=""
-authors="simibubi"
-description='''
-Technology that empowers the player.'''
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="${mod_authors}"
+description='''${mod_description}'''
 
-[[dependencies.create]]
-    modId="forge"
-    mandatory=true
-    versionRange="[47.0.0,)"
-    ordering="NONE"
-    side="BOTH"
+[[mixins]]
+config="${mod_id}.mixins.json"
 
-[[dependencies.create]]
-    modId="minecraft"
-    mandatory=true
-    versionRange="[1.20,1.21)"
-    ordering="NONE"
-    side="BOTH"
+[[accessTransformers]]
+file="META-INF/accesstransformer.cfg"
+
+[[dependencies.${mod_id}]]
+modId="neoforge"
+type="required"
+versionRange="${neo_version_range}"
+ordering="NONE"
+side="BOTH"
+
+# Here's another dependency
+[[dependencies.${mod_id}]]
+modId="minecraft"
+type="required"
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"
+
+# Features are specific properties of the game environment, that you may want to declare you require. This example declares
+# that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
+# stop your mod loading on the server for example.
+#[features.${mod_id}]
+#openGLVersion="[3.2,)"
