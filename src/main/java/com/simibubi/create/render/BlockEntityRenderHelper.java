@@ -4,14 +4,13 @@ import java.util.Iterator;
 
 import javax.annotation.Nullable;
 
+import com.simibubi.create.utility.math.PoseTransformStack;
+
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
-import com.jozufozu.flywheel.api.backend.BackendManager;
-import com.jozufozu.flywheel.impl.visualization.VisualizationHelper;
-import com.jozufozu.flywheel.lib.transform.TransformStack;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.Create;
 import com.simibubi.create.utility.AnimationTickHolder;
@@ -60,7 +59,7 @@ public class BlockEntityRenderHelper {
 
 			BlockPos pos = blockEntity.getBlockPos();
 			ms.pushPose();
-			TransformStack.of(ms)
+			PoseTransformStack.of(ms)
 				.translate(pos);
 
 			try {

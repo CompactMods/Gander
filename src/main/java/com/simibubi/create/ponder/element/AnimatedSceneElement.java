@@ -1,9 +1,10 @@
 package com.simibubi.create.ponder.element;
 
-import com.jozufozu.flywheel.lib.transform.TransformStack;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.ponder.PonderWorld;
 import com.simibubi.create.utility.animation.LerpedFloat;
+
+import com.simibubi.create.utility.math.PoseTransformStack;
 
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -61,7 +62,7 @@ public abstract class AnimatedSceneElement extends PonderSceneElement {
 	protected float applyFade(PoseStack ms, float pt) {
 		float currentFade = fade.getValue(pt);
 		if (fadeVec != null)
-			TransformStack.of(ms)
+			PoseTransformStack.of(ms)
 					.translate(fadeVec.scale(-1 + currentFade));
 		return currentFade;
 	}

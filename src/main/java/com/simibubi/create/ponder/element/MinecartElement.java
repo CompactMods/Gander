@@ -1,10 +1,11 @@
 package com.simibubi.create.ponder.element;
 
-import com.jozufozu.flywheel.lib.transform.TransformStack;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.ponder.PonderScene;
 import com.simibubi.create.ponder.PonderWorld;
 import com.simibubi.create.utility.animation.LerpedFloat;
+
+import com.simibubi.create.utility.math.PoseTransformStack;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -103,7 +104,7 @@ public class MinecartElement extends AnimatedSceneElement {
 		ms.translate(Mth.lerp(pt, entity.xo, entity.getX()),
 			Mth.lerp(pt, entity.yo, entity.getY()), Mth.lerp(pt, entity.zo, entity.getZ()));
 
-		TransformStack.of(ms)
+		PoseTransformStack.of(ms)
 			.rotateYDegrees(rotation.getValue(pt));
 
 		entityrenderermanager.render(entity, 0, 0, 0, 0, pt, ms, buffer, lightCoordsFromFade(fade));

@@ -9,8 +9,6 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import com.jozufozu.flywheel.api.visualization.VisualizationLevel;
-
 import it.unimi.dsi.fastutil.objects.Object2ShortMap;
 import it.unimi.dsi.fastutil.objects.Object2ShortOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -50,7 +48,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.ticks.LevelTickAccess;
 
-public class VirtualRenderLevel extends Level implements VisualizationLevel {
+public class VirtualRenderLevel extends Level {
 	protected final Level level;
 	protected final int minBuildHeight;
 	protected final int height;

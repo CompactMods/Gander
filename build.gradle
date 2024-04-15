@@ -11,14 +11,6 @@ plugins {
 jarJar.enable()
 
 boolean dev = System.getenv('RELEASE') == null || System.getenv('RELEASE').equals('false');
-// jozu: I use a gradle workspace with both projects.
-// The project is named Flywheel-Forge, but sub-projects are named by folder.
-Project flywheelProject = findProject(':Flywheel')
-boolean flywheelInWorkspace = flywheelProject != null
-
-if (flywheelInWorkspace) {
-    println('Workspace detected, using Flywheel sibling project')
-}
 
 ext.buildNumber = System.getenv('BUILD_NUMBER')
 
@@ -32,10 +24,6 @@ println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getPro
 
 mixin {
     add sourceSets.main, 'create.refmap.json'
-
-    config 'flywheel.backend.mixins.json'
-    config 'flywheel.impl.mixins.json'
-    config 'flywheel.impl.sodium.mixins.json'
     config 'create.mixins.json'
 
     debug.verbose = true
@@ -80,13 +68,6 @@ minecraft {
 
         client {
             workingDirectory project.file('run')
-            mods {
-                if (flywheelInWorkspace) {
-                    flywheel {
-                        source flywheelProject.sourceSets.main
-                    }
-                }
-            }
         }
 
         server {
@@ -98,13 +79,6 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES,REGISTRYDUMP'
             property 'forge.logging.console.level', 'debug'
             args '--mod', 'create', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources')
-            mods {
-                if (flywheelInWorkspace) {
-                    flywheel {
-                        source flywheelProject.sourceSets.main
-                    }
-                }
-            }
         }
 
         gameTestServer {
@@ -115,50 +89,6 @@ minecraft {
 }
 
 repositories {
-    maven {
-        // location of the maven for Registrate and Flywheel
-        name = 'tterrag maven'
-        url = 'https://maven.tterrag.com'
-    }
-    maven {
-        // location of the maven that hosts JEI files since January 2023
-        // location of the maven for Vazkii's mods
-        name = "Jared's maven"
-        url = "https://maven.blamejared.com/"
-    }
-    /*maven {
-        // location of a maven mirror for JEI files, as a fallback
-        name = "ModMaven"
-        url = "https://modmaven.dev"
-    }*/
-    maven {
-        // location of the maven for Dynamic Trees
-        url = 'https://harleyoconnor.com/maven'
-    }
-    maven {
-        // location of the maven for Curios API
-        url = "https://maven.theillusivec4.top/"
-    }
-    maven {
-        // location of maven for CC: Tweaked
-        name = "squiddev"
-        url = "https://squiddev.cc/maven/"
-    }
-
-    maven {
-        url = 'https://www.cursemaven.com'
-        content {
-            includeGroup "curse.maven"
-        }
-    }
-    maven {
-        name = "Modrinth"
-        url = "https://api.modrinth.com/maven"
-        content {
-            includeGroup "maven.modrinth"
-        }
-    }
-
     mavenCentral()
     mavenLocal()
     flatDir {
@@ -168,23 +98,6 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-
-    jarJar("com.jozufozu.flywheel:flywheel-forge-${flywheel_minecraft_version}:${flywheel_version}") {
-        jarJar.ranged(it, '[1.0,2.0)')
-    }
-
-    if (flywheelInWorkspace) {
-        implementation flywheelProject
-    } else {
-        implementation fg.deobf("com.jozufozu.flywheel:flywheel-forge-${flywheel_minecraft_version}:${flywheel_version}")
-    }
-
-    compileOnly fg.deobf("mezz.jei:jei-${jei_minecraft_version}-common-api:${jei_version}")
-    compileOnly fg.deobf("mezz.jei:jei-${jei_minecraft_version}-forge-api:${jei_version}")
-    runtimeOnly fg.deobf("mezz.jei:jei-${jei_minecraft_version}-forge:${jei_version}")
-
-    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}+${curios_minecraft_version}:api")
-    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}+${curios_minecraft_version}")
 
     // https://discord.com/channels/313125603924639766/725850371834118214/910619168821354497
     // Prevent Mixin annotation processor from getting into IntelliJ's annotation processor settings
@@ -273,56 +186,3 @@ publishing {
         }
     }
 }
-
-String getChangelogText() {
-    def changelogFile = file('changelog.txt')
-    String str = ''
-    int lineCount = 0
-    boolean done = false
-    changelogFile.eachLine {
-        if (done || it == null) {
-            return
-        }
-        if (it.size() > 1) {
-            def temp = it
-            if (lineCount == 0) {
-                temp = "Create ${version}"
-                temp = "<span style=\"font-size: 18px; color: #333399;\">Create v${mod_version}</span>&nbsp;&nbsp;<em>for Minecraft ${minecraft_version}</em><br/>"
-            } else if (it.startsWith('-')) {
-                temp = "&nbsp;&nbsp;&nbsp;$temp<br/>"
-                temp = temp.replaceAll("(\\S+\\/\\S+)#([0-9]+)\\b", "<a href=\"https://github.com/\$1/issues/\$2\">\$0</a>");
-                temp = temp.replaceAll("#([0-9]+)\\b(?!<\\/a>)", "<a href=\"https://github.com/$github_project/issues/\$1\">\$0</a>");
-            } else {
-                temp = "<h4>$temp</h4>"
-            }
-            str += temp
-            lineCount++
-        } else {
-            str += "<p>Please submit any Issues you come across on the&nbsp;<a href=\"https://github.com/${github_project}/issues\" rel=\"nofollow\">Issue Tracker</a>.</p>"
-            done = true
-        }
-    }
-    return str
-}
-
-// changelog debugging
-// new File("changelog.html").write getChangelogText()
-// tasks.curseforge.enabled = !dev && project.hasProperty('simi_curseforge_key')
-// curseforge {
-//     if (project.hasProperty('simi_curseforge_key')) {
-//         apiKey = project.simi_curseforge_key
-//     }
-//
-//     project {
-//         id = project.projectId
-//         changelog = System.getenv('CHANGELOG') == null || System.getenv('CHANGELOG').equals('none') ? getChangelogText() : System.getenv('CHANGELOG')
-//         changelogType = 'html'
-//         releaseType = project.curse_type
-//         mainArtifact(shadowJar) {
-//             displayName = "Create - ${version}"
-//         }
-//         relations {
-//             optionalDependency 'jei'
-//         }
-//     }
-// }

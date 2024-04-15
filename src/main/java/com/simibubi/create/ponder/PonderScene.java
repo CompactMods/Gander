@@ -15,12 +15,13 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+import com.simibubi.create.utility.math.PoseTransformStack;
+
 import org.apache.commons.lang3.mutable.MutableDouble;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
-import com.jozufozu.flywheel.lib.transform.TransformStack;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.gui.UIRenderHelper;
 import com.simibubi.create.outliner.Outliner;
@@ -523,7 +524,7 @@ public class PonderScene {
 		public PoseStack apply(PoseStack ms, float pt) {
 			ms.translate(width / 2, height / 2, 200 + offset);
 
-			TransformStack.of(ms)
+			PoseTransformStack.of(ms)
 				.rotateXDegrees(-35)
 				.rotateYDegrees(55)
 				.translate(offset, 0, 0)

@@ -6,8 +6,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
 
-import com.jozufozu.flywheel.lib.model.ModelUtil;
-import com.jozufozu.flywheel.lib.transform.TransformStack;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -28,6 +26,8 @@ import com.simibubi.create.render.VirtualRenderHelper;
 import com.simibubi.create.utility.AnimationTickHolder;
 import com.simibubi.create.utility.Pair;
 import com.simibubi.create.utility.VecHelper;
+
+import com.simibubi.create.utility.math.PoseTransformStack;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -60,7 +60,7 @@ import net.minecraftforge.client.model.data.ModelData;
 public class WorldSectionElement extends AnimatedSceneElement {
 
 	public static final SuperByteBufferCache.Compartment<Pair<Integer, Integer>> DOC_WORLD_SECTION =
-		new SuperByteBufferCache.Compartment<>();
+			new SuperByteBufferCache.Compartment<>();
 
 	private static final ThreadLocal<ThreadLocalObjects> THREAD_LOCAL_OBJECTS = ThreadLocal.withInitial(ThreadLocalObjects::new);
 
@@ -78,7 +78,8 @@ public class WorldSectionElement extends AnimatedSceneElement {
 
 	BlockPos selectedBlock;
 
-	public WorldSectionElement() {}
+	public WorldSectionElement() {
+	}
 
 	public WorldSectionElement(Selection section) {
 		this.section = section.copy();
@@ -186,7 +187,7 @@ public class WorldSectionElement extends AnimatedSceneElement {
 		world.setMask(this.section);
 		Vec3 transformedTarget = reverseTransformVec(target);
 		BlockHitResult rayTraceBlocks = world.clip(new ClipContext(reverseTransformVec(source), transformedTarget,
-			ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, null));
+				ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, null));
 		world.clearMask();
 
 		if (rayTraceBlocks == null)
@@ -195,9 +196,9 @@ public class WorldSectionElement extends AnimatedSceneElement {
 			return null;
 
 		double t = rayTraceBlocks.getLocation()
-			.subtract(transformedTarget)
-			.lengthSqr()
-			/ source.subtract(target)
+				.subtract(transformedTarget)
+				.lengthSqr()
+				/ source.subtract(target)
 				.lengthSqr();
 		Vec3 actualHit = VecHelper.lerp((float) t, target, source);
 		return Pair.of(actualHit, rayTraceBlocks);
@@ -229,27 +230,27 @@ public class WorldSectionElement extends AnimatedSceneElement {
 	}
 
 	public void transformMS(PoseStack ms, float pt) {
-		TransformStack.of(ms)
-			.translate(VecHelper.lerp(pt, prevAnimatedOffset, animatedOffset));
+		PoseTransformStack.of(ms)
+				.translate(VecHelper.lerp(pt, prevAnimatedOffset, animatedOffset));
 		if (!animatedRotation.equals(Vec3.ZERO) || !prevAnimatedRotation.equals(Vec3.ZERO)) {
 			if (centerOfRotation == null)
 				centerOfRotation = section.getCenter();
 			double rotX = Mth.lerp(pt, prevAnimatedRotation.x, animatedRotation.x);
 			double rotZ = Mth.lerp(pt, prevAnimatedRotation.z, animatedRotation.z);
 			double rotY = Mth.lerp(pt, prevAnimatedRotation.y, animatedRotation.y);
-			TransformStack.of(ms)
-				.translate(centerOfRotation)
-				.rotateX((float) rotX)
-				.rotateZ((float) rotZ)
-				.rotateY((float) rotY)
-				.translateBack(centerOfRotation);
+			PoseTransformStack.of(ms)
+					.translate(centerOfRotation)
+					.rotateX((float) rotX)
+					.rotateZ((float) rotZ)
+					.rotateY((float) rotY)
+					.translateBack(centerOfRotation);
 			if (stabilizationAnchor != null) {
-				TransformStack.of(ms)
-					.translate(stabilizationAnchor)
-					.rotateX((float) -rotX)
-					.rotateZ((float) -rotZ)
-					.rotateY((float) -rotY)
-					.translateBack(stabilizationAnchor);
+				PoseTransformStack.of(ms)
+						.translate(stabilizationAnchor)
+						.rotateX((float) -rotX)
+						.rotateZ((float) -rotZ)
+						.rotateY((float) -rotY)
+						.translateBack(stabilizationAnchor);
 			}
 		}
 	}
@@ -261,12 +262,12 @@ public class WorldSectionElement extends AnimatedSceneElement {
 			return;
 		loadBEsIfMissing(scene.getWorld());
 		renderedBlockEntities.removeIf(be -> scene.getWorld()
-			.getBlockEntity(be.getBlockPos()) != be);
+				.getBlockEntity(be.getBlockPos()) != be);
 		tickableBlockEntities.removeIf(be -> scene.getWorld()
-			.getBlockEntity(be.getFirst()
-				.getBlockPos()) != be.getFirst());
+				.getBlockEntity(be.getFirst()
+						.getBlockPos()) != be.getFirst());
 		tickableBlockEntities.forEach(be -> be.getSecond()
-			.accept(scene.getWorld()));
+				.accept(scene.getWorld()));
 	}
 
 	@Override
@@ -302,7 +303,7 @@ public class WorldSectionElement extends AnimatedSceneElement {
 	@SuppressWarnings("unchecked")
 	private <T extends BlockEntity> void addTicker(T blockEntity, BlockEntityTicker<?> ticker) {
 		tickableBlockEntities.add(Pair.of(blockEntity, w -> ((BlockEntityTicker<T>) ticker).tick(w,
-			blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity)));
+				blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity)));
 	}
 
 	@Override
@@ -336,16 +337,18 @@ public class WorldSectionElement extends AnimatedSceneElement {
 			}
 
 			VertexConsumer builder = new SheetedDecalTextureGenerator(
-				buffer.getBuffer(ModelBakery.DESTROY_TYPES.get(entry.getValue())), overlayMS.last()
+					buffer.getBuffer(ModelBakery.DESTROY_TYPES.get(entry.getValue())), overlayMS.last()
 					.pose(),
-				overlayMS.last()
-					.normal(),
-				1);
+					overlayMS.last()
+							.normal(),
+					1);
 
 			ms.pushPose();
 			ms.translate(pos.getX(), pos.getY(), pos.getZ());
-			ModelUtil.VANILLA_RENDERER
-				.renderBreakingTexture(world.getBlockState(pos), pos, world, ms, builder, ModelData.EMPTY);
+			Minecraft.getInstance()
+					.getBlockRenderer()
+					.renderBreakingTexture(world.getBlockState(pos), pos, world, ms, builder, ModelData.EMPTY);
+
 			ms.popPose();
 		}
 
@@ -354,25 +357,25 @@ public class WorldSectionElement extends AnimatedSceneElement {
 
 	@Override
 	protected void renderLayer(PonderWorld world, MultiBufferSource buffer, RenderType type, PoseStack ms, float fade,
-		float pt) {
+							   float pt) {
 		SuperByteBufferCache bufferCache = CreateClient.BUFFER_CACHE;
 
 		int code = hashCode() ^ world.hashCode();
 		Pair<Integer, Integer> key = Pair.of(code, RenderType.chunkBufferLayers()
-			.indexOf(type));
+				.indexOf(type));
 
 		if (redraw)
 			bufferCache.invalidate(DOC_WORLD_SECTION, key);
 		SuperByteBuffer contraptionBuffer =
-			bufferCache.get(DOC_WORLD_SECTION, key, () -> buildStructureBuffer(world, type));
+				bufferCache.get(DOC_WORLD_SECTION, key, () -> buildStructureBuffer(world, type));
 		if (contraptionBuffer.isEmpty())
 			return;
 
 		transformMS(contraptionBuffer.getTransforms(), pt);
 		int light = lightCoordsFromFade(fade);
 		contraptionBuffer
-			.light(light)
-			.renderInto(ms, buffer.getBuffer(type));
+				.light(light)
+				.renderInto(ms, buffer.getBuffer(type));
 	}
 
 	@Override
@@ -384,7 +387,7 @@ public class WorldSectionElement extends AnimatedSceneElement {
 		if (blockState.isAir())
 			return;
 		VoxelShape shape =
-			blockState.getShape(world, selectedBlock, CollisionContext.of(Minecraft.getInstance().player));
+				blockState.getShape(world, selectedBlock, CollisionContext.of(Minecraft.getInstance().player));
 		if (shape.isEmpty())
 			return;
 
@@ -394,9 +397,9 @@ public class WorldSectionElement extends AnimatedSceneElement {
 
 		AABBOutline aabbOutline = new AABBOutline(shape.bounds());
 		aabbOutline.getParams()
-			.lineWidth(1 / 64f)
-			.colored(0xefefef)
-			.disableLineNormals();
+				.lineWidth(1 / 64f)
+				.colored(0xefefef)
+				.disableLineNormals();
 		aabbOutline.render(ms, (SuperRenderTypeBuffer) buffer, Vec3.ZERO, pt);
 
 		ms.popPose();
@@ -408,7 +411,7 @@ public class WorldSectionElement extends AnimatedSceneElement {
 	}
 
 	private SuperByteBuffer buildStructureBuffer(PonderWorld world, RenderType layer) {
-		BlockRenderDispatcher dispatcher = ModelUtil.VANILLA_RENDERER;
+		BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
 		ModelBlockRenderer renderer = dispatcher.getModelRenderer();
 		ThreadLocalObjects objects = THREAD_LOCAL_OBJECTS.get();
 
@@ -441,7 +444,7 @@ public class WorldSectionElement extends AnimatedSceneElement {
 				random.setSeed(seed);
 				if (model.getRenderTypes(state, random, modelData).contains(layer)) {
 					renderer.tesselateBlock(world, model, state, pos, poseStack, shadeSeparatingWrapper, true,
-						random, seed, OverlayTexture.NO_OVERLAY, modelData, layer);
+							random, seed, OverlayTexture.NO_OVERLAY, modelData, layer);
 				}
 			}
 

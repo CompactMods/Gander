@@ -33,8 +33,6 @@ public class CreateClient {
 
 	public static void clientInit(final FMLClientSetupEvent event) {
 		BUFFER_CACHE.registerCompartment(CachedBufferer.GENERIC_BLOCK);
-		BUFFER_CACHE.registerCompartment(CachedBufferer.PARTIAL);
-		BUFFER_CACHE.registerCompartment(CachedBufferer.DIRECTIONAL_PARTIAL);
 		BUFFER_CACHE.registerCompartment(WorldSectionElement.DOC_WORLD_SECTION, 20);
 
 		PonderIndex.register();

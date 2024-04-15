@@ -4,13 +4,14 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+import com.simibubi.create.utility.math.PoseTransformStack;
+
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-import com.jozufozu.flywheel.lib.transform.TransformStack;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.render.SuperRenderTypeBuffer;
@@ -57,7 +58,7 @@ public abstract class Outline {
 		float vAngle = AngleHelper.deg(Mth.atan2(hDistance, diff.y())) - 90;
 
 		poseStack.pushPose();
-		TransformStack.of(poseStack)
+		PoseTransformStack.of(poseStack)
 			.translate(start.x - camera.x, start.y - camera.y, start.z - camera.z)
 			.rotateYDegrees(hAngle)
 			.rotateXDegrees(vAngle);

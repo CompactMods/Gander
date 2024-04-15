@@ -2,12 +2,13 @@ package com.simibubi.create.render;
 
 import java.util.function.Function;
 
-import com.jozufozu.flywheel.lib.transform.TransformStack;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.utility.AngleHelper;
 import com.simibubi.create.utility.Iterate;
+
+import com.simibubi.create.utility.math.PoseTransformStack;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -58,7 +59,7 @@ public class FluidRenderer {
 		if (inbound)
 			direction = direction.getOpposite();
 
-		var msr = TransformStack.of(ms);
+		var msr = PoseTransformStack.of(ms);
 		ms.pushPose();
 		msr.center()
 			.rotateYDegrees(AngleHelper.horizontalAngle(direction))
@@ -109,7 +110,7 @@ public class FluidRenderer {
 		Vec3 center = new Vec3(xMin + (xMax - xMin) / 2, yMin + (yMax - yMin) / 2, zMin + (zMax - zMin) / 2);
 		ms.pushPose();
 		if (fluidAttributes.isLighterThanAir())
-			TransformStack.of(ms)
+			PoseTransformStack.of(ms)
 				.translate(center)
 				.rotateXDegrees(180)
 				.translateBack(center);

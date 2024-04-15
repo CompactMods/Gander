@@ -2,7 +2,6 @@ package com.simibubi.create.gui.element;
 
 import javax.annotation.Nullable;
 
-import com.jozufozu.flywheel.lib.model.baked.PartialModel;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.GlStateManager.DestFactor;
 import com.mojang.blaze3d.platform.GlStateManager.SourceFactor;
@@ -54,10 +53,6 @@ public class GuiGameElement {
 
 	public static GuiRenderBuilder of(BlockState state) {
 		return new GuiBlockStateRenderBuilder(state);
-	}
-
-	public static GuiRenderBuilder of(PartialModel partial) {
-		return new GuiBlockPartialRenderBuilder(partial);
 	}
 
 	public static GuiRenderBuilder of(Fluid fluid) {
@@ -237,14 +232,6 @@ public class GuiGameElement {
 				.getType(), 1000), 0, 0, 0, 1, 1, 1, buffer, ms, LightTexture.FULL_BRIGHT, false);
 			buffer.endBatch();
 		}
-	}
-
-	public static class GuiBlockPartialRenderBuilder extends GuiBlockModelRenderBuilder {
-
-		public GuiBlockPartialRenderBuilder(PartialModel partial) {
-			super(partial.get(), null);
-		}
-
 	}
 
 	public static class GuiItemRenderBuilder extends GuiRenderBuilder {

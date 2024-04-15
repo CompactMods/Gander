@@ -1,13 +1,13 @@
 package com.simibubi.create.render;
 
+import com.simibubi.create.utility.math.TransformStack;
+
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-import com.jozufozu.flywheel.lib.transform.TransformStack;
-import com.jozufozu.flywheel.lib.util.ShadersModHandler;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -95,8 +95,7 @@ public class SuperByteBuffer implements TransformStack<SuperByteBuffer> {
 		final Vector4f lightPos = new Vector4f();
 
 		DiffuseLightCalculator diffuseCalculator = ForcedDiffuseState.getForcedCalculator();
-		final boolean disableDiffuseMult =
-			this.disableDiffuseMult || (ShadersModHandler.isShaderPackInUse() && diffuseCalculator == null);
+		final boolean disableDiffuseMult = this.disableDiffuseMult;
 		if (diffuseCalculator == null) {
 			diffuseCalculator = this.diffuseCalculator;
 			if (diffuseCalculator == null) {
@@ -209,37 +208,18 @@ public class SuperByteBuffer implements TransformStack<SuperByteBuffer> {
 		return transforms;
 	}
 
-	@Override
 	public SuperByteBuffer scale(float factorX, float factorY, float factorZ) {
 		transforms.scale(factorX, factorY, factorZ);
 		return this;
 	}
 
-	@Override
 	public SuperByteBuffer rotate(Quaternionf quaternion) {
 		transforms.mulPose(quaternion);
 		return this;
 	}
 
-	@Override
 	public SuperByteBuffer translate(double x, double y, double z) {
 		transforms.translate(x, y, z);
-		return this;
-	}
-
-	@Override
-	public SuperByteBuffer mulPose(Matrix4f pose) {
-		transforms.last()
-			.pose()
-			.mul(pose);
-		return this;
-	}
-
-	@Override
-	public SuperByteBuffer mulNormal(Matrix3f normal) {
-		transforms.last()
-			.normal()
-			.mul(normal);
 		return this;
 	}
 

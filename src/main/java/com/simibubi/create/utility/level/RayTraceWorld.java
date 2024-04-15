@@ -1,4 +1,4 @@
-package com.simibubi.create.utility.worldWrappers;
+package com.simibubi.create.utility.level;
 
 import java.util.function.BiFunction;
 

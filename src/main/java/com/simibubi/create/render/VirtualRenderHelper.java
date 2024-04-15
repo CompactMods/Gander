@@ -2,13 +2,12 @@ package com.simibubi.create.render;
 
 import java.nio.ByteBuffer;
 
+import com.simibubi.create.utility.level.EmptyBlockAndTintGetter;
+
+import net.minecraft.client.Minecraft;
+
 import org.jetbrains.annotations.Nullable;
 
-import com.jozufozu.flywheel.api.model.Model;
-import com.jozufozu.flywheel.lib.model.ModelCache;
-import com.jozufozu.flywheel.lib.model.ModelUtil;
-import com.jozufozu.flywheel.lib.model.baked.BakedModelBuilder;
-import com.jozufozu.flywheel.lib.model.baked.VirtualEmptyBlockGetter;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferBuilder.RenderedBuffer;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -28,25 +27,10 @@ import net.minecraftforge.client.model.data.ModelProperty;
 public class VirtualRenderHelper {
 	public static final ModelProperty<Boolean> VIRTUAL_PROPERTY = new ModelProperty<>();
 	public static final ModelData VIRTUAL_DATA = ModelData.builder().with(VIRTUAL_PROPERTY, true).build();
-
-	private static final ModelCache<BlockState> VIRTUAL_BLOCKS = new ModelCache<>(state -> new BakedModelBuilder(ModelUtil.VANILLA_RENDERER.getBlockModel(state)).modelData(VIRTUAL_DATA).build());
 	private static final ThreadLocal<ThreadLocalObjects> THREAD_LOCAL_OBJECTS = ThreadLocal.withInitial(ThreadLocalObjects::new);
 
-	public static boolean isVirtual(ModelData data) {
-		return data.has(VirtualRenderHelper.VIRTUAL_PROPERTY) && data.get(VirtualRenderHelper.VIRTUAL_PROPERTY);
-	}
-
-	/**
-	 * A copy of {@link com.jozufozu.flywheel.lib.model.Models#block(BlockState)}, but with virtual model data passed in.
-	 * @param state The block state to get the model for.
-	 * @return The model for the given block state.
-	 */
-	public static Model blockModel(BlockState state) {
-		return VIRTUAL_BLOCKS.get(state);
-	}
-
 	public static SuperByteBuffer bufferBlock(BlockState state) {
-		return bufferModel(ModelUtil.VANILLA_RENDERER.getBlockModel(state), state);
+		return bufferModel(Minecraft.getInstance().getBlockRenderer().getBlockModel(state), state);
 	}
 
 	public static SuperByteBuffer bufferModel(BakedModel model, BlockState state) {
@@ -54,7 +38,7 @@ public class VirtualRenderHelper {
 	}
 
 	public static SuperByteBuffer bufferModel(BakedModel model, BlockState state, @Nullable PoseStack poseStack) {
-		BlockRenderDispatcher dispatcher = ModelUtil.VANILLA_RENDERER;
+		BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
 		ModelBlockRenderer renderer = dispatcher.getModelRenderer();
 		ThreadLocalObjects objects = THREAD_LOCAL_OBJECTS.get();
 
@@ -71,9 +55,9 @@ public class VirtualRenderHelper {
 		unshadedBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 		shadeSeparatingWrapper.prepare(shadedBuilder, unshadedBuilder);
 
-		ModelData modelData = model.getModelData(VirtualEmptyBlockGetter.INSTANCE, BlockPos.ZERO, state, VIRTUAL_DATA);
+		ModelData modelData = model.getModelData(EmptyBlockAndTintGetter.INSTANCE, BlockPos.ZERO, state, VIRTUAL_DATA);
 		poseStack.pushPose();
-		renderer.tesselateBlock(VirtualEmptyBlockGetter.INSTANCE, model, state, BlockPos.ZERO, poseStack, shadeSeparatingWrapper, false, random, 42L, OverlayTexture.NO_OVERLAY, modelData, null);
+		renderer.tesselateBlock(EmptyBlockAndTintGetter.INSTANCE, model, state, BlockPos.ZERO, poseStack, shadeSeparatingWrapper, false, random, 42L, OverlayTexture.NO_OVERLAY, modelData, null);
 		poseStack.popPose();
 
 		shadeSeparatingWrapper.clear();
