@@ -6,7 +6,7 @@ import net.minecraft.world.phys.Vec3;
 
 public class MovePoiInstruction extends PonderInstruction {
 
-	private Vec3 poi;
+	private final Vec3 poi;
 
 	public MovePoiInstruction(Vec3 poi) {
 		this.poi = poi;

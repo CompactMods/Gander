@@ -1,6 +1,5 @@
 package com.simibubi.create;
 
-import com.simibubi.create.CreateClient;
 import com.simibubi.create.utility.LangNumberFormat;
 
 import net.minecraft.server.packs.resources.ResourceManager;

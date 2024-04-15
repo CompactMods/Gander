@@ -2,7 +2,7 @@ package com.simibubi.create.render;
 
 import java.nio.ByteBuffer;
 
-import com.simibubi.create.utility.level.EmptyBlockAndTintGetter;
+import com.simibubi.create.ponder.level.EmptyBlockAndTintGetter;
 
 import net.minecraft.client.Minecraft;
 

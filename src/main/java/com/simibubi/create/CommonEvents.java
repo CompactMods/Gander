@@ -2,7 +2,7 @@ package com.simibubi.create;
 
 import com.simibubi.create.infrastructure.command.ClearBufferCacheCommand;
 import com.simibubi.create.infrastructure.command.HighlightCommand;
-import com.simibubi.create.infrastructure.command.PonderCommand;
+import com.simibubi.create.ponder.core.PonderCommand;
 import com.simibubi.create.utility.Components;
 import com.simibubi.create.utility.ServerSpeedProvider;
 import com.simibubi.create.utility.WorldAttached;

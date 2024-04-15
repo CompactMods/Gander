@@ -102,8 +102,8 @@ public abstract class Selection implements Predicate<BlockPos> {
 
 	private static class Simple extends Selection {
 
-		private BoundingBox bb;
-		private AABB aabb;
+		private final BoundingBox bb;
+		private final AABB aabb;
 
 		public Simple(BoundingBox bb) {
 			this.bb = bb;

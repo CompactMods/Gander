@@ -11,18 +11,18 @@ import net.minecraft.world.phys.Vec3;
 
 public class EmitParticlesInstruction extends TickingInstruction {
 
-	private Vec3 anchor;
-	private Emitter emitter;
-	private float runsPerTick;
+	private final Vec3 anchor;
+	private final Emitter emitter;
+	private final float runsPerTick;
 
 	@FunctionalInterface
-	public static interface Emitter {
+	public interface Emitter {
 
-		public static <T extends ParticleOptions> Emitter simple(T data, Vec3 motion) {
+		static <T extends ParticleOptions> Emitter simple(T data, Vec3 motion) {
 			return (w, x, y, z) -> w.addParticle(data, x, y, z, motion.x, motion.y, motion.z);
 		}
 
-		public static <T extends ParticleOptions> Emitter withinBlockSpace(T data, Vec3 motion) {
+		static <T extends ParticleOptions> Emitter withinBlockSpace(T data, Vec3 motion) {
 			return (w, x, y, z) -> w.addParticle(data, Math.floor(x) + Create.RANDOM.nextFloat(),
 					Math.floor(y) + Create.RANDOM.nextFloat(), Math.floor(z) + Create.RANDOM.nextFloat(), motion.x,
 					motion.y, motion.z);
@@ -32,7 +32,7 @@ public class EmitParticlesInstruction extends TickingInstruction {
 			return Minecraft.getInstance().particleEngine;
 		}
 
-		public void create(PonderWorld world, double x, double y, double z);
+		void create(PonderWorld world, double x, double y, double z);
 
 	}
 

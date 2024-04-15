@@ -1,16 +1,13 @@
-package com.simibubi.create.infrastructure.command;
+package com.simibubi.create.ponder.core;
 
 import java.util.Collection;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.Command;
-import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.simibubi.create.AllPackets;
 import com.simibubi.create.ponder.PonderRegistry;
-
-import com.simibubi.create.infrastructure.ponder.OpenPonderPacket;
 
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

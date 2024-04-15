@@ -12,9 +12,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class BlockEntityDataInstruction extends WorldModifyInstruction {
 
-	private boolean redraw;
-	private UnaryOperator<CompoundTag> data;
-	private Class<? extends BlockEntity> type;
+	private final boolean redraw;
+	private final UnaryOperator<CompoundTag> data;
+	private final Class<? extends BlockEntity> type;
 
 	public BlockEntityDataInstruction(Selection selection, Class<? extends BlockEntity> type,
 		UnaryOperator<CompoundTag> data, boolean redraw) {

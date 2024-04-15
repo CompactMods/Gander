@@ -2,7 +2,7 @@ package com.simibubi.create.utility;
 
 import com.simibubi.create.ponder.PonderWorld;
 import com.simibubi.create.ponder.ui.PonderUI;
-import com.simibubi.create.utility.level.WrappedClientWorld;
+import com.simibubi.create.ponder.level.WrappedClientWorld;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.LevelAccessor;

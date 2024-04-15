@@ -1,4 +1,4 @@
-package com.simibubi.create.infrastructure.ponder;
+package com.simibubi.create.ponder.core;
 
 import com.simibubi.create.Create;
 import com.simibubi.create.gui.ScreenOpener;

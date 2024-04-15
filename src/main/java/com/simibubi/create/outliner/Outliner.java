@@ -18,17 +18,6 @@ public class Outliner {
 
 	private final Map<Object, OutlineEntry> outlines = Collections.synchronizedMap(new HashMap<>());
 
-	public OutlineParams showLine(Object slot, Vec3 start, Vec3 end) {
-		if (!outlines.containsKey(slot)) {
-			LineOutline outline = new LineOutline();
-			addOutline(slot, outline);
-		}
-		OutlineEntry entry = outlines.get(slot);
-		entry.ticksTillRemoval = 1;
-		((LineOutline) entry.outline).set(start, end);
-		return entry.outline.getParams();
-	}
-
 	public OutlineParams showAABB(Object slot, AABB bb, int ttl) {
 		createAABBOutlineIfMissing(slot, bb);
 		ChasingAABBOutline outline = getAndRefreshAABB(slot, ttl);

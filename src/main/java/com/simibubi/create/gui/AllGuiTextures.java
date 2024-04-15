@@ -193,27 +193,25 @@ public enum AllGuiTextures implements ScreenElement {
 	// ComputerCraft
 	COMPUTER("computer", 200, 102);
 
-	;
-
-	public static final int FONT_COLOR = 0x575F7A;
+    public static final int FONT_COLOR = 0x575F7A;
 
 	public final ResourceLocation location;
 	public int width, height;
 	public int startX, startY;
 
-	private AllGuiTextures(String location, int width, int height) {
+	AllGuiTextures(String location, int width, int height) {
 		this(location, 0, 0, width, height);
 	}
 
-	private AllGuiTextures(int startX, int startY) {
+	AllGuiTextures(int startX, int startY) {
 		this("icons", startX * 16, startY * 16, 16, 16);
 	}
 
-	private AllGuiTextures(String location, int startX, int startY, int width, int height) {
+	AllGuiTextures(String location, int startX, int startY, int width, int height) {
 		this(Create.ID, location, startX, startY, width, height);
 	}
 
-	private AllGuiTextures(String namespace, String location, int startX, int startY, int width, int height) {
+	AllGuiTextures(String namespace, String location, int startX, int startY, int width, int height) {
 		this.location = new ResourceLocation(namespace, "textures/gui/" + location + ".png");
 		this.width = width;
 		this.height = height;

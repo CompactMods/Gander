@@ -17,11 +17,11 @@ import net.minecraft.world.phys.Vec3;
 
 public class MinecartElement extends AnimatedSceneElement {
 
-	private Vec3 location;
-	private LerpedFloat rotation;
+	private final Vec3 location;
+	private final LerpedFloat rotation;
 	private AbstractMinecart entity;
-	private MinecartConstructor constructor;
-	private float initialRotation;
+	private final MinecartConstructor constructor;
+	private final float initialRotation;
 
 	public interface MinecartConstructor {
 		AbstractMinecart create(Level w, double x, double y, double z);

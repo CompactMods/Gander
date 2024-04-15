@@ -20,11 +20,11 @@ import net.minecraft.world.phys.Vec3;
 
 public class InputWindowElement extends AnimatedOverlayElement {
 
-	private Pointing direction;
+	private final Pointing direction;
 	ResourceLocation key;
 	AllIcons icon;
 	ItemStack item = ItemStack.EMPTY;
-	private Vec3 sceneSpace;
+	private final Vec3 sceneSpace;
 
 	public InputWindowElement clone() {
 		InputWindowElement inputWindowElement = new InputWindowElement(sceneSpace, direction);

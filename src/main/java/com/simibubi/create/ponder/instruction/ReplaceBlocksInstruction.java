@@ -11,9 +11,9 @@ import net.minecraft.world.level.block.state.BlockState;
 
 public class ReplaceBlocksInstruction extends WorldModifyInstruction {
 
-	private UnaryOperator<BlockState> stateToUse;
-	private boolean replaceAir;
-	private boolean spawnParticles;
+	private final UnaryOperator<BlockState> stateToUse;
+	private final boolean replaceAir;
+	private final boolean spawnParticles;
 
 	public ReplaceBlocksInstruction(Selection selection, UnaryOperator<BlockState> stateToUse, boolean replaceAir,
 		boolean spawnParticles) {

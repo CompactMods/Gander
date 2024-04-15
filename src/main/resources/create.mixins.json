@@ -10,7 +10,6 @@
     "accessor.ParticleEngineAccessor"
   ],
   "client": [
-    "client.LevelRendererMixin",
     "client.WindowResizeMixin"
   ],
   "injectors": {

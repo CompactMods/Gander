@@ -12,7 +12,6 @@ import java.util.stream.Stream;
 import com.simibubi.create.Create;
 import com.simibubi.create.utility.BBHelper;
 import com.simibubi.create.utility.NBTProcessors;
-import com.simibubi.create.utility.level.WrappedWorld;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

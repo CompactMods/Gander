@@ -25,11 +25,11 @@ import net.minecraft.world.phys.Vec3;
 
 public class ParrotElement extends AnimatedSceneElement {
 
-	private Vec3 location;
+	private final Vec3 location;
 	private Parrot entity;
 	private ParrotPose pose;
 	private boolean deferConductor = false;
-	private Supplier<? extends ParrotPose> initialPose;
+	private final Supplier<? extends ParrotPose> initialPose;
 
 	public static ParrotElement create(Vec3 location, Supplier<? extends ParrotPose> pose) {
 		return new ParrotElement(location, pose);

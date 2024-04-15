@@ -75,7 +75,7 @@ public abstract class RenderElement implements ScreenElement {
 
 	public static class SimpleRenderElement extends RenderElement {
 
-		private ScreenElement renderable;
+		private final ScreenElement renderable;
 
 		public SimpleRenderElement(ScreenElement renderable) {
 			this.renderable = renderable;

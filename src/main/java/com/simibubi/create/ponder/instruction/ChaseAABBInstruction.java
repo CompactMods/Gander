@@ -7,9 +7,9 @@ import net.minecraft.world.phys.AABB;
 
 public class ChaseAABBInstruction extends TickingInstruction {
 
-	private AABB bb;
-	private Object slot;
-	private PonderPalette color;
+	private final AABB bb;
+	private final Object slot;
+	private final PonderPalette color;
 
 	public ChaseAABBInstruction(PonderPalette color, Object slot, AABB bb, int ticks) {
 		super(false, ticks);

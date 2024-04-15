@@ -17,8 +17,8 @@ public class AnimateBlockEntityInstruction extends TickingInstruction {
 	protected double target;
 	protected final BlockPos location;
 
-	private BiConsumer<PonderWorld, Float> setter;
-	private Function<PonderWorld, Float> getter;
+	private final BiConsumer<PonderWorld, Float> setter;
+	private final Function<PonderWorld, Float> getter;
 
 	protected AnimateBlockEntityInstruction(BlockPos location, float totalDelta, int ticks,
 		BiConsumer<PonderWorld, Float> setter, Function<PonderWorld, Float> getter) {

@@ -65,12 +65,10 @@ public abstract class NavigatableSimiScreen extends AbstractSimiScreen {
 		List<Screen> screenHistory = ScreenOpener.getScreenHistory();
 		if (screenHistory.isEmpty())
 			return;
-		if (!(screenHistory.get(0) instanceof NavigatableSimiScreen))
+		if (!(screenHistory.get(0) instanceof NavigatableSimiScreen screen))
 			return;
 
-		NavigatableSimiScreen screen = (NavigatableSimiScreen) screenHistory.get(0);
-
-		addRenderableWidget(backTrack = new PonderButton(31, height - 31 - 20).enableFade(0, 5)
+        addRenderableWidget(backTrack = new PonderButton(31, height - 31 - 20).enableFade(0, 5)
 			.withCallback(() -> ScreenOpener.openPreviousScreen(this, Optional.empty())));
 		backTrack.fade(1);
 

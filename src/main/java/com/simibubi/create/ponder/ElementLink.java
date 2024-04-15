@@ -6,8 +6,8 @@ import com.simibubi.create.ponder.element.PonderElement;
 
 public class ElementLink<T extends PonderElement> {
 
-	private Class<T> elementClass;
-	private UUID id;
+	private final Class<T> elementClass;
+	private final UUID id;
 
 	public ElementLink(Class<T> elementClass) {
 		this(elementClass, UUID.randomUUID());

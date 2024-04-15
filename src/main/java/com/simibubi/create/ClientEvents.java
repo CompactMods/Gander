@@ -4,9 +4,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.render.SuperRenderTypeBuffer;
 import com.simibubi.create.utility.AnimationTickHolder;
-import com.simibubi.create.utility.CameraAngleAnimationService;
 import com.simibubi.create.utility.ServerSpeedProvider;
-import com.simibubi.create.utility.level.WrappedClientWorld;
+import com.simibubi.create.ponder.level.WrappedClientWorld;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -17,7 +16,6 @@ import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent.Stage;
-import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.event.TickEvent.ClientTickEvent;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.level.LevelEvent;
@@ -39,7 +37,6 @@ public class ClientEvents {
 		AnimationTickHolder.tick();
 		ServerSpeedProvider.clientTick();
 		CreateClient.OUTLINER.tickOutlines();
-		CameraAngleAnimationService.tick();
 	}
 
 	@SubscribeEvent
@@ -82,17 +79,6 @@ public class ClientEvents {
 		buffer.draw();
 		RenderSystem.enableCull();
 		ms.popPose();
-	}
-
-	@SubscribeEvent
-	public static void onCameraSetup(ViewportEvent.ComputeCameraAngles event) {
-		float partialTicks = AnimationTickHolder.getPartialTicks();
-
-		if (CameraAngleAnimationService.isYawAnimating())
-			event.setYaw(CameraAngleAnimationService.getYaw(partialTicks));
-
-		if (CameraAngleAnimationService.isPitchAnimating())
-			event.setPitch(CameraAngleAnimationService.getPitch(partialTicks));
 	}
 
 	protected static boolean isGameActive() {

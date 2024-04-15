@@ -1,4 +1,4 @@
-package com.simibubi.create.infrastructure.ponder;
+package com.simibubi.create.ponder.core;
 
 import com.simibubi.create.Create;
 import com.simibubi.create.ItemHelper;
@@ -22,7 +22,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;

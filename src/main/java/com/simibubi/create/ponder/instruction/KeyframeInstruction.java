@@ -7,7 +7,7 @@ public class KeyframeInstruction extends PonderInstruction {
     public static final KeyframeInstruction IMMEDIATE = new KeyframeInstruction(false);
     public static final KeyframeInstruction DELAYED = new KeyframeInstruction(true);
 
-	private boolean delayed;
+	private final boolean delayed;
 
     private KeyframeInstruction(boolean delayed) {
 		this.delayed = delayed;

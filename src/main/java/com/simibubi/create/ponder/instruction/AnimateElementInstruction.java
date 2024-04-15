@@ -17,8 +17,8 @@ public class AnimateElementInstruction<T extends PonderSceneElement> extends Tic
 	protected ElementLink<T> link;
 	protected T element;
 
-	private BiConsumer<T, Vec3> setter;
-	private Function<T, Vec3> getter;
+	private final BiConsumer<T, Vec3> setter;
+	private final Function<T, Vec3> getter;
 
 	protected AnimateElementInstruction(ElementLink<T> link, Vec3 totalDelta, int ticks,
 		BiConsumer<T, Vec3> setter, Function<T, Vec3> getter) {

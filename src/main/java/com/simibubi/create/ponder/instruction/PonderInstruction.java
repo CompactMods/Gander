@@ -24,7 +24,7 @@ public abstract class PonderInstruction {
 
 	private static class Simple extends PonderInstruction {
 
-		private Consumer<PonderScene> callback;
+		private final Consumer<PonderScene> callback;
 
 		public Simple(Consumer<PonderScene> callback) {
 			this.callback = callback;

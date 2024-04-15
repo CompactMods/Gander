@@ -70,10 +70,8 @@ public final class NBTProcessors {
 			return false;
 		if (name.contains("Damage"))
 			return false;
-		if (name.equals("display"))
-			return false;
-		return true;
-	}
+        return !name.equals("display");
+    }
 
 	public static boolean textComponentHasClickEvent(String json) {
 		Component component = Component.Serializer.fromJson(json.isEmpty() ? "\"\"" : json);

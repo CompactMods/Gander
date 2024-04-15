@@ -2,13 +2,7 @@ package com.simibubi.create.ponder.ui;
 
 import static com.simibubi.create.ponder.PonderLocalization.LANG_PREFIX;
 
-import java.util.Collections;
 import java.util.List;
-
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.KeyboardHandler;
-import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.item.Items;
 
 import org.joml.Matrix4f;
 
@@ -18,7 +12,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.math.Axis;
-import com.simibubi.create.Create;
 import com.simibubi.create.gui.AllGuiTextures;
 import com.simibubi.create.gui.AllIcons;
 import com.simibubi.create.gui.Theme;
@@ -33,17 +26,13 @@ import com.simibubi.create.ponder.PonderStoryBoardEntry;
 import com.simibubi.create.ponder.PonderWorld;
 import com.simibubi.create.render.SuperRenderTypeBuffer;
 import com.simibubi.create.utility.Color;
-import com.simibubi.create.utility.Components;
-import com.simibubi.create.utility.FontHelper;
 import com.simibubi.create.utility.Iterate;
 import com.simibubi.create.utility.Lang;
 import com.simibubi.create.utility.Pair;
 import com.simibubi.create.utility.Pointing;
-import com.simibubi.create.utility.RegisteredObjects;
 import com.simibubi.create.utility.animation.LerpedFloat;
 import com.simibubi.create.utility.animation.LerpedFloat.Chaser;
-import com.simibubi.create.infrastructure.ponder.DebugScenes;
-import com.simibubi.create.infrastructure.ponder.PonderIndex;
+import com.simibubi.create.ponder.core.PonderIndex;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -81,8 +70,8 @@ public class PonderUI extends NavigatableSimiScreen {
 	public static final String REPLAY = LANG_PREFIX + "replay";
 	public static final String SLOW_TEXT = LANG_PREFIX + "slow_text";
 
-	private List<PonderScene> scenes;
-	private LerpedFloat fadeIn;
+	private final List<PonderScene> scenes;
+	private final LerpedFloat fadeIn;
 	ItemStack stack;
 
 	private boolean userViewMode;
@@ -90,16 +79,16 @@ public class PonderUI extends NavigatableSimiScreen {
 	private ItemStack hoveredTooltipItem;
 	private BlockPos hoveredBlockPos;
 
-	private ClipboardManager clipboardHelper;
+	private final ClipboardManager clipboardHelper;
 	private BlockPos copiedBlockPos;
 
-	private LerpedFloat finishingFlash;
-	private LerpedFloat nextUp;
+	private final LerpedFloat finishingFlash;
+	private final LerpedFloat nextUp;
 	private int finishingFlashWarmup = 0;
 	private int nextUpWarmup = 0;
 
-	private LerpedFloat lazyIndex;
-	private int index = 0;
+	private final LerpedFloat lazyIndex;
+	private final int index = 0;
 
 	private PonderButton scan;
 	private int skipCooling = 0;
@@ -671,9 +660,8 @@ public class PonderUI extends NavigatableSimiScreen {
 		float renderPartialTicks = Minecraft.getInstance()
 				.getFrameTime();
 
-		if (Minecraft.getInstance().screen instanceof PonderUI) {
-			PonderUI ui = (PonderUI) Minecraft.getInstance().screen;
-			if (ui.identifyMode)
+		if (Minecraft.getInstance().screen instanceof PonderUI ui) {
+            if (ui.identifyMode)
 				return ponderPartialTicksPaused;
 
 			return (renderPartialTicks + (ui.extendedTickLength - ui.extendedTickTimer)) / (ui.extendedTickLength + 1);

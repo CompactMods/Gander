@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 
 import com.simibubi.create.utility.math.PoseTransformStack;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import org.joml.Matrix4f;
@@ -14,7 +15,6 @@ import org.joml.Vector4f;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.Create;
 import com.simibubi.create.utility.AnimationTickHolder;
-import com.simibubi.create.utility.RegisteredObjects;
 import com.simibubi.create.ponder.level.VirtualRenderLevel;
 
 import net.minecraft.client.Minecraft;
@@ -77,8 +77,7 @@ public class BlockEntityRenderHelper {
 			} catch (Exception e) {
 				iterator.remove();
 
-				String message = "BlockEntity " + RegisteredObjects.getKeyOrThrow(blockEntity.getType())
-					.toString() + " could not be rendered virtually.";
+				String message = "BlockEntity " + BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(blockEntity.getType()) + " could not be rendered virtually.";
 				if (FMLEnvironment.production)
 					Create.LOGGER.error(message, e);
 				else

@@ -5,15 +5,12 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import com.google.gson.JsonObject;
-import com.simibubi.create.infrastructure.ponder.PonderIndex;
-import com.simibubi.create.utility.Pair;
 
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.resources.ResourceLocation;
 
 public class PonderLocalization {
 	static final Map<ResourceLocation, String> SHARED = new HashMap<>();
-	static final Map<ResourceLocation, Pair<String, String>> TAG = new HashMap<>();
 	static final Map<ResourceLocation, Map<String, String>> SPECIFIC = new HashMap<>();
 
 	//
@@ -35,14 +32,6 @@ public class PonderLocalization {
 		return k.getNamespace() + "." + LANG_PREFIX + "shared." + k.getPath();
 	}
 
-	protected static String langKeyForTag(ResourceLocation k) {
-		return k.getNamespace() + "." + LANG_PREFIX + "tag." + k.getPath();
-	}
-
-	protected static String langKeyForTagDescription(ResourceLocation k) {
-		return k.getNamespace() + "." + LANG_PREFIX + "tag." + k.getPath() + ".description";
-	}
-
 	protected static String langKeyForSpecific(ResourceLocation sceneId, String k) {
 		return sceneId.getNamespace() + "." + LANG_PREFIX + sceneId.getPath() + "." + k;
 	}
@@ -61,13 +50,6 @@ public class PonderLocalization {
 		SHARED.forEach((k, v) -> {
 			if (k.getNamespace().equals(namespace)) {
 				consumer.accept(langKeyForShared(k), v);
-			}
-		});
-
-		TAG.forEach((k, v) -> {
-			if (k.getNamespace().equals(namespace)) {
-				consumer.accept(langKeyForTag(k), v.getFirst());
-				consumer.accept(langKeyForTagDescription(k), v.getSecond());
 			}
 		});
 

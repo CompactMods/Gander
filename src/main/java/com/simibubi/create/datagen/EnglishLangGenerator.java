@@ -4,8 +4,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.simibubi.create.Create;
 
-import com.simibubi.create.infrastructure.ponder.GeneralText;
-import com.simibubi.create.infrastructure.ponder.PonderIndex;
+import com.simibubi.create.ponder.core.GeneralText;
+import com.simibubi.create.ponder.core.PonderIndex;
 import com.simibubi.create.ponder.PonderLocalization;
 
 import net.minecraft.data.DataGenerator;

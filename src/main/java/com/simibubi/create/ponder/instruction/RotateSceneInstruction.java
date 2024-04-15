@@ -6,9 +6,9 @@ import com.simibubi.create.utility.animation.LerpedFloat.Chaser;
 
 public class RotateSceneInstruction extends PonderInstruction {
 
-	private float xRot;
-	private float yRot;
-	private boolean relative;
+	private final float xRot;
+	private final float yRot;
+	private final boolean relative;
 
 	public RotateSceneInstruction(float xRot, float yRot, boolean relative) {
 		this.xRot = xRot;

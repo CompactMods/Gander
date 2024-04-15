@@ -7,7 +7,7 @@ import com.simibubi.create.ponder.element.TextWindowElement;
 
 public class TextInstruction extends FadeInOutInstruction {
 
-	private TextWindowElement element;
+	private final TextWindowElement element;
 	private OutlinerElement outline;
 
 	public TextInstruction(TextWindowElement element, int duration) {

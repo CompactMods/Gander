@@ -4,7 +4,7 @@ import com.simibubi.create.ponder.PonderScene;
 
 public abstract class TickingInstruction extends PonderInstruction {
 
-	private boolean blocking;
+	private final boolean blocking;
 	protected int totalTicks;
 	protected int remainingTicks;
 

@@ -1,4 +1,4 @@
-package com.simibubi.create.infrastructure.ponder;
+package com.simibubi.create.ponder.core;
 
 public class PonderIndex {
 

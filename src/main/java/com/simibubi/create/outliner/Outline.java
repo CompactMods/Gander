@@ -1,10 +1,6 @@
 package com.simibubi.create.outliner;
 
-import java.util.Optional;
-
 import javax.annotation.Nullable;
-
-import com.simibubi.create.utility.math.PoseTransformStack;
 
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -17,6 +13,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.render.SuperRenderTypeBuffer;
 import com.simibubi.create.utility.AngleHelper;
 import com.simibubi.create.utility.Color;
+import com.simibubi.create.utility.math.PoseTransformStack;
 
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;

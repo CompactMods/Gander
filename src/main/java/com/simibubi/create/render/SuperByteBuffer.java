@@ -87,9 +87,9 @@ public class SuperByteBuffer implements TransformStack<SuperByteBuffer> {
 				this.u = u;
 				this.v = v;
 			}
-		};
+		}
 
-		final Vector4f pos = new Vector4f();
+        final Vector4f pos = new Vector4f();
 		final Vector3f normal = new Vector3f();
 		final ShiftOutput shiftOutput = new ShiftOutput();
 		final Vector4f lightPos = new Vector4f();

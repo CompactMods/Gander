@@ -8,8 +8,8 @@ import net.minecraft.world.phys.Vec3;
 
 public class HighlightValueBoxInstruction extends TickingInstruction {
 
-	private Vec3 vec;
-	private Vec3 expands;
+	private final Vec3 vec;
+	private final Vec3 expands;
 
 	public HighlightValueBoxInstruction(Vec3 vec, Vec3 expands, int duration) {
 		super(false, duration);

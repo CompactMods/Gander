@@ -1,7 +1,6 @@
 package com.simibubi.create.ponder;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -39,7 +38,7 @@ import com.simibubi.create.utility.AnimationTickHolder;
 import com.simibubi.create.utility.Pair;
 import com.simibubi.create.utility.VecHelper;
 import com.simibubi.create.utility.animation.LerpedFloat;
-import com.simibubi.create.infrastructure.ponder.PonderIndex;
+import com.simibubi.create.ponder.core.PonderIndex;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -70,26 +69,26 @@ public class PonderScene {
 	private int textIndex;
 	ResourceLocation sceneId;
 
-	private IntList keyframeTimes;
+	private final IntList keyframeTimes;
 
 	List<PonderInstruction> schedule;
-	private List<PonderInstruction> activeSchedule;
-	private Map<UUID, PonderElement> linkedElements;
-	private Set<PonderElement> elements;
+	private final List<PonderInstruction> activeSchedule;
+	private final Map<UUID, PonderElement> linkedElements;
+	private final Set<PonderElement> elements;
 
-	private PonderWorld world;
-	private String namespace;
-	private ResourceLocation component;
+	private final PonderWorld world;
+	private final String namespace;
+	private final ResourceLocation component;
 	private SceneTransform transform;
-	private SceneCamera camera;
-	private Outliner outliner;
+	private final SceneCamera camera;
+	private final Outliner outliner;
 //	private String defaultTitle;
 
 	private Vec3 pointOfInterest;
 	private Vec3 chasingPointOfInterest;
-	private WorldSectionElement baseWorldSection;
+	private final WorldSectionElement baseWorldSection;
 	@Nullable
-	private Entity renderViewEntity;
+	private final Entity renderViewEntity;
 
 	int basePlateOffsetX;
 	int basePlateOffsetZ;

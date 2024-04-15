@@ -15,8 +15,7 @@ import com.simibubi.create.ponder.level.SchematicWorld;
 import com.simibubi.create.mixin.accessor.ParticleEngineAccessor;
 import com.simibubi.create.ponder.element.WorldSectionElement;
 import com.simibubi.create.render.SuperRenderTypeBuffer;
-import com.simibubi.create.utility.RegisteredObjects;
-import com.simibubi.create.utility.level.WrappedClientWorld;
+import com.simibubi.create.ponder.level.WrappedClientWorld;
 
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -30,6 +29,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -55,7 +55,7 @@ public class PonderWorld extends SchematicWorld {
 	protected Map<BlockPos, CompoundTag> originalBlockEntities;
 	protected Map<BlockPos, Integer> blockBreakingProgressions;
 	protected List<Entity> originalEntities;
-	private Supplier<ClientLevel> asClientWorld = Suppliers.memoize(() -> WrappedClientWorld.of(this));
+	private final Supplier<ClientLevel> asClientWorld = Suppliers.memoize(() -> WrappedClientWorld.of(this));
 
 	protected PonderWorldParticles particles;
 	private final Map<ResourceLocation, ParticleProvider<?>> particleProviders;
@@ -177,9 +177,9 @@ public class PonderWorld extends SchematicWorld {
 
 	private void renderEntity(Entity entity, double x, double y, double z, float pt, PoseStack ms,
 							  MultiBufferSource buffer) {
-		double d0 = Mth.lerp((double) pt, entity.xOld, entity.getX());
-		double d1 = Mth.lerp((double) pt, entity.yOld, entity.getY());
-		double d2 = Mth.lerp((double) pt, entity.zOld, entity.getZ());
+		double d0 = Mth.lerp(pt, entity.xOld, entity.getX());
+		double d1 = Mth.lerp(pt, entity.yOld, entity.getY());
+		double d2 = Mth.lerp(pt, entity.zOld, entity.getZ());
 		float f = Mth.lerp(pt, entity.yRotO, entity.getYRot());
 		EntityRenderDispatcher renderManager = Minecraft.getInstance()
 				.getEntityRenderDispatcher();
@@ -256,7 +256,7 @@ public class PonderWorld extends SchematicWorld {
 	@SuppressWarnings("unchecked")
 	private <T extends ParticleOptions> Particle makeParticle(T data, double x, double y, double z, double mx, double my,
 															  double mz) {
-		ResourceLocation key = RegisteredObjects.getKeyOrThrow(data.getType());
+		ResourceLocation key = BuiltInRegistries.PARTICLE_TYPE.getKey(data.getType());
 		ParticleProvider<T> particleProvider = (ParticleProvider<T>) particleProviders.get(key);
 		return particleProvider == null ? null
 				: particleProvider.createParticle(data, asClientWorld.get(), x, y, z, mx, my, mz);

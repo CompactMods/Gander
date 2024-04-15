@@ -8,9 +8,9 @@ import net.minecraft.util.StringRepresentable;
 public enum Pointing implements StringRepresentable {
 	UP(0), LEFT(270), DOWN(180), RIGHT(90);
 
-	private int xRotation;
+	private final int xRotation;
 
-	private Pointing(int xRotation) {
+	Pointing(int xRotation) {
 		this.xRotation = xRotation;
 	}
 

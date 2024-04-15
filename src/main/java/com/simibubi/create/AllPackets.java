@@ -8,7 +8,7 @@ import java.util.function.Supplier;
 
 import com.simibubi.create.infrastructure.command.HighlightCommand;
 import com.simibubi.create.networking.SimplePacketBase;
-import com.simibubi.create.infrastructure.ponder.OpenPonderPacket;
+import com.simibubi.create.ponder.core.OpenPonderPacket;
 
 import com.simibubi.create.utility.ServerSpeedProvider;
 
@@ -32,7 +32,7 @@ public enum AllPackets {
 	public static final String NETWORK_VERSION_STR = String.valueOf(NETWORK_VERSION);
 	private static SimpleChannel channel;
 
-	private PacketType<?> packetType;
+	private final PacketType<?> packetType;
 
 	<T extends SimplePacketBase> AllPackets(Class<T> type, Function<FriendlyByteBuf, T> factory,
 		NetworkDirection direction) {
@@ -57,11 +57,11 @@ public enum AllPackets {
 	private static class PacketType<T extends SimplePacketBase> {
 		private static int index = 0;
 
-		private BiConsumer<T, FriendlyByteBuf> encoder;
-		private Function<FriendlyByteBuf, T> decoder;
-		private BiConsumer<T, Supplier<Context>> handler;
-		private Class<T> type;
-		private NetworkDirection direction;
+		private final BiConsumer<T, FriendlyByteBuf> encoder;
+		private final Function<FriendlyByteBuf, T> decoder;
+		private final BiConsumer<T, Supplier<Context>> handler;
+		private final Class<T> type;
+		private final NetworkDirection direction;
 
 		private PacketType(Class<T> type, Function<FriendlyByteBuf, T> factory, NetworkDirection direction) {
 			encoder = T::write;

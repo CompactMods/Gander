@@ -11,7 +11,7 @@ import net.minecraft.client.renderer.RenderType;
 
 public abstract class TrackedElement<T> extends PonderSceneElement {
 
-	private WeakReference<T> reference;
+	private final WeakReference<T> reference;
 
 	public TrackedElement(T wrapped) {
 		this.reference = new WeakReference<>(wrapped);

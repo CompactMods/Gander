@@ -41,9 +41,8 @@ public class ScreenOpener {
 			return;
 		backSteppedFrom = current;
 		Screen previousScreen = backStack.pop();
-		if (previousScreen instanceof NavigatableSimiScreen) {
-			NavigatableSimiScreen previousAbstractSimiScreen = (NavigatableSimiScreen) previousScreen;
-			screenWithContext.ifPresent(s -> s.shareContextWith(previousAbstractSimiScreen));
+		if (previousScreen instanceof NavigatableSimiScreen previousAbstractSimiScreen) {
+            screenWithContext.ifPresent(s -> s.shareContextWith(previousAbstractSimiScreen));
 			previousAbstractSimiScreen.transition.startWithValue(-0.1)
 				.chase(-1, .4f, LerpedFloat.Chaser.EXP);
 		}

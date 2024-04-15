@@ -6,7 +6,7 @@ import com.simibubi.create.ponder.element.WorldSectionElement;
 
 public abstract class WorldModifyInstruction extends PonderInstruction {
 
-	private Selection selection;
+	private final Selection selection;
 
 	public WorldModifyInstruction(Selection selection) {
 		this.selection = selection;

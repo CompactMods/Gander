@@ -69,8 +69,8 @@ public class BlockClusterOutline extends Outline {
 	private static class Cluster {
 
 		private BlockPos anchor;
-		private Map<MergeEntry, AxisDirection> visibleFaces;
-		private Set<MergeEntry> visibleEdges;
+		private final Map<MergeEntry, AxisDirection> visibleFaces;
+		private final Set<MergeEntry> visibleEdges;
 
 		public Cluster() {
 			visibleEdges = new HashSet<>();
@@ -132,8 +132,8 @@ public class BlockClusterOutline extends Outline {
 
 	private static class MergeEntry {
 
-		private Axis axis;
-		private BlockPos pos;
+		private final Axis axis;
+		private final BlockPos pos;
 
 		public MergeEntry(Axis axis, BlockPos pos) {
 			this.axis = axis;
@@ -144,11 +144,10 @@ public class BlockClusterOutline extends Outline {
 		public boolean equals(Object o) {
 			if (this == o)
 				return true;
-			if (!(o instanceof MergeEntry))
+			if (!(o instanceof MergeEntry other))
 				return false;
 
-			MergeEntry other = (MergeEntry) o;
-			return this.axis == other.axis && this.pos.equals(other.pos);
+            return this.axis == other.axis && this.pos.equals(other.pos);
 		}
 
 		@Override

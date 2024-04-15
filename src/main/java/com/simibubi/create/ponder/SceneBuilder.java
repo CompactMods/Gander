@@ -32,7 +32,6 @@ import com.simibubi.create.ponder.instruction.EmitParticlesInstruction.Emitter;
 import com.simibubi.create.ponder.instruction.FadeOutOfSceneInstruction;
 import com.simibubi.create.ponder.instruction.HighlightValueBoxInstruction;
 import com.simibubi.create.ponder.instruction.KeyframeInstruction;
-import com.simibubi.create.ponder.instruction.LineInstruction;
 import com.simibubi.create.ponder.instruction.MarkAsFinishedInstruction;
 import com.simibubi.create.ponder.instruction.MovePoiInstruction;
 import com.simibubi.create.ponder.instruction.OutlineSelectionInstruction;
@@ -320,14 +319,6 @@ public class SceneBuilder {
 			Vec3 expands = VecHelper.axisAlingedPlaneOf(side)
 				.scale(11 / 128f);
 			addInstruction(new HighlightValueBoxInstruction(location, expands, duration));
-		}
-
-		public void showLine(PonderPalette color, Vec3 start, Vec3 end, int duration) {
-			addInstruction(new LineInstruction(color, start, end, duration, false));
-		}
-
-		public void showBigLine(PonderPalette color, Vec3 start, Vec3 end, int duration) {
-			addInstruction(new LineInstruction(color, start, end, duration, true));
 		}
 
 		public void showOutline(PonderPalette color, Object slot, Selection selection, int duration) {

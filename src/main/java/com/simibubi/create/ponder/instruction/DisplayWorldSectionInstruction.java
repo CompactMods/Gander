@@ -14,8 +14,8 @@ import net.minecraft.core.Direction;
 
 public class DisplayWorldSectionInstruction extends FadeIntoSceneInstruction<WorldSectionElement> {
 
-	private Selection initialSelection;
-	private Optional<Supplier<WorldSectionElement>> mergeOnto;
+	private final Selection initialSelection;
+	private final Optional<Supplier<WorldSectionElement>> mergeOnto;
 
 	public DisplayWorldSectionInstruction(int fadeInTicks, Direction fadeInFrom, Selection selection,
 		Optional<Supplier<WorldSectionElement>> mergeOnto) {

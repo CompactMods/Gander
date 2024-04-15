@@ -1,6 +1,5 @@
 package com.simibubi.create;
 
-import com.simibubi.create.ClientResourceReloadListener;
 import com.simibubi.create.gui.UIRenderHelper;
 import com.simibubi.create.outliner.Outliner;
 import com.simibubi.create.ponder.element.WorldSectionElement;
@@ -8,7 +7,7 @@ import com.simibubi.create.render.CachedBufferer;
 import com.simibubi.create.render.StitchedSprite;
 import com.simibubi.create.render.SuperByteBufferCache;
 import com.simibubi.create.utility.Components;
-import com.simibubi.create.infrastructure.ponder.PonderIndex;
+import com.simibubi.create.ponder.core.PonderIndex;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GraphicsStatus;

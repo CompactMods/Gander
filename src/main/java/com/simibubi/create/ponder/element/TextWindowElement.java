@@ -36,7 +36,7 @@ public class TextWindowElement extends AnimatedOverlayElement {
 
 	public class Builder {
 
-		private PonderScene scene;
+		private final PonderScene scene;
 
 		public Builder(PonderScene scene) {
 			this.scene = scene;

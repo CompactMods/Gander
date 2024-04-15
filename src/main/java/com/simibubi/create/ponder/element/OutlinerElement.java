@@ -8,7 +8,7 @@ import com.simibubi.create.ponder.PonderScene;
 
 public class OutlinerElement extends AnimatedSceneElement {
 
-	private Function<Outliner, OutlineParams> outlinerCall;
+	private final Function<Outliner, OutlineParams> outlinerCall;
 	private int overrideColor;
 
 	public OutlinerElement(Function<Outliner, OutlineParams> outlinerCall) {

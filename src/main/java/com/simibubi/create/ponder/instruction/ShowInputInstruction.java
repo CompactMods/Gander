@@ -5,7 +5,7 @@ import com.simibubi.create.ponder.element.InputWindowElement;
 
 public class ShowInputInstruction extends FadeInOutInstruction {
 
-	private InputWindowElement element;
+	private final InputWindowElement element;
 
 	public ShowInputInstruction(InputWindowElement element, int ticks) {
 		super(ticks);

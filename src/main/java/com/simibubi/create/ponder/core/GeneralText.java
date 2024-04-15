@@ -1,4 +1,4 @@
-package com.simibubi.create.infrastructure.ponder;
+package com.simibubi.create.ponder.core;
 
 import java.util.function.BiConsumer;
 
