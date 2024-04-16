@@ -11,6 +11,7 @@ import org.joml.Vector4f;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+
 import dev.compactmods.gander.utility.Color;
 
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
@@ -62,16 +63,12 @@ public class SuperByteBuffer implements TransformStack<SuperByteBuffer> {
 		if (isEmpty())
 			return;
 
-		Matrix4f modelMat = new Matrix4f(input.last()
-			.pose());
-		Matrix4f localTransforms = transforms.last()
-			.pose();
+		Matrix4f modelMat = new Matrix4f(input.last().pose());
+		Matrix4f localTransforms = transforms.last().pose();
 		modelMat.mul(localTransforms);
 
-		Matrix3f normalMat = new Matrix3f(input.last()
-			.normal());
-		Matrix3f localNormalTransforms = transforms.last()
-			.normal();
+		Matrix3f normalMat = new Matrix3f(input.last().normal());
+		Matrix3f localNormalTransforms = transforms.last().normal();
 		normalMat.mul(localNormalTransforms);
 
 		if (useWorldLight) {
@@ -89,7 +86,7 @@ public class SuperByteBuffer implements TransformStack<SuperByteBuffer> {
 			}
 		}
 
-        final Vector4f pos = new Vector4f();
+		final Vector4f pos = new Vector4f();
 		final Vector3f normal = new Vector3f();
 		final ShiftOutput shiftOutput = new ShiftOutput();
 		final Vector4f lightPos = new Vector4f();

@@ -402,6 +402,11 @@ public class SceneBuilder {
 			});
 		}
 
+		public void showSection(Selection selection) {
+			addInstruction(new DisplayWorldSectionInstruction(15, Direction.DOWN, selection,
+					Optional.of(scene::getBaseWorldSection)));
+		}
+
 		public void showSection(Selection selection, Direction fadeInDirection) {
 			addInstruction(new DisplayWorldSectionInstruction(15, fadeInDirection, selection,
 				Optional.of(scene::getBaseWorldSection)));

@@ -38,7 +38,6 @@ import dev.compactmods.gander.utility.AnimationTickHolder;
 import dev.compactmods.gander.utility.Pair;
 import dev.compactmods.gander.utility.VecHelper;
 import dev.compactmods.gander.utility.animation.LerpedFloat;
-import dev.compactmods.gander.ponder.core.PonderIndex;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -172,10 +171,6 @@ public class PonderScene {
 			return Pair.of(ItemStack.EMPTY, null);
 		if (BoundingBox.fromCorners(origin, origin.offset(new Vec3i(basePlateSize - 1, 0, basePlateSize - 1)))
 			.isInside(selectedPos)) {
-			if (PonderIndex.editingModeActive())
-				nearestHit.getValue()
-					.getFirst()
-					.selectBlock(selectedPos);
 			return Pair.of(ItemStack.EMPTY, selectedPos);
 		}
 

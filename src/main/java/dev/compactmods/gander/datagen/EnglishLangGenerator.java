@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 
 import dev.compactmods.gander.GanderLib;
 import dev.compactmods.gander.ponder.core.GeneralText;
-import dev.compactmods.gander.ponder.core.PonderIndex;
 import dev.compactmods.gander.ponder.PonderLocalization;
 
 import net.minecraft.data.DataGenerator;
@@ -42,7 +41,6 @@ public class EnglishLangGenerator extends LanguageProvider {
 
 	private static void providePonderLang(BiConsumer<String, String> consumer) {
 		// Register these since FMLClientSetupEvent does not run during datagen
-		PonderIndex.register();
 		GeneralText.provideLang(consumer);
 		PonderLocalization.provideLang(GanderLib.ID, consumer);
 	}

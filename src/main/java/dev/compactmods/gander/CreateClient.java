@@ -6,7 +6,6 @@ import dev.compactmods.gander.ponder.element.WorldSectionElement;
 import dev.compactmods.gander.render.CachedBufferer;
 import dev.compactmods.gander.render.SuperByteBufferCache;
 import dev.compactmods.gander.utility.Components;
-import dev.compactmods.gander.ponder.core.PonderIndex;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GraphicsStatus;
@@ -32,7 +31,7 @@ public class CreateClient {
 		BUFFER_CACHE.registerCompartment(CachedBufferer.GENERIC_BLOCK);
 		BUFFER_CACHE.registerCompartment(WorldSectionElement.DOC_WORLD_SECTION, 20);
 
-		PonderIndex.register();
+		DebugScenes.registerAll();
 		UIRenderHelper.init();
 	}
 

@@ -19,14 +19,11 @@ import com.mojang.math.Axis;
 
 import dev.compactmods.gander.gui.AllIcons;
 import dev.compactmods.gander.gui.Theme;
-import dev.compactmods.gander.gui.UIRenderHelper;
 import dev.compactmods.gander.gui.element.BoxElement;
 import dev.compactmods.gander.ItemHelper;
 import dev.compactmods.gander.ponder.PonderRegistry;
 import dev.compactmods.gander.ponder.PonderScene;
 import dev.compactmods.gander.ponder.PonderScene.SceneTransform;
-import dev.compactmods.gander.ponder.PonderStoryBoardEntry;
-import dev.compactmods.gander.ponder.PonderLevel;
 import dev.compactmods.gander.render.SuperRenderTypeBuffer;
 import dev.compactmods.gander.utility.Color;
 import dev.compactmods.gander.utility.Iterate;
@@ -34,7 +31,6 @@ import dev.compactmods.gander.utility.Pair;
 import dev.compactmods.gander.utility.Pointing;
 import dev.compactmods.gander.utility.animation.LerpedFloat;
 import dev.compactmods.gander.utility.animation.LerpedFloat.Chaser;
-import dev.compactmods.gander.ponder.core.PonderIndex;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -47,12 +43,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.phys.Vec3;
 
 public class PonderUI extends NavigatableSimiScreen {
@@ -469,33 +461,6 @@ public class PonderUI extends NavigatableSimiScreen {
 		PonderScene story = scenes.get(i);
 		story.renderOverlay(this, graphics, skipCooling > 0 ? 0 : identifyMode ? ponderPartialTicksPaused : partialTicks);
 		ms.popPose();
-	}
-
-	@Override
-	public boolean mouseClicked(double x, double y, int button) {
-		if (identifyMode && hoveredBlockPos != null && PonderIndex.editingModeActive()) {
-			long handle = minecraft.getWindow()
-					.getWindow();
-			if (copiedBlockPos != null && button == 1) {
-				clipboardHelper.setClipboard(handle,
-						"util.select.fromTo(" + copiedBlockPos.getX() + ", " + copiedBlockPos.getY() + ", "
-								+ copiedBlockPos.getZ() + ", " + hoveredBlockPos.getX() + ", " + hoveredBlockPos.getY() + ", "
-								+ hoveredBlockPos.getZ() + ")");
-				copiedBlockPos = hoveredBlockPos;
-				return true;
-			}
-
-			if (hasShiftDown())
-				clipboardHelper.setClipboard(handle, "util.select.position(" + hoveredBlockPos.getX() + ", "
-						+ hoveredBlockPos.getY() + ", " + hoveredBlockPos.getZ() + ")");
-			else
-				clipboardHelper.setClipboard(handle, "util.grid.at(" + hoveredBlockPos.getX() + ", "
-						+ hoveredBlockPos.getY() + ", " + hoveredBlockPos.getZ() + ")");
-			copiedBlockPos = hoveredBlockPos;
-			return true;
-		}
-
-		return super.mouseClicked(x, y, button);
 	}
 
 	@Override
