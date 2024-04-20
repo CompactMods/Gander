@@ -137,6 +137,12 @@ public class PonderScene {
 		forEach(WorldSectionElement.class, WorldSectionElement::resetSelectedBlock);
 	}
 
+	public Pair<ItemStack, BlockPos> rayTraceScene(double mouseX, double mouseY) {
+		Vec3 vec1 = transform.screenToScene(mouseX, mouseY, 1000, 0);
+		Vec3 vec2 = transform.screenToScene(mouseX, mouseY, -100, 0);
+		return rayTraceScene(vec1, vec2);
+	}
+
 	public Pair<ItemStack, BlockPos> rayTraceScene(Vec3 from, Vec3 to) {
 		MutableObject<Pair<WorldSectionElement, Pair<Vec3, BlockHitResult>>> nearestHit = new MutableObject<>();
 		MutableDouble bestDistance = new MutableDouble(0);

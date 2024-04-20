@@ -5,6 +5,7 @@ import static dev.compactmods.gander.ponder.PonderLocalization.LANG_PREFIX;
 import java.util.List;
 
 import dev.compactmods.gander.gui.TickableGuiEventListener;
+import dev.compactmods.gander.ponder.widget.CompassOverlay;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -93,6 +94,9 @@ public class PonderUI extends Screen {
 	protected int windowXOffset, windowYOffset;
 	protected int guiLeft, guiTop;
 
+	protected CompassOverlay compassOverlay;
+	protected boolean autoRotate = false;
+
 	protected PonderUI(List<PonderScene> scenes) {
 		super(Component.empty());
 
@@ -134,15 +138,8 @@ public class PonderUI extends Screen {
 		Options bindings = minecraft.options;
 		int bX = (width / 2) - 10;
 		int bY = height - 20 - 31;
-	}
 
-	private void ponderButtonClicked() {
-		identifyMode = !identifyMode;
-		if (!identifyMode)
-			scenes.get(index)
-					.deselect();
-		else
-			ponderPartialTicksPaused = minecraft.getFrameTime();
+		this.compassOverlay = new CompassOverlay(getActiveScene());
 	}
 
 	@Override
@@ -183,23 +180,10 @@ public class PonderUI extends Screen {
 		} else
 			extendedTickTimer--;
 
-		if (activeScene.getCurrentTime() == activeScene.getTotalTime() - 1) {
-			finishingFlashWarmup = 30;
-			nextUpWarmup = 50;
-		}
-
-		if (finishingFlashWarmup > 0) {
-			finishingFlashWarmup--;
-			if (finishingFlashWarmup == 0) {
-				finishingFlash.setValue(1);
-				finishingFlash.setValue(1);
-			}
-		}
-
-		if (nextUpWarmup > 0) {
-			nextUpWarmup--;
-			if (nextUpWarmup == 0)
-				nextUp.updateChaseTarget(1);
+		if (autoRotate) {
+			var transform = getActiveScene().getTransform();
+			float targetLeftRight = transform.yRotation.getChaseTarget() - 1;
+			transform.yRotation.chase(targetLeftRight, .1f, Chaser.EXP);
 		}
 
 		updateIdentifiedItem(activeScene);
@@ -224,10 +208,8 @@ public class PonderUI extends Screen {
 		Window w = minecraft.getWindow();
 		double mouseX = minecraft.mouseHandler.xpos() * w.getGuiScaledWidth() / w.getScreenWidth();
 		double mouseY = minecraft.mouseHandler.ypos() * w.getGuiScaledHeight() / w.getScreenHeight();
-		SceneTransform t = activeScene.getTransform();
-		Vec3 vec1 = t.screenToScene(mouseX, mouseY, 1000, 0);
-		Vec3 vec2 = t.screenToScene(mouseX, mouseY, -100, 0);
-		Pair<ItemStack, BlockPos> pair = activeScene.rayTraceScene(vec1, vec2);
+
+		Pair<ItemStack, BlockPos> pair = activeScene.rayTraceScene(mouseX, mouseY);
 		hoveredTooltipItem = pair.getFirst();
 		hoveredBlockPos = pair.getSecond();
 	}
@@ -250,9 +232,6 @@ public class PonderUI extends Screen {
 	protected void renderScene(GuiGraphics graphics, int mouseX, int mouseY, int i, float partialTicks) {
 		SuperRenderTypeBuffer buffer = SuperRenderTypeBuffer.getInstance();
 		PonderScene scene = scenes.get(i);
-		double value = lazyIndex.getValue(minecraft.getFrameTime());
-		double diff = i - value;
-		double slide = Mth.lerp(diff * diff, 200, 600) * diff;
 
 		RenderSystem.enableBlend();
 		RenderSystem.enableDepthTest();
@@ -267,108 +246,17 @@ public class PonderUI extends Screen {
 		ms.pushPose();
 		ms.translate(0, 0, -800);
 
-		scene.getTransform()
-				.updateScreenParams(width, height, slide);
-		scene.getTransform()
-				.apply(ms, partialTicks);
+		scene.getTransform().updateScreenParams(width, height, 0);
+		scene.getTransform().apply(ms, partialTicks);
+		scene.getTransform().updateSceneRVE(partialTicks);
 
-//		ms.translate(-story.getBasePlateOffsetX() * .5, 0, -story.getBasePlateOffsetZ() * .5);
-
-		scene.getTransform()
-				.updateSceneRVE(partialTicks);
-
-		scene.renderScene(buffer, ms, partialTicks);
-		buffer.draw();
-
-		BoundingBox bounds = scene.getBounds();
-		ms.pushPose();
-
-		// kool shadow fx
-//		if (!scene.shouldHidePlatformShadow()) {
-//			RenderSystem.enableCull();
-//			RenderSystem.enableDepthTest();
-//			ms.pushPose();
-//			ms.translate(scene.getBasePlateOffsetX(), 0, scene.getBasePlateOffsetZ());
-//			UIRenderHelper.flipForGuiRender(ms);
-//
-//			float flash = finishingFlash.getValue(partialTicks) * .9f;
-//			float alpha = flash;
-//			flash *= flash;
-//			flash = ((flash * 2) - 1);
-//			flash *= flash;
-//			flash = 1 - flash;
-//
-//			for (int f = 0; f < 4; f++) {
-//				ms.translate(scene.getBasePlateSize(), 0, 0);
-//				ms.pushPose();
-//				ms.translate(0, 0, -1 / 1024f);
-//				if (flash > 0) {
-//					ms.pushPose();
-//					ms.scale(1, .5f + flash * .75f, 1);
-//					graphics.fillGradient(0, -1, -scene.getBasePlateSize(), 0, 0, 0x00_c6ffc9,
-//							new Color(0xaa_c6ffc9).scaleAlpha(alpha)
-//									.getRGB());
-//					ms.popPose();
-//				}
-//				ms.translate(0, 0, 2 / 1024f);
-//				graphics.fillGradient(0, 0, -scene.getBasePlateSize(), 4, 0, 0x66_000000, 0x00_000000);
-//				ms.popPose();
-//				ms.mulPose(Axis.YP.rotationDegrees(-90));
-//			}
-//			ms.popPose();
-//			RenderSystem.disableCull();
-//			RenderSystem.disableDepthTest();
-//		}
-
-		// coords for debug
-		// if (PonderIndex.editingModeActive() && !userViewMode) {
-
-			ms.scale(-1, -1, 1);
-			ms.scale(1 / 16f, 1 / 16f, 1 / 16f);
-			ms.translate(1, -8, -1 / 64f);
-
-			// X AXIS
-			ms.pushPose();
-			ms.translate(4, -3, 0);
-			ms.translate(0, 0, -2 / 1024f);
-			for (int x = 0; x <= bounds.getXSpan(); x++) {
-				ms.translate(-16, 0, 0);
-				graphics.drawString(font, x == bounds.getXSpan() ? "x" : "" + x, 0, 0, 0xFFFFFFFF, false);
-			}
-			ms.popPose();
-
-			// Z AXIS
-			ms.pushPose();
-			ms.scale(-1, 1, 1);
-			ms.translate(0, -3, -4);
-			ms.mulPose(Axis.YP.rotationDegrees(-90));
-			ms.translate(-8, -2, 2 / 64f);
-			for (int z = 0; z <= bounds.getZSpan(); z++) {
-				ms.translate(16, 0, 0);
-				graphics.drawString(font, z == bounds.getZSpan() ? "z" : "" + z, 0, 0, 0xFFFFFFFF, false);
-			}
-			ms.popPose();
-
-			// DIRECTIONS
-			ms.pushPose();
-			ms.translate(bounds.getXSpan() * -8, 0, bounds.getZSpan() * 8);
-			ms.mulPose(Axis.YP.rotationDegrees(-90));
-			for (Direction d : Iterate.horizontalDirections) {
-				ms.mulPose(Axis.YP.rotationDegrees(90));
-				ms.pushPose();
-				ms.translate(0, 0, bounds.getZSpan() * 16);
-				ms.mulPose(Axis.XP.rotationDegrees(-90));
-				graphics.drawString(font, d.name()
-						.substring(0, 1), 0, 0, 0x66FFFFFF, false);
-				graphics.drawString(font, "|", 2, 10, 0x44FFFFFF, false);
-				graphics.drawString(font, ".", 2, 14, 0x22FFFFFF, false);
-				ms.popPose();
-			}
-			ms.popPose();
+		// RenderSystem.runAsFancy(() -> {
+			scene.renderScene(buffer, ms, partialTicks);
 			buffer.draw();
-		// }
+		// });
 
-		ms.popPose();
+		this.compassOverlay.render(graphics, mouseX, mouseY, partialTicks);
+
 		ms.popPose();
 		RenderSystem.restoreProjectionMatrix();
 	}
@@ -390,26 +278,6 @@ public class PonderUI extends Screen {
 		renderChapterTitle(graphics, fade, indexDiff, activeScene, tooltipColor);
 
 		PoseStack ms = graphics.pose();
-
-//		if (identifyMode) {
-//			if (noWidgetsHovered && mouseY < height - 80) {
-//				ms.pushPose();
-//				ms.translate(mouseX, mouseY, 100);
-//				if (hoveredTooltipItem.isEmpty()) {
-//					MutableComponent text = Component.translatable(IDENTIFY_MODE,
-//									((MutableComponent) minecraft.options.keyDrop.getTranslatedKeyMessage())
-//											.withStyle(ChatFormatting.WHITE))
-//							.withStyle(ChatFormatting.GRAY);
-//					graphics.renderTooltip(font, font.split(text, width / 3), 0, 0);
-//				} else
-//					graphics.renderTooltip(font, hoveredTooltipItem, 0, 0);
-//
-//				ms.popPose();
-//			}
-//			scan.flash();
-//		} else {
-//			scan.dim();
-//		}
 
 		renderSceneOverlay(graphics, partialTicks, lazyIndexValue, indexDiff);
 		renderHoverTooltips(graphics, tooltipColor);
@@ -468,9 +336,23 @@ public class PonderUI extends Screen {
 		int KEY_RIGHT = settings.keyRight.getKey().getValue();
 		int KEY_DROP = settings.keyDrop.getKey().getValue();
 
+		if (code == 263) {
+			var transform = getActiveScene().getTransform();
+			float targetLeftRight = transform.yRotation.getChaseTarget() - 15;
+			transform.yRotation.chase(targetLeftRight, .1f, Chaser.EXP);
+			return true;
+		}
+
+		if (code == 262) {
+			var transform = getActiveScene().getTransform();
+			float targetLeftRight = transform.yRotation.getChaseTarget() + 15;
+			transform.yRotation.chase(targetLeftRight, .1f, Chaser.EXP);
+			return true;
+		}
+
 		if (code == 73) {
 			this.identifyMode = !identifyMode;
-			if(!identifyMode) {
+			if (!identifyMode) {
 				scenes.get(index).deselect();
 			}
 			return true;
@@ -564,7 +446,7 @@ public class PonderUI extends Screen {
 				.getFrameTime();
 
 		if (Minecraft.getInstance().screen instanceof PonderUI ui) {
-            if (ui.identifyMode)
+			if (ui.identifyMode)
 				return ponderPartialTicksPaused;
 
 			return (renderPartialTicks + (ui.extendedTickLength - ui.extendedTickTimer)) / (ui.extendedTickLength + 1);
