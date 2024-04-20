@@ -2,12 +2,13 @@ package dev.compactmods.gander.gui;
 
 import dev.compactmods.gander.GanderLib;
 
+import net.minecraft.client.gui.components.Renderable;
+
 import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import dev.compactmods.gander.gui.element.ScreenElement;
 import dev.compactmods.gander.utility.Color;
 
 import net.minecraft.client.gui.GuiGraphics;
@@ -17,7 +18,7 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.phys.Vec3;
 
-public class AllIcons implements ScreenElement {
+public class AllIcons implements Renderable {
 
 	public static final ResourceLocation ICON_ATLAS = GanderLib.asResource("textures/gui/icons.png");
 	public static final int ICON_ATLAS_SIZE = 256;
@@ -179,7 +180,7 @@ public class AllIcons implements ScreenElement {
 	}
 
 	@Override
-	public void render(GuiGraphics graphics, int x, int y) {
+	public void render(GuiGraphics graphics, int x, int y, float partialTicks) {
 		graphics.blit(ICON_ATLAS, x, y, 0, iconX, iconY, 16, 16, 256, 256);
 	}
 

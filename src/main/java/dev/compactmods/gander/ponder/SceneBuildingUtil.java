@@ -15,7 +15,6 @@ public class SceneBuildingUtil {
 
 	public final SelectionUtil select;
 	public final VectorUtil vector;
-	public final PositionUtil grid;
 
 	private final BoundingBox sceneBounds;
 
@@ -23,25 +22,12 @@ public class SceneBuildingUtil {
 		this.sceneBounds = sceneBounds;
 		this.select = new SelectionUtil();
 		this.vector = new VectorUtil();
-		this.grid = new PositionUtil();
-	}
-
-	public class PositionUtil {
-
-		public BlockPos at(int x, int y, int z) {
-			return new BlockPos(x, y, z);
-		}
-
-		public BlockPos zero() {
-			return at(0, 0, 0);
-		}
-
 	}
 
 	public class VectorUtil {
 
 		public Vec3 centerOf(int x, int y, int z) {
-			return centerOf(grid.at(x, y, z));
+			return centerOf(new BlockPos(x, y, z));
 		}
 
 		public Vec3 centerOf(BlockPos pos) {
@@ -49,7 +35,7 @@ public class SceneBuildingUtil {
 		}
 
 		public Vec3 topOf(int x, int y, int z) {
-			return blockSurface(grid.at(x, y, z), Direction.UP);
+			return blockSurface(new BlockPos(x, y, z), Direction.UP);
 		}
 
 		public Vec3 topOf(BlockPos pos) {
@@ -75,10 +61,6 @@ public class SceneBuildingUtil {
 
 		public Selection everywhere() {
 			return Selection.of(sceneBounds);
-		}
-
-		public Selection position(int x, int y, int z) {
-			return position(grid.at(x, y, z));
 		}
 
 		public Selection position(BlockPos pos) {

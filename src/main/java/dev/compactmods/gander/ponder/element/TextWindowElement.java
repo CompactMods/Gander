@@ -5,7 +5,6 @@ import java.util.function.Supplier;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.compactmods.gander.gui.Theme;
-import dev.compactmods.gander.gui.element.BoxElement;
 import dev.compactmods.gander.ponder.PonderLocalization;
 import dev.compactmods.gander.ponder.PonderPalette;
 import dev.compactmods.gander.ponder.PonderScene;
@@ -128,11 +127,11 @@ public class TextWindowElement extends AnimatedOverlayElement {
 		ms.pushPose();
 		ms.translate(0, pY, 400);
 
-		new BoxElement().withBackground(Theme.color(Theme.Key.PONDER_BACKGROUND_FLAT))
-			.gradientBorder(Theme.pair(Theme.Key.TEXT_WINDOW_BORDER))
-			.at(targetX - 10, 3, 100)
-			.withBounds(boxWidth, boxHeight - 1)
-			.render(graphics);
+//		new BoxElement().withBackground(Theme.color(Theme.Key.PONDER_BACKGROUND_FLAT))
+//			.gradientBorder(Theme.pair(Theme.Key.TEXT_WINDOW_BORDER))
+//			.at(targetX - 10, 3, 100)
+//			.withBounds(boxWidth, boxHeight - 1)
+//			.render(graphics);
 
 		//PonderUI.renderBox(ms, targetX - 10, 3, boxWidth, boxHeight - 1, 0xaa000000, 0x30eebb00, 0x10eebb00);
 

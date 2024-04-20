@@ -84,7 +84,7 @@ public class DebugScenes {
 				.independent(10)
 				.text("Blocks can be modified");
 		scene.idle(20);
-		scene.world.replaceBlocks(util.select.position(3, 1, 1), Blocks.GOLD_BLOCK.defaultBlockState(), true);
+		scene.world.replaceBlocks(util.select.position(new BlockPos(3, 1, 1)), Blocks.GOLD_BLOCK.defaultBlockState(), true);
 		scene.idle(5);
 		scene.rotateCameraY(180);
 		scene.markAsFinished();
@@ -122,7 +122,7 @@ public class DebugScenes {
 		}
 
 		scene.idle(12);
-		scene.special.movePointOfInterest(util.grid.at(-4, 5, 4));
+		scene.special.movePointOfInterest(new BlockPos(-4, 5, 4));
 		scene.overlay.showText(40)
 				.colored(PonderPalette.RED)
 				.text("wut?")
@@ -205,7 +205,7 @@ public class DebugScenes {
 		scene.world.showSection(util.select.layer(3), Direction.DOWN);
 		scene.idle(10);
 
-		BlockPos shaftPos = util.grid.at(3, 1, 1);
+		BlockPos shaftPos = new BlockPos(3, 1, 1);
 		Selection shaftSelection = util.select.position(shaftPos);
 		scene.overlay.showControls(new InputWindowElement(util.vector.topOf(shaftPos), Pointing.DOWN).rightClick()
 				.whileSneaking(), 40);
@@ -222,7 +222,7 @@ public class DebugScenes {
 
 		scene.idle(40);
 
-		BlockPos chassis = util.grid.at(1, 1, 3);
+		BlockPos chassis = new BlockPos(1, 1, 3);
 		Vec3 chassisSurface = util.vector.blockSurface(chassis, Direction.NORTH);
 
 		Object chassisValueBoxHighlight = new Object();
@@ -231,7 +231,7 @@ public class DebugScenes {
 		AABB point = new AABB(chassisSurface, chassisSurface);
 		AABB expanded = point.inflate(1 / 4f, 1 / 4f, 1 / 16f);
 
-		Selection singleBlock = util.select.position(1, 2, 3);
+		Selection singleBlock = util.select.position(new BlockPos(1, 2, 3));
 		Selection twoBlocks = util.select.fromTo(1, 2, 3, 1, 3, 3);
 		Selection threeBlocks = util.select.fromTo(1, 2, 3, 1, 4, 3);
 
@@ -296,8 +296,8 @@ public class DebugScenes {
 				.add(0, 0.25f, 0), FacePointOfInterestPose::new);
 		scene.idle(20);
 
-		BlockPos poi1 = util.grid.at(4, 1, 0);
-		BlockPos poi2 = util.grid.at(0, 1, 4);
+		BlockPos poi1 = new BlockPos(4, 1, 0);
+		BlockPos poi2 = new BlockPos(0, 1, 4);
 
 		scene.world.setBlock(poi1, Blocks.GOLD_BLOCK.defaultBlockState(), true);
 		scene.special.movePointOfInterest(poi1);
@@ -324,8 +324,8 @@ public class DebugScenes {
 		scene.idle(10);
 		scene.rotateCameraY(95);
 
-		BlockPos mergePos = util.grid.at(1, 1, 1);
-		BlockPos independentPos = util.grid.at(3, 1, 1);
+		BlockPos mergePos = new BlockPos(1, 1, 1);
+		BlockPos independentPos = new BlockPos(3, 1, 1);
 		Selection toMerge = util.select.position(mergePos);
 		Selection independent = util.select.position(independentPos);
 		Selection start = util.select.layersFrom(1)
@@ -353,13 +353,13 @@ public class DebugScenes {
 		scene.idle(40);
 
 		scene.world.hideIndependentSection(link, Direction.DOWN);
-		scene.world.hideSection(util.select.fromTo(mergePos, util.grid.at(1, 1, 4)), Direction.DOWN);
+		scene.world.hideSection(util.select.fromTo(mergePos, new BlockPos(1, 1, 4)), Direction.DOWN);
 
 		scene.idle(20);
 
 		Selection hiddenReplaceArea = util.select.fromTo(2, 1, 2, 4, 1, 4)
-				.substract(util.select.position(4, 1, 3))
-				.substract(util.select.position(2, 1, 3));
+				.substract(util.select.position(new BlockPos(4, 1, 3))
+				.substract(util.select.position(new BlockPos(2, 1, 3))));
 
 		scene.world.hideSection(hiddenReplaceArea, Direction.UP);
 		scene.idle(20);

@@ -16,7 +16,6 @@ public class GeneralText {
 		consume(consumer, PonderUI.NEXT_UP, "Up Next:");
 		consume(consumer, PonderUI.PREVIOUS, "Previous Scene");
 		consume(consumer, PonderUI.REPLAY, "Replay");
-		consume(consumer, PonderUI.THINK_BACK, "Think Back");
 		consume(consumer, PonderUI.SLOW_TEXT, "Comfy Reading");
 	}
 

@@ -42,6 +42,6 @@ public record OpenPonderPacket(String scene) implements CustomPacketPayload {
 			return;
 		}
 
-		ScreenOpener.transitionTo(PonderUI.of(id));
+		ScreenOpener.open(PonderUI.of(id));
 	}
 }
