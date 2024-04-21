@@ -2,6 +2,8 @@ package dev.compactmods.gander.outliner;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.client.renderer.MultiBufferSource;
+
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3d;
@@ -10,7 +12,6 @@ import org.joml.Vector4f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import dev.compactmods.gander.render.SuperRenderTypeBuffer;
 import dev.compactmods.gander.utility.AngleHelper;
 import dev.compactmods.gander.utility.Color;
 import dev.compactmods.gander.utility.math.PoseTransformStack;
@@ -40,7 +41,7 @@ public abstract class Outline {
 		return params;
 	}
 
-	public abstract void render(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt);
+	public abstract void render(PoseStack ms, MultiBufferSource buffer, Vec3 camera, float pt);
 
 	public void tick() {}
 

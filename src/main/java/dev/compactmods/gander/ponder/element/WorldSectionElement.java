@@ -6,24 +6,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.SheetedDecalTextureGenerator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.blaze3d.vertex.VertexFormat;
 
-import dev.compactmods.gander.CreateClient;
 import dev.compactmods.gander.outliner.AABBOutline;
 import dev.compactmods.gander.ponder.PonderScene;
 import dev.compactmods.gander.ponder.PonderLevel;
 import dev.compactmods.gander.ponder.Selection;
 import dev.compactmods.gander.render.BlockEntityRenderHelper;
-import dev.compactmods.gander.render.ShadeSeparatingVertexConsumer;
-import dev.compactmods.gander.render.SuperByteBuffer;
-import dev.compactmods.gander.render.SuperByteBufferCache;
-import dev.compactmods.gander.render.SuperRenderTypeBuffer;
-import dev.compactmods.gander.render.VirtualRenderHelper;
 import dev.compactmods.gander.utility.AnimationTickHolder;
 import dev.compactmods.gander.utility.Pair;
 import dev.compactmods.gander.utility.VecHelper;
@@ -59,11 +50,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.client.model.data.ModelData;
 
 public class WorldSectionElement extends AnimatedSceneElement {
-
-	public static final SuperByteBufferCache.Compartment<Pair<Integer, Integer>> DOC_WORLD_SECTION =
-			new SuperByteBufferCache.Compartment<>();
-
-	private static final ThreadLocal<ThreadLocalObjects> THREAD_LOCAL_OBJECTS = ThreadLocal.withInitial(ThreadLocalObjects::new);
 
 	List<BlockEntity> renderedBlockEntities;
 	List<Pair<BlockEntity, Consumer<Level>>> tickableBlockEntities;
@@ -264,7 +250,7 @@ public class WorldSectionElement extends AnimatedSceneElement {
 	}
 
 	@Override
-	public void renderFirst(PonderLevel world, MultiBufferSource buffer, PoseStack ms, float fade, float pt) {
+	public void renderFirst(PonderLevel world, MultiBufferSource.BufferSource buffer, PoseStack ms, float fade, float pt) {
 		int light = -1;
 		if (fade != 1)
 			light = (int) (Mth.lerp(fade, 5, 14));
@@ -312,30 +298,55 @@ public class WorldSectionElement extends AnimatedSceneElement {
 	}
 
 	@Override
-	protected void renderLayer(PonderLevel world, MultiBufferSource buffer, RenderType type, PoseStack ms, float fade,
+	protected void renderLayer(PonderLevel world, MultiBufferSource.BufferSource buffer, RenderType type, PoseStack pose, float fade,
 							   float pt) {
-		SuperByteBufferCache bufferCache = CreateClient.BUFFER_CACHE;
+		var b = buffer.getBuffer(type);
+		pose.pushPose();
+		{
+			transformMS(pose, pt);
+			BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
+			ModelBlockRenderer renderer = dispatcher.getModelRenderer();
 
-		int code = hashCode() ^ world.hashCode();
-		Pair<Integer, Integer> key = Pair.of(code, RenderType.chunkBufferLayers()
-				.indexOf(type));
+			RandomSource random = RandomSource.createNewThreadLocalInstance();
 
-		if (redraw)
-			bufferCache.invalidate(DOC_WORLD_SECTION, key);
-		SuperByteBuffer contraptionBuffer =
-				bufferCache.get(DOC_WORLD_SECTION, key, () -> buildStructureBuffer(world, type));
-		if (contraptionBuffer.isEmpty())
-			return;
+			world.setMask(this.section);
+			ModelBlockRenderer.enableCaching();
+			section.forEach(pos -> {
+				BlockState state = world.getBlockState(pos);
+				FluidState fluidState = world.getFluidState(pos);
 
-		transformMS(contraptionBuffer.getTransforms(), pt);
-		int light = lightCoordsFromFade(fade);
-		contraptionBuffer
-				.light(light)
-				.renderInto(ms, buffer.getBuffer(type));
+				pose.pushPose();
+				pose.translate(pos.getX(), pos.getY(), pos.getZ());
+
+				if (state.getRenderShape() == RenderShape.MODEL) {
+					BakedModel model = dispatcher.getBlockModel(state);
+					BlockEntity blockEntity = world.getBlockEntity(pos);
+
+					long seed = state.getSeed(pos);
+					random.setSeed(seed);
+
+					ModelData modelData = blockEntity != null ? blockEntity.getModelData() : ModelData.EMPTY;
+					modelData = model.getModelData(world, pos, state, modelData);
+					if (model.getRenderTypes(state, random, modelData).contains(type)) {
+						renderer.tesselateBlock(world, model, state, pos, pose, b, true,
+								random, seed, OverlayTexture.NO_OVERLAY, modelData, type);
+					}
+				}
+
+				if (!fluidState.isEmpty() && ItemBlockRenderTypes.getRenderLayer(fluidState) == type)
+					dispatcher.renderLiquid(pos, world, b, state, fluidState);
+
+				pose.popPose();
+			});
+			ModelBlockRenderer.clearCache();
+			world.clearMask();
+			buffer.endBatch();
+		}
+		pose.popPose();
 	}
 
 	@Override
-	protected void renderLast(PonderLevel world, MultiBufferSource buffer, PoseStack ms, float fade, float pt) {
+	protected void renderLast(PonderLevel world, MultiBufferSource.BufferSource buffer, PoseStack ms, float fade, float pt) {
 		redraw = false;
 		if (selectedBlock == null)
 			return;
@@ -356,7 +367,7 @@ public class WorldSectionElement extends AnimatedSceneElement {
 				.lineWidth(1 / 64f)
 				.colored(0xefefef)
 				.disableLineNormals();
-		aabbOutline.render(ms, (SuperRenderTypeBuffer) buffer, Vec3.ZERO, pt);
+		aabbOutline.render(ms, buffer, Vec3.ZERO, pt);
 
 		ms.popPose();
 	}
@@ -365,63 +376,4 @@ public class WorldSectionElement extends AnimatedSceneElement {
 		loadBEsIfMissing(world);
 		BlockEntityRenderHelper.renderBlockEntities(world, renderedBlockEntities, ms, buffer, pt);
 	}
-
-	private SuperByteBuffer buildStructureBuffer(PonderLevel world, RenderType layer) {
-		BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
-		ModelBlockRenderer renderer = dispatcher.getModelRenderer();
-		ThreadLocalObjects objects = THREAD_LOCAL_OBJECTS.get();
-
-		PoseStack poseStack = objects.poseStack;
-		RandomSource random = objects.random;
-
-		ShadeSeparatingVertexConsumer shadeSeparatingWrapper = objects.shadeSeparatingWrapper;
-		BufferBuilder shadedBuilder = objects.shadedBuilder;
-		BufferBuilder unshadedBuilder = objects.unshadedBuilder;
-
-		shadedBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
-		unshadedBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
-		shadeSeparatingWrapper.prepare(shadedBuilder, unshadedBuilder);
-
-		world.setMask(this.section);
-		ModelBlockRenderer.enableCaching();
-		section.forEach(pos -> {
-			BlockState state = world.getBlockState(pos);
-			FluidState fluidState = world.getFluidState(pos);
-
-			poseStack.pushPose();
-			poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
-
-			if (state.getRenderShape() == RenderShape.MODEL) {
-				BakedModel model = dispatcher.getBlockModel(state);
-				BlockEntity blockEntity = world.getBlockEntity(pos);
-				ModelData modelData = blockEntity != null ? blockEntity.getModelData() : ModelData.EMPTY;
-				modelData = model.getModelData(world, pos, state, modelData);
-				long seed = state.getSeed(pos);
-				random.setSeed(seed);
-				if (model.getRenderTypes(state, random, modelData).contains(layer)) {
-					renderer.tesselateBlock(world, model, state, pos, poseStack, shadeSeparatingWrapper, true,
-							random, seed, OverlayTexture.NO_OVERLAY, modelData, layer);
-				}
-			}
-
-			if (!fluidState.isEmpty() && ItemBlockRenderTypes.getRenderLayer(fluidState) == layer)
-				dispatcher.renderLiquid(pos, world, shadedBuilder, state, fluidState);
-
-			poseStack.popPose();
-		});
-		ModelBlockRenderer.clearCache();
-		world.clearMask();
-
-		shadeSeparatingWrapper.clear();
-		return VirtualRenderHelper.endAndCombine(shadedBuilder, unshadedBuilder);
-	}
-
-	private static class ThreadLocalObjects {
-		public final PoseStack poseStack = new PoseStack();
-		public final RandomSource random = RandomSource.createNewThreadLocalInstance();
-		public final ShadeSeparatingVertexConsumer shadeSeparatingWrapper = new ShadeSeparatingVertexConsumer();
-		public final BufferBuilder shadedBuilder = new BufferBuilder(512);
-		public final BufferBuilder unshadedBuilder = new BufferBuilder(512);
-	}
-
 }

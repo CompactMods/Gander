@@ -7,8 +7,8 @@ import java.util.Map;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.compactmods.gander.outliner.Outline.OutlineParams;
-import dev.compactmods.gander.render.SuperRenderTypeBuffer;
 
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
@@ -85,7 +85,7 @@ public class Outliner {
 		}
 	}
 
-	public void renderOutlines(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt) {
+	public void renderOutlines(PoseStack ms, MultiBufferSource buffer, Vec3 camera, float pt) {
 		outlines.forEach((key, entry) -> {
 			Outline outline = entry.getOutline();
 			OutlineParams params = outline.getParams();

@@ -7,6 +7,6 @@ public class ClientResourceReloadListener implements ResourceManagerReloadListen
 
 	@Override
 	public void onResourceManagerReload(ResourceManager resourceManager) {
-		CreateClient.invalidateRenderers();
+		// CreateClient.invalidateRenderers();
 	}
 }

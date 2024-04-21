@@ -8,10 +8,10 @@ import net.minecraft.client.renderer.RenderType;
 
 public abstract class PonderSceneElement implements PonderElement {
 
-	public abstract void renderFirst(PonderLevel world, MultiBufferSource buffer, PoseStack ms, float pt);
+	public abstract void renderFirst(PonderLevel world, MultiBufferSource.BufferSource buffer, PoseStack ms, float pt);
 
-	public abstract void renderLayer(PonderLevel world, MultiBufferSource buffer, RenderType type, PoseStack ms, float pt);
+	public abstract void renderLayer(PonderLevel world, MultiBufferSource.BufferSource buffer, RenderType type, PoseStack ms, float pt);
 
-	public abstract void renderLast(PonderLevel world, MultiBufferSource buffer, PoseStack ms, float pt);
+	public abstract void renderLast(PonderLevel world, MultiBufferSource.BufferSource buffer, PoseStack ms, float pt);
 
 }

@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import dev.compactmods.gander.GanderLib;
 import dev.compactmods.gander.utility.math.PoseTransformStack;
 
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.neoforged.fml.loading.FMLEnvironment;
@@ -105,10 +106,18 @@ public class BlockEntityRenderHelper {
 
 		if (renderWorld != null) {
 			int renderWorldLight = LevelRenderer.getLightColor(renderWorld, renderWorldPos);
-			return SuperByteBuffer.maxLight(worldLight, renderWorldLight);
+			return maxLight(worldLight, renderWorldLight);
 		}
 
 		return worldLight;
+	}
+
+	private static int maxLight(int packedLight1, int packedLight2) {
+		int blockLight1 = LightTexture.block(packedLight1);
+		int skyLight1 = LightTexture.sky(packedLight1);
+		int blockLight2 = LightTexture.block(packedLight2);
+		int skyLight2 = LightTexture.sky(packedLight2);
+		return LightTexture.pack(Math.max(blockLight1, blockLight2), Math.max(skyLight1, skyLight2));
 	}
 
 }

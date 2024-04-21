@@ -35,7 +35,7 @@ public abstract class AnimatedSceneElement extends PonderSceneElement {
 	}
 
 	@Override
-	public final void renderFirst(PonderLevel world, MultiBufferSource buffer, PoseStack ms, float pt) {
+	public final void renderFirst(PonderLevel world, MultiBufferSource.BufferSource buffer, PoseStack ms, float pt) {
 		ms.pushPose();
 		float currentFade = applyFade(ms, pt);
 		renderFirst(world, buffer, ms, currentFade, pt);
@@ -43,8 +43,8 @@ public abstract class AnimatedSceneElement extends PonderSceneElement {
 	}
 
 	@Override
-	public final void renderLayer(PonderLevel world, MultiBufferSource buffer, RenderType type, PoseStack ms,
-                                  float pt) {
+	public final void renderLayer(PonderLevel world, MultiBufferSource.BufferSource buffer, RenderType type, PoseStack ms,
+								  float pt) {
 		ms.pushPose();
 		float currentFade = applyFade(ms, pt);
 		renderLayer(world, buffer, type, ms, currentFade, pt);
@@ -52,7 +52,7 @@ public abstract class AnimatedSceneElement extends PonderSceneElement {
 	}
 
 	@Override
-	public final void renderLast(PonderLevel world, MultiBufferSource buffer, PoseStack ms, float pt) {
+	public final void renderLast(PonderLevel world, MultiBufferSource.BufferSource buffer, PoseStack ms, float pt) {
 		ms.pushPose();
 		float currentFade = applyFade(ms, pt);
 		renderLast(world, buffer, ms, currentFade, pt);
@@ -67,12 +67,12 @@ public abstract class AnimatedSceneElement extends PonderSceneElement {
 		return currentFade;
 	}
 
-	protected void renderLayer(PonderLevel world, MultiBufferSource buffer, RenderType type, PoseStack ms, float fade,
+	protected void renderLayer(PonderLevel world, MultiBufferSource.BufferSource buffer, RenderType type, PoseStack ms, float fade,
                                float pt) {}
 
-	protected void renderFirst(PonderLevel world, MultiBufferSource buffer, PoseStack ms, float fade, float pt) {}
+	protected void renderFirst(PonderLevel world, MultiBufferSource.BufferSource buffer, PoseStack ms, float fade, float pt) {}
 
-	protected void renderLast(PonderLevel world, MultiBufferSource buffer, PoseStack ms, float fade, float pt) {}
+	protected void renderLast(PonderLevel world, MultiBufferSource.BufferSource buffer, PoseStack ms, float fade, float pt) {}
 
 	protected int lightCoordsFromFade(float fade) {
 		int light = LightTexture.FULL_BRIGHT;

@@ -1,9 +1,10 @@
 package dev.compactmods.gander.outliner;
 
+import net.minecraft.client.renderer.MultiBufferSource;
+
 import org.joml.Vector4f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import dev.compactmods.gander.render.SuperRenderTypeBuffer;
 
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
@@ -31,7 +32,7 @@ public class ChasingAABBOutline extends AABBOutline {
 	}
 
 	@Override
-	public void render(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt) {
+	public void render(PoseStack ms, MultiBufferSource buffer, Vec3 camera, float pt) {
 		params.loadColor(colorTemp);
 		Vector4f color = colorTemp;
 		int lightmap = params.lightmap;

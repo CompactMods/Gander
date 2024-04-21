@@ -1,41 +1,27 @@
 package dev.compactmods.gander.ponder.ui;
 
-import static dev.compactmods.gander.ponder.PonderLocalization.LANG_PREFIX;
-
-import java.util.List;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import dev.compactmods.gander.gui.TickableGuiEventListener;
-import dev.compactmods.gander.ponder.widget.CompassOverlay;
+import dev.compactmods.gander.ponder.SceneRaytracer;
 import dev.compactmods.gander.ponder.widget.SceneWidget;
-import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.network.chat.Component;
 
-import org.joml.Matrix4f;
-
 import com.mojang.blaze3d.platform.ClipboardManager;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexSorting;
-import com.mojang.math.Axis;
 
-import dev.compactmods.gander.gui.AllIcons;
-import dev.compactmods.gander.gui.Theme;
 import dev.compactmods.gander.ponder.PonderRegistry;
 import dev.compactmods.gander.ponder.PonderScene;
-import dev.compactmods.gander.ponder.PonderScene.SceneTransform;
-import dev.compactmods.gander.render.SuperRenderTypeBuffer;
 import dev.compactmods.gander.utility.Color;
-import dev.compactmods.gander.utility.Iterate;
 import dev.compactmods.gander.utility.Pair;
-import dev.compactmods.gander.utility.Pointing;
 import dev.compactmods.gander.utility.animation.LerpedFloat;
 import dev.compactmods.gander.utility.animation.LerpedFloat.Chaser;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.Font;
@@ -43,12 +29,13 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.levelgen.structure.BoundingBox;
-import net.minecraft.world.phys.Vec3;
+
+import org.joml.Vector2d;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
 
 public class PonderUI extends Screen {
 
@@ -76,6 +63,8 @@ public class PonderUI extends Screen {
 
 	protected boolean autoRotate = false;
 	private SceneWidget sceneRenderer;
+	private Vector2f mainCameraRotation;
+	private static final Vector2f DEFAULT_ROTATION = new Vector2f((float) Math.toRadians(-25), (float) Math.toRadians(-135));
 
 	protected PonderUI(PonderScene scene) {
 		super(Component.empty());
@@ -111,6 +100,8 @@ public class PonderUI extends Screen {
 		int bY = height - 20 - 31;
 
 		this.sceneRenderer = this.addRenderableOnly(new SceneWidget(scene, width, height));
+		// this.sceneRenderer.shouldRenderCompass(true);
+		this.mainCameraRotation = new Vector2f(DEFAULT_ROTATION);
 	}
 
 	@Override
@@ -142,9 +133,7 @@ public class PonderUI extends Screen {
 			extendedTickTimer--;
 
 		if (autoRotate) {
-			var transform = getActiveScene().getTransform();
-			float targetLeftRight = transform.yRotation.getChaseTarget() - 1;
-			transform.yRotation.chase(targetLeftRight, .1f, Chaser.EXP);
+			this.mainCameraRotation.y += Math.toRadians(2.5);
 		}
 
 		updateIdentifiedItem(scene);
@@ -164,7 +153,7 @@ public class PonderUI extends Screen {
 		double mouseX = minecraft.mouseHandler.xpos() * w.getGuiScaledWidth() / w.getScreenWidth();
 		double mouseY = minecraft.mouseHandler.ypos() * w.getGuiScaledHeight() / w.getScreenHeight();
 
-		Pair<ItemStack, BlockPos> pair = activeScene.rayTraceScene(mouseX, mouseY);
+		Pair<ItemStack, BlockPos> pair = SceneRaytracer.rayTraceScene(activeScene, mouseX, mouseY);
 		hoveredTooltipItem = pair.getFirst();
 		hoveredBlockPos = pair.getSecond();
 	}
@@ -176,6 +165,7 @@ public class PonderUI extends Screen {
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+		this.sceneRenderer.prepareCamera(this.mainCameraRotation);
 		super.render(graphics, mouseX, mouseY, partialTicks);
 
 		// Chapter title
@@ -204,23 +194,44 @@ public class PonderUI extends Screen {
 	public boolean keyPressed(int code, int scanCode, int modifiers) {
 		Options settings = Minecraft.getInstance().options;
 
-		int KEY_LEFT = 262;
-		int KEY_RIGHT = 263;
+		var transform = getActiveScene().getTransform();
 
-		if (code == KEY_LEFT) {
-			var transform = getActiveScene().getTransform();
-			transform.rotate(Direction.Axis.Y, 15);
+		final var rads = 1 / 12f;
+
+		if (code == InputConstants.KEY_A) {
+			this.autoRotate = !autoRotate;
 			return true;
 		}
 
-		if (code == KEY_RIGHT) {
-			var transform = getActiveScene().getTransform();
-			transform.rotate(Direction.Axis.Y, -15);
+		if (code == InputConstants.KEY_R) {
+			this.mainCameraRotation.set(DEFAULT_ROTATION);
 			return true;
 		}
 
-		// Hit I to toggle identify mode
-		if (code == 73) {
+		if (code == InputConstants.KEY_UP) {
+			if(this.mainCameraRotation.x < -rads)
+				this.mainCameraRotation.x += rads;
+
+			return true;
+		}
+
+		if (code == InputConstants.KEY_DOWN) {
+			if(this.mainCameraRotation.x > -(Math.PI / 2) + (rads * 2))
+				this.mainCameraRotation.x -= rads;
+			return true;
+		}
+
+		if (code == InputConstants.KEY_LEFT) {
+			this.mainCameraRotation.y += rads;
+			return true;
+		}
+
+		if (code == InputConstants.KEY_RIGHT) {
+			this.mainCameraRotation.y -= rads;
+			return true;
+		}
+
+		if (code == InputConstants.KEY_I) {
 			this.identifyMode = !identifyMode;
 			if (!identifyMode) {
 				scene.deselect();

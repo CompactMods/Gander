@@ -18,7 +18,6 @@ import dev.compactmods.gander.ponder.instruction.EmitParticlesInstruction.Emitte
 import dev.compactmods.gander.ponder.instruction.HighlightValueBoxInstruction;
 import dev.compactmods.gander.ponder.instruction.KeyframeInstruction;
 import dev.compactmods.gander.ponder.instruction.MarkAsFinishedInstruction;
-import dev.compactmods.gander.ponder.instruction.MovePoiInstruction;
 import dev.compactmods.gander.ponder.instruction.OutlineSelectionInstruction;
 import dev.compactmods.gander.ponder.instruction.contract.PonderInstruction;
 import dev.compactmods.gander.ponder.instruction.ReplaceBlocksInstruction;
@@ -66,63 +65,17 @@ public class SceneBuilder {
 	 */
 	public final EffectInstructions effects;
 
-	/**
-	 * Random other instructions that might come in handy
-	 */
-	public final SpecialInstructions special;
 
 	private final PonderScene scene;
 
 	public SceneBuilder(PonderScene ponderScene) {
 		scene = ponderScene;
 		overlay = new OverlayInstructions();
-		special = new SpecialInstructions();
 		world = new WorldInstructions();
 		effects = new EffectInstructions();
 	}
 
 	// General
-	/**
-	 * Communicates to the ponder UI which parts of the schematic make up the base
-	 * horizontally. Use of this is encouraged whenever there are components outside
-	 * the the base plate. <br>
-	 * As a result, showBasePlate() will only show the configured size, and the
-	 * scene's scaling inside the UI will be consistent with its base size.
-	 *
-	 * @param xOffset       Block spaces between the base plate and the schematic
-	 *                      boundary on the Western side.
-	 * @param zOffset       Block spaces between the base plate and the schematic
-	 *                      boundary on the Northern side.
-	 * @param basePlateSize Length in blocks of the base plate itself. Ponder
-	 *                      assumes it to be square
-	 */
-	public void configureBasePlate(int xOffset, int zOffset, int basePlateSize) {
-		scene.basePlateOffsetX = xOffset;
-		scene.basePlateOffsetZ = zOffset;
-		scene.basePlateSize = basePlateSize;
-	}
-
-	/**
-	 * Use this in case you are not happy with the scale of the scene relative to
-	 * the overlay
-	 *
-	 * @param factor {@literal >}1 will make the scene appear larger, smaller
-	 *               otherwise
-	 */
-	public void scaleSceneView(float factor) {
-		scene.scaleFactor = factor;
-	}
-
-	/**
-	 * Use this in case you are not happy with the vertical alignment of the scene
-	 * relative to the overlay
-	 *
-	 * @param yOffset {@literal >}0 moves the scene up, down otherwise
-	 */
-	public void setSceneOffsetY(float yOffset) {
-		scene.yOffset = yOffset;
-	}
-
 	/**
 	 * Adds an instruction to the scene. It is recommended to only use this method
 	 * if another method in this class or its subclasses does not already allow
@@ -258,16 +211,6 @@ public class SceneBuilder {
 			addInstruction(new OutlineSelectionInstruction(color, slot, selection, duration));
 		}
 
-	}
-
-	public class SpecialInstructions {
-		public void movePointOfInterest(Vec3 location) {
-			addInstruction(new MovePoiInstruction(location));
-		}
-
-		public void movePointOfInterest(BlockPos location) {
-			movePointOfInterest(VecHelper.getCenterOf(location));
-		}
 	}
 
 	public class WorldInstructions {

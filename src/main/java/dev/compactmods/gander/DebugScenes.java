@@ -26,6 +26,8 @@ public class DebugScenes {
 		// add(DebugScenes::blocksScene, "debug/scene_" + index);
 		// add(DebugScenes::fluidsScene, "debug/scene_" + index);
 		add(DebugScenes::renderers, "debug/renderers");
+		add(DebugScenes::renderers, "debug/glass");
+		add(DebugScenes::renderers, "debug/glass2");
 		// add(DebugScenes::offScreenScene, "debug/scene_" + index);
 		// add(DebugScenes::particleScene, "debug/scene_" + index);
 		// add(DebugScenes::controlsScene, "debug/scene_" + index);
@@ -72,25 +74,10 @@ public class DebugScenes {
 			scene.overlay.chaseBoundingBoxOutline(PonderPalette.RED, outlineSlot,
 					i % 2 == 0 ? boundingBox1 : boundingBox2, 15);
 			scene.idle(1);
-			scene.special.movePointOfInterest(i % 2 == 0 ? poi1 : poi2);
-			scene.idle(12);
 		}
-
-		scene.idle(12);
-		scene.special.movePointOfInterest(new BlockPos(-4, 5, 4));
-
 	}
 
 	private static void renderers(SceneBuilder scene, SceneBuildingUtil util) {
-		scene.configureBasePlate(0, 0, 7);
-
-		Selection blocksExceptBasePlate = util.select.layersFrom(1)
-				.substract(util.select.layer(0));
-
-//		scene.scaleSceneView(0.5f);
-//		scene.rotateCameraY(15);
-		scene.idle(20);
-
 		scene.markAsFinished();
 	}
 
@@ -182,24 +169,18 @@ public class DebugScenes {
 		BlockPos poi2 = new BlockPos(0, 1, 4);
 
 		scene.world.setBlock(poi1, Blocks.GOLD_BLOCK.defaultBlockState(), true);
-		scene.special.movePointOfInterest(poi1);
 		scene.idle(20);
 
 		scene.world.setBlock(poi2, Blocks.GOLD_BLOCK.defaultBlockState(), true);
-		scene.special.movePointOfInterest(poi2);
 		scene.idle(20);
 
 		scene.world.destroyBlock(poi1);
-		scene.special.movePointOfInterest(poi1);
 		scene.idle(20);
 
 		scene.world.destroyBlock(poi2);
-		scene.special.movePointOfInterest(poi2);
 	}
 
 	public static void itemScene(SceneBuilder scene, SceneBuildingUtil util) {
-		scene.configureBasePlate(0, 0, 6);
-
 		ItemStack brassItem = new ItemStack(Items.STICK);
 		ItemStack copperItem = new ItemStack(Items.COPPER_INGOT);
 

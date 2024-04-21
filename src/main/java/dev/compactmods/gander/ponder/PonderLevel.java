@@ -13,8 +13,6 @@ import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.compactmods.gander.ponder.level.SchematicLevel;
 import dev.compactmods.gander.mixin.accessor.ParticleEngineAccessor;
-import dev.compactmods.gander.ponder.element.WorldSectionElement;
-import dev.compactmods.gander.render.SuperRenderTypeBuffer;
 import dev.compactmods.gander.ponder.level.WrappedClientWorld;
 
 import net.minecraft.client.Camera;
@@ -146,7 +144,7 @@ public class PonderLevel extends SchematicLevel {
 		return this;
 	}
 
-	public void renderEntities(PoseStack ms, SuperRenderTypeBuffer buffer, Camera ari, float pt) {
+	public void renderEntities(PoseStack ms, MultiBufferSource buffer, Camera ari, float pt) {
 		Vec3 Vector3d = ari.getPosition();
 		double d0 = Vector3d.x();
 		double d1 = Vector3d.y();
@@ -161,10 +159,11 @@ public class PonderLevel extends SchematicLevel {
 			renderEntity(entity, d0, d1, d2, pt, ms, buffer);
 		}
 
-		buffer.draw(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));
-		buffer.draw(RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS));
-		buffer.draw(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS));
-		buffer.draw(RenderType.entitySmoothCutout(InventoryMenu.BLOCK_ATLAS));
+		var bs = Minecraft.getInstance().renderBuffers().bufferSource();
+		bs.endBatch(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));
+		bs.endBatch(RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS));
+		bs.endBatch(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS));
+		bs.endBatch(RenderType.entitySmoothCutout(InventoryMenu.BLOCK_ATLAS));
 	}
 
 	private void renderEntity(Entity entity, double x, double y, double z, float pt, PoseStack ms,

@@ -5,13 +5,14 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import net.minecraft.client.renderer.MultiBufferSource;
+
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.compactmods.gander.render.RenderTypes;
-import dev.compactmods.gander.render.SuperRenderTypeBuffer;
 import dev.compactmods.gander.utility.Iterate;
 
 import net.minecraft.core.BlockPos;
@@ -32,7 +33,7 @@ public class BlockClusterOutline extends Outline {
 	}
 
 	@Override
-	public void render(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt) {
+	public void render(PoseStack ms, MultiBufferSource buffer, Vec3 camera, float pt) {
 		params.loadColor(colorTemp);
 		Vector4f color = colorTemp;
 		int lightmap = params.lightmap;
@@ -41,7 +42,7 @@ public class BlockClusterOutline extends Outline {
 		renderEdges(ms, buffer, camera, pt, color, lightmap, disableLineNormals);
 	}
 
-	protected void renderEdges(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt, Vector4f color, int lightmap, boolean disableNormals) {
+	protected void renderEdges(PoseStack ms, MultiBufferSource buffer, Vec3 camera, float pt, Vector4f color, int lightmap, boolean disableNormals) {
 		float lineWidth = params.getLineWidth();
 		if (lineWidth == 0)
 			return;

@@ -31,12 +31,12 @@ public abstract class TrackedElement<T> extends PonderSceneElement {
 	}
 
 	@Override
-	public void renderFirst(PonderLevel world, MultiBufferSource buffer, PoseStack ms, float pt) {}
+	public void renderFirst(PonderLevel world, MultiBufferSource.BufferSource buffer, PoseStack ms, float pt) {}
 
 	@Override
-	public void renderLayer(PonderLevel world, MultiBufferSource buffer, RenderType type, PoseStack ms, float pt) {}
+	public void renderLayer(PonderLevel world, MultiBufferSource.BufferSource buffer, RenderType type, PoseStack ms, float pt) {}
 
 	@Override
-	public void renderLast(PonderLevel world, MultiBufferSource buffer, PoseStack ms, float pt) {}
+	public void renderLast(PonderLevel world, MultiBufferSource.BufferSource buffer, PoseStack ms, float pt) {}
 
 }

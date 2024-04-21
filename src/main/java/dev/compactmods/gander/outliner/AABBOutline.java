@@ -1,16 +1,12 @@
 package dev.compactmods.gander.outliner;
 
-import java.util.Optional;
-
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.MultiBufferSource;
 
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import dev.compactmods.gander.render.RenderTypes;
-import dev.compactmods.gander.render.SuperRenderTypeBuffer;
 
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.Direction;
@@ -34,7 +30,7 @@ public class AABBOutline extends Outline {
 	}
 
 	@Override
-	public void render(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt) {
+	public void render(PoseStack ms, MultiBufferSource buffer, Vec3 camera, float pt) {
 		params.loadColor(colorTemp);
 		Vector4f color = colorTemp;
 		int lightmap = params.lightmap;
@@ -42,7 +38,7 @@ public class AABBOutline extends Outline {
 		renderBox(ms, buffer, camera, bb, color, lightmap, disableLineNormals);
 	}
 
-	protected void renderBox(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, AABB box, Vector4f color, int lightmap, boolean disableLineNormals) {
+	protected void renderBox(PoseStack ms, MultiBufferSource buffer, Vec3 camera, AABB box, Vector4f color, int lightmap, boolean disableLineNormals) {
 		Vector3f minPos = minPosTemp1;
 		Vector3f maxPos = maxPosTemp1;
 
