@@ -1,6 +1,7 @@
 package dev.compactmods.gander.ponder.instruction;
 
 import dev.compactmods.gander.ponder.PonderScene;
+import dev.compactmods.gander.ponder.instruction.contract.PonderInstruction;
 
 public class KeyframeInstruction extends PonderInstruction {
 

@@ -7,6 +7,7 @@ import dev.compactmods.gander.ponder.PonderScene;
 import dev.compactmods.gander.ponder.PonderLevel;
 import dev.compactmods.gander.ponder.Selection;
 
+import dev.compactmods.gander.ponder.instruction.contract.WorldModifyInstruction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.block.entity.BlockEntity;
 

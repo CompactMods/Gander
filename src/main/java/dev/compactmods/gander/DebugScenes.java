@@ -1,6 +1,5 @@
 package dev.compactmods.gander;
 
-import dev.compactmods.gander.ponder.ElementLink;
 import dev.compactmods.gander.ponder.PonderPalette;
 import dev.compactmods.gander.ponder.PonderRegistry;
 import dev.compactmods.gander.ponder.PonderStoryBoard;
@@ -8,12 +7,7 @@ import dev.compactmods.gander.ponder.PonderStoryBoardEntry;
 import dev.compactmods.gander.ponder.SceneBuilder;
 import dev.compactmods.gander.ponder.SceneBuildingUtil;
 import dev.compactmods.gander.ponder.Selection;
-import dev.compactmods.gander.ponder.element.InputWindowElement;
-import dev.compactmods.gander.ponder.element.ParrotElement.DancePose;
-import dev.compactmods.gander.ponder.element.ParrotElement.FacePointOfInterestPose;
-import dev.compactmods.gander.ponder.element.WorldSectionElement;
 import dev.compactmods.gander.ponder.instruction.EmitParticlesInstruction.Emitter;
-import dev.compactmods.gander.utility.Pointing;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -29,7 +23,6 @@ import net.minecraft.world.phys.Vec3;
 public class DebugScenes {
 
 	public static void registerAll() {
-		add(DebugScenes::coordinateScene, "debug/scene_coordinates");
 		// add(DebugScenes::blocksScene, "debug/scene_" + index);
 		// add(DebugScenes::fluidsScene, "debug/scene_" + index);
 		add(DebugScenes::renderers, "debug/renderers");
@@ -50,39 +43,7 @@ public class DebugScenes {
 		PonderRegistry.addStoryBoard(entry);
 	}
 
-	public static void coordinateScene(SceneBuilder scene, SceneBuildingUtil util) {
-		scene.title("debug_coords", "Coordinate Space");
-		scene.showBasePlate();
-		scene.idle(10);
-		scene.world.showSection(util.select.layersFrom(1), Direction.DOWN);
-
-		Selection xAxis = util.select.fromTo(2, 1, 1, 4, 1, 1);
-		Selection yAxis = util.select.fromTo(1, 2, 1, 1, 4, 1);
-		Selection zAxis = util.select.fromTo(1, 1, 2, 1, 1, 4);
-
-		scene.idle(10);
-		scene.overlay.showSelectionWithText(xAxis, 20)
-				.colored(PonderPalette.RED)
-				.text("Das X axis");
-		scene.idle(20);
-		scene.overlay.showSelectionWithText(yAxis, 20)
-				.colored(PonderPalette.GREEN)
-				.text("Das Y axis");
-		scene.idle(20);
-		scene.overlay.showSelectionWithText(zAxis, 20)
-				.colored(PonderPalette.BLUE)
-				.text("Das Z axis");
-	}
-
 	public static void blocksScene(SceneBuilder scene, SceneBuildingUtil util) {
-		scene.title("debug_blocks", "Changing Blocks");
-		scene.showBasePlate();
-		scene.idle(10);
-		scene.world.showSection(util.select.layersFrom(1), Direction.DOWN);
-		scene.idle(10);
-		scene.overlay.showText(1000)
-				.independent(10)
-				.text("Blocks can be modified");
 		scene.idle(20);
 		scene.world.replaceBlocks(util.select.position(new BlockPos(3, 1, 1)), Blocks.GOLD_BLOCK.defaultBlockState(), true);
 		scene.idle(5);
@@ -91,15 +52,9 @@ public class DebugScenes {
 	}
 
 	public static void fluidsScene(SceneBuilder scene, SceneBuildingUtil util) {
-		scene.title("debug_fluids", "Showing Fluids");
-		scene.showBasePlate();
 		scene.idle(10);
 		Vec3 parrotPos = util.vector.topOf(1, 0, 1);
-		scene.special.createBirb(parrotPos, FacePointOfInterestPose::new);
-		scene.world.showSection(util.select.layersFrom(1), Direction.DOWN);
-		scene.overlay.showText(1000)
-				.text("Fluid rendering test.")
-				.pointAt(new Vec3(1, 2.5, 4.5));
+		// scene.special.createBirb(parrotPos, FacePointOfInterestPose::new);
 		scene.markAsFinished();
 
 		Object outlineSlot = new Object();
@@ -123,69 +78,28 @@ public class DebugScenes {
 
 		scene.idle(12);
 		scene.special.movePointOfInterest(new BlockPos(-4, 5, 4));
-		scene.overlay.showText(40)
-				.colored(PonderPalette.RED)
-				.text("wut?")
-				.pointAt(parrotPos.add(-.25f, 0.25f, .25f));
 
 	}
 
 	private static void renderers(SceneBuilder scene, SceneBuildingUtil util) {
-		scene.title("debug_renderers", "Renderers");
 		scene.configureBasePlate(0, 0, 7);
-		scene.showBasePlate();
 
 		Selection blocksExceptBasePlate = util.select.layersFrom(1)
 				.substract(util.select.layer(0));
 
 //		scene.scaleSceneView(0.5f);
 //		scene.rotateCameraY(15);
-		scene.idle(10);
-		scene.world.showSection(blocksExceptBasePlate);
 		scene.idle(20);
 
 		scene.markAsFinished();
 	}
 
-	public static void offScreenScene(SceneBuilder scene, SceneBuildingUtil util) {
-		scene.title("debug_baseplate", "Out of bounds / configureBasePlate");
-		scene.configureBasePlate(1, 0, 6);
-		scene.showBasePlate();
-
-		Selection out1 = util.select.fromTo(7, 0, 0, 8, 0, 5);
-		Selection out2 = util.select.fromTo(0, 0, 0, 0, 0, 5);
-		Selection blocksExceptBasePlate = util.select.layersFrom(1)
-				.add(out1)
-				.add(out2);
-
-		scene.idle(10);
-		scene.world.showSection(blocksExceptBasePlate, Direction.DOWN);
-		scene.idle(10);
-
-		scene.overlay.showSelectionWithText(out1, 100)
-				.colored(PonderPalette.BLACK)
-				.text("Blocks outside of the base plate do not affect scaling");
-		scene.overlay.showSelectionWithText(out2, 100)
-				.colored(PonderPalette.BLACK)
-				.text("configureBasePlate() makes sure of that.");
-		scene.markAsFinished();
-	}
-
 	public static void particleScene(SceneBuilder scene, SceneBuildingUtil util) {
-		scene.title("debug_particles", "Emitting particles");
-		scene.showBasePlate();
-		scene.idle(10);
-		scene.world.showSection(util.select.layersFrom(1), Direction.DOWN);
 		scene.idle(10);
 
 		Vec3 emitterPos = util.vector.of(2.5, 2.25, 2.5);
 		Emitter emitter = Emitter.simple(ParticleTypes.LAVA, util.vector.of(0, .1, 0));
-		Emitter rotation =
-				Emitter.simple(ParticleTypes.ASH, util.vector.of(0, .1, 0));
-
-		scene.overlay.showText(20)
-				.text("Incoming...")
-				.pointAt(emitterPos);
+		Emitter rotation = Emitter.simple(ParticleTypes.ASH, util.vector.of(0, .1, 0));
 
 		scene.idle(30);
 		scene.effects.emitParticles(emitterPos, emitter, 1, 60);
@@ -195,30 +109,12 @@ public class DebugScenes {
 	}
 
 	public static void controlsScene(SceneBuilder scene, SceneBuildingUtil util) {
-		scene.title("debug_controls", "Basic player interaction");
-		scene.showBasePlate();
-		scene.idle(10);
-		scene.world.showSection(util.select.layer(1), Direction.DOWN);
-		scene.idle(4);
-		scene.world.showSection(util.select.layer(2), Direction.DOWN);
-		scene.idle(4);
-		scene.world.showSection(util.select.layer(3), Direction.DOWN);
 		scene.idle(10);
 
 		BlockPos shaftPos = new BlockPos(3, 1, 1);
 		Selection shaftSelection = util.select.position(shaftPos);
-		scene.overlay.showControls(new InputWindowElement(util.vector.topOf(shaftPos), Pointing.DOWN).rightClick()
-				.whileSneaking(), 40);
 		scene.idle(20);
 		scene.world.replaceBlocks(shaftSelection, Blocks.BAMBOO_FENCE.defaultBlockState(), true);
-
-		scene.idle(20);
-		scene.world.hideSection(shaftSelection, Direction.UP);
-
-		scene.idle(20);
-
-		scene.overlay.showControls(new InputWindowElement(util.vector.of(1, 4.5, 3.5), Pointing.LEFT).rightClick(), 20);
-		scene.world.showSection(util.select.layer(4), Direction.DOWN);
 
 		scene.idle(40);
 
@@ -243,7 +139,6 @@ public class DebugScenes {
 		scene.overlay.chaseBoundingBoxOutline(PonderPalette.GREEN, chassisValueBoxHighlight, point, 1);
 		scene.idle(1);
 		scene.overlay.chaseBoundingBoxOutline(PonderPalette.GREEN, chassisValueBoxHighlight, expanded, 120);
-		scene.overlay.showControls(new InputWindowElement(chassisSurface, Pointing.UP).scroll(), 40);
 
 		PonderPalette white = PonderPalette.WHITE;
 		scene.overlay.showOutline(white, chassisEffectHighlight, singleBlock, 10);
@@ -256,10 +151,6 @@ public class DebugScenes {
 		scene.idle(10);
 		scene.overlay.showOutline(white, chassisEffectHighlight, singleBlock, 10);
 		scene.idle(10);
-
-		scene.idle(30);
-		scene.overlay.showControls(new InputWindowElement(chassisSurface, Pointing.UP).whileCTRL()
-				.scroll(), 40);
 
 		scene.overlay.showOutline(white, chassisEffectHighlight, singleRow, 10);
 		scene.idle(10);
@@ -276,24 +167,15 @@ public class DebugScenes {
 	}
 
 	public static void birbScene(SceneBuilder scene, SceneBuildingUtil util) {
-		scene.title("debug_birbs", "Birbs");
-		scene.showBasePlate();
-		scene.idle(10);
-		scene.world.showSection(util.select.layersFrom(1), Direction.DOWN);
 		scene.idle(10);
 
 		BlockPos pos = new BlockPos(1, 2, 3);
-		scene.overlay.showText(100)
-				.colored(PonderPalette.GREEN)
-				.text("More birbs = More interesting")
-				.pointAt(util.vector.topOf(pos));
 
 		scene.idle(10);
-		scene.special.createBirb(util.vector.topOf(0, 1, 2), DancePose::new);
+		// scene.special.createBirb(util.vector.topOf(0, 1, 2), DancePose::new);
 		scene.idle(10);
 
-		scene.special.createBirb(util.vector.centerOf(3, 1, 3)
-				.add(0, 0.25f, 0), FacePointOfInterestPose::new);
+		// scene.special.createBirb(util.vector.centerOf(3, 1, 3).add(0, 0.25f, 0), FacePointOfInterestPose::new);
 		scene.idle(20);
 
 		BlockPos poi1 = new BlockPos(4, 1, 0);
@@ -305,9 +187,6 @@ public class DebugScenes {
 
 		scene.world.setBlock(poi2, Blocks.GOLD_BLOCK.defaultBlockState(), true);
 		scene.special.movePointOfInterest(poi2);
-		scene.overlay.showText(20)
-				.text("Point of Interest")
-				.pointAt(util.vector.centerOf(poi2));
 		scene.idle(20);
 
 		scene.world.destroyBlock(poi1);
@@ -318,79 +197,8 @@ public class DebugScenes {
 		scene.special.movePointOfInterest(poi2);
 	}
 
-	public static void sectionsScene(SceneBuilder scene, SceneBuildingUtil util) {
-		scene.title("debug_sections", "Sections");
-		scene.showBasePlate();
-		scene.idle(10);
-		scene.rotateCameraY(95);
-
-		BlockPos mergePos = new BlockPos(1, 1, 1);
-		BlockPos independentPos = new BlockPos(3, 1, 1);
-		Selection toMerge = util.select.position(mergePos);
-		Selection independent = util.select.position(independentPos);
-		Selection start = util.select.layersFrom(1)
-				.substract(toMerge)
-				.substract(independent);
-
-		scene.world.showSection(start, Direction.DOWN);
-		scene.idle(20);
-
-		scene.world.showSection(toMerge, Direction.DOWN);
-		ElementLink<WorldSectionElement> link = scene.world.showIndependentSection(independent, Direction.DOWN);
-
-		scene.idle(20);
-
-		scene.overlay.showText(40)
-				.colored(PonderPalette.GREEN)
-				.text("This Section got merged to base.")
-				.pointAt(util.vector.topOf(mergePos));
-		scene.idle(10);
-		scene.overlay.showText(40)
-				.colored(PonderPalette.RED)
-				.text("This Section renders independently.")
-				.pointAt(util.vector.topOf(independentPos));
-
-		scene.idle(40);
-
-		scene.world.hideIndependentSection(link, Direction.DOWN);
-		scene.world.hideSection(util.select.fromTo(mergePos, new BlockPos(1, 1, 4)), Direction.DOWN);
-
-		scene.idle(20);
-
-		Selection hiddenReplaceArea = util.select.fromTo(2, 1, 2, 4, 1, 4)
-				.substract(util.select.position(new BlockPos(4, 1, 3))
-				.substract(util.select.position(new BlockPos(2, 1, 3))));
-
-		scene.world.hideSection(hiddenReplaceArea, Direction.UP);
-		scene.idle(20);
-		scene.world.setBlocks(hiddenReplaceArea, Blocks.STONE.defaultBlockState(), false);
-		scene.world.showSection(hiddenReplaceArea, Direction.DOWN);
-		scene.idle(20);
-		scene.overlay.showSelectionWithText(hiddenReplaceArea, 30)
-				.colored(PonderPalette.BLUE)
-				.text("Seamless substitution of blocks");
-
-		scene.idle(40);
-
-		ElementLink<WorldSectionElement> helicopter = scene.world.makeSectionIndependent(hiddenReplaceArea);
-		scene.world.rotateSection(helicopter, 50, 5 * 360, 0, 60);
-		scene.world.moveSection(helicopter, util.vector.of(0, 4, 5), 50);
-		scene.overlay.showText(30)
-				.colored(PonderPalette.BLUE)
-				.text("Up, up and away.")
-				.independent(30);
-
-		scene.idle(40);
-		scene.world.hideIndependentSection(helicopter, Direction.UP);
-
-	}
-
 	public static void itemScene(SceneBuilder scene, SceneBuildingUtil util) {
-		scene.title("debug_items", "Manipulating Items");
 		scene.configureBasePlate(0, 0, 6);
-		scene.world.showSection(util.select.layer(0), Direction.UP);
-		scene.idle(10);
-		scene.world.showSection(util.select.layersFrom(1), Direction.DOWN);
 
 		ItemStack brassItem = new ItemStack(Items.STICK);
 		ItemStack copperItem = new ItemStack(Items.COPPER_INGOT);

@@ -1,4 +1,4 @@
-package dev.compactmods.gander.ponder.instruction;
+package dev.compactmods.gander.ponder.instruction.animation;
 
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -7,6 +7,7 @@ import dev.compactmods.gander.ponder.ElementLink;
 import dev.compactmods.gander.ponder.PonderScene;
 import dev.compactmods.gander.ponder.element.PonderSceneElement;
 
+import dev.compactmods.gander.ponder.instruction.contract.TickingInstruction;
 import net.minecraft.world.phys.Vec3;
 
 public class AnimateElementInstruction<T extends PonderSceneElement> extends TickingInstruction {

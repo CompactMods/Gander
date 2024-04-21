@@ -1,4 +1,4 @@
-package dev.compactmods.gander.ponder.instruction;
+package dev.compactmods.gander.ponder.instruction.contract;
 
 import dev.compactmods.gander.ponder.PonderScene;
 

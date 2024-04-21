@@ -6,6 +6,7 @@ import dev.compactmods.gander.ponder.PonderScene;
 import dev.compactmods.gander.ponder.PonderLevel;
 import dev.compactmods.gander.ponder.Selection;
 
+import dev.compactmods.gander.ponder.instruction.contract.WorldModifyInstruction;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 

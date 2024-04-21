@@ -1,55 +1,35 @@
 package dev.compactmods.gander.ponder;
 
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 import org.joml.Vector3f;
 
-import dev.compactmods.gander.ponder.element.AnimatedSceneElement;
 import dev.compactmods.gander.ponder.element.EntityElement;
-import dev.compactmods.gander.ponder.element.InputWindowElement;
-import dev.compactmods.gander.ponder.element.MinecartElement;
-import dev.compactmods.gander.ponder.element.MinecartElement.MinecartConstructor;
-import dev.compactmods.gander.ponder.element.ParrotElement;
-import dev.compactmods.gander.ponder.element.ParrotElement.ParrotPose;
-import dev.compactmods.gander.ponder.element.TextWindowElement;
 import dev.compactmods.gander.ponder.element.WorldSectionElement;
-import dev.compactmods.gander.ponder.instruction.AnimateMinecartInstruction;
-import dev.compactmods.gander.ponder.instruction.AnimateParrotInstruction;
-import dev.compactmods.gander.ponder.instruction.AnimateWorldSectionInstruction;
+import dev.compactmods.gander.ponder.instruction.animation.AnimateWorldSectionInstruction;
 import dev.compactmods.gander.ponder.instruction.BlockEntityDataInstruction;
 import dev.compactmods.gander.ponder.instruction.ChaseAABBInstruction;
-import dev.compactmods.gander.ponder.instruction.CreateMinecartInstruction;
-import dev.compactmods.gander.ponder.instruction.CreateParrotInstruction;
-import dev.compactmods.gander.ponder.instruction.DelayInstruction;
-import dev.compactmods.gander.ponder.instruction.DisplayWorldSectionInstruction;
+import dev.compactmods.gander.ponder.instruction.ticking.DelayInstruction;
 import dev.compactmods.gander.ponder.instruction.EmitParticlesInstruction;
 import dev.compactmods.gander.ponder.instruction.EmitParticlesInstruction.Emitter;
-import dev.compactmods.gander.ponder.instruction.FadeOutOfSceneInstruction;
 import dev.compactmods.gander.ponder.instruction.HighlightValueBoxInstruction;
 import dev.compactmods.gander.ponder.instruction.KeyframeInstruction;
 import dev.compactmods.gander.ponder.instruction.MarkAsFinishedInstruction;
 import dev.compactmods.gander.ponder.instruction.MovePoiInstruction;
 import dev.compactmods.gander.ponder.instruction.OutlineSelectionInstruction;
-import dev.compactmods.gander.ponder.instruction.PonderInstruction;
+import dev.compactmods.gander.ponder.instruction.contract.PonderInstruction;
 import dev.compactmods.gander.ponder.instruction.ReplaceBlocksInstruction;
-import dev.compactmods.gander.ponder.instruction.RotateSceneInstruction;
-import dev.compactmods.gander.ponder.instruction.ShowInputInstruction;
-import dev.compactmods.gander.ponder.instruction.TextInstruction;
 import dev.compactmods.gander.utility.Color;
 import dev.compactmods.gander.utility.VecHelper;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
-import net.minecraft.core.Vec3i;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -102,20 +82,6 @@ public class SceneBuilder {
 	}
 
 	// General
-
-	/**
-	 * Assign a unique translation key, as well as the standard english translation
-	 * for this scene's title using this method, anywhere inside the program
-	 * function.
-	 *
-	 * @param sceneId
-	 * @param title
-	 */
-	public void title(String sceneId, String title) {
-		scene.sceneId = new ResourceLocation(scene.getNamespace(), sceneId);
-		PonderLocalization.registerSpecific(scene.sceneId, PonderScene.TITLE_KEY, title);
-	}
-
 	/**
 	 * Communicates to the ponder UI which parts of the schematic make up the base
 	 * horizontally. Use of this is encouraged whenever there are components outside
@@ -148,13 +114,6 @@ public class SceneBuilder {
 	}
 
 	/**
-	 * Use this to disable the base plates' shadow for this scene
-	 */
-	public void removeShadow() {
-		scene.hidePlatformShadow = true;
-	}
-
-	/**
 	 * Use this in case you are not happy with the vertical alignment of the scene
 	 * relative to the overlay
 	 *
@@ -162,16 +121,6 @@ public class SceneBuilder {
 	 */
 	public void setSceneOffsetY(float yOffset) {
 		scene.yOffset = yOffset;
-	}
-
-	/**
-	 * Fade the layer of blocks into the scene ponder assumes to be the base plate
-	 * of the schematic's structure. Makes for a nice opener
-	 */
-	public void showBasePlate() {
-		world.showSection(scene.getSceneBuildingUtil().select.cuboid(
-			new BlockPos(scene.getBasePlateOffsetX(), 0, scene.getBasePlateOffsetZ()),
-			new Vec3i(scene.getBasePlateSize() - 1, 0, scene.getBasePlateSize() - 1)), Direction.UP);
 	}
 
 	/**
@@ -233,7 +182,7 @@ public class SceneBuilder {
 	 * @param degrees
 	 */
 	public void rotateCameraY(float degrees) {
-		addInstruction(new RotateSceneInstruction(0, degrees, true));
+		addInstruction(PonderInstruction.simple(scene -> scene.getTransform().rotate(Axis.Y, degrees)));
 	}
 
 	/**
@@ -276,22 +225,6 @@ public class SceneBuilder {
 
 	public class OverlayInstructions {
 
-		public TextWindowElement.Builder showText(int duration) {
-			TextWindowElement textWindowElement = new TextWindowElement();
-			addInstruction(new TextInstruction(textWindowElement, duration));
-			return textWindowElement.new Builder(scene);
-		}
-
-		public TextWindowElement.Builder showSelectionWithText(Selection selection, int duration) {
-			TextWindowElement textWindowElement = new TextWindowElement();
-			addInstruction(new TextInstruction(textWindowElement, duration, selection));
-			return textWindowElement.new Builder(scene).pointAt(selection.getCenter());
-		}
-
-		public void showControls(InputWindowElement element, int duration) {
-			addInstruction(new ShowInputInstruction(element.clone(), duration));
-		}
-
 		public void chaseBoundingBoxOutline(PonderPalette color, Object slot, AABB boundingBox, int duration) {
 			addInstruction(new ChaseAABBInstruction(color, slot, boundingBox, duration));
 		}
@@ -328,24 +261,6 @@ public class SceneBuilder {
 	}
 
 	public class SpecialInstructions {
-		public ElementLink<ParrotElement> createBirb(Vec3 location, Supplier<? extends ParrotPose> pose) {
-			ElementLink<ParrotElement> link = new ElementLink<>(ParrotElement.class);
-			ParrotElement parrot = ParrotElement.create(location, pose);
-			addInstruction(new CreateParrotInstruction(10, Direction.DOWN, parrot));
-			addInstruction(scene -> scene.linkElement(parrot, link));
-			return link;
-		}
-
-		public void changeBirbPose(ElementLink<ParrotElement> birb, Supplier<? extends ParrotPose> pose) {
-			addInstruction(scene -> scene.resolve(birb)
-				.setPose(pose.get()));
-		}
-
-		public void conductorBirb(ElementLink<ParrotElement> birb, boolean conductor) {
-			addInstruction(scene -> scene.resolve(birb)
-				.setConductor(conductor));
-		}
-
 		public void movePointOfInterest(Vec3 location) {
 			addInstruction(new MovePoiInstruction(location));
 		}
@@ -353,36 +268,6 @@ public class SceneBuilder {
 		public void movePointOfInterest(BlockPos location) {
 			movePointOfInterest(VecHelper.getCenterOf(location));
 		}
-
-		public void rotateParrot(ElementLink<ParrotElement> link, double xRotation, double yRotation, double zRotation,
-			int duration) {
-			addInstruction(AnimateParrotInstruction.rotate(link, new Vec3(xRotation, yRotation, zRotation), duration));
-		}
-
-		public void moveParrot(ElementLink<ParrotElement> link, Vec3 offset, int duration) {
-			addInstruction(AnimateParrotInstruction.move(link, offset, duration));
-		}
-
-		public ElementLink<MinecartElement> createCart(Vec3 location, float angle, MinecartConstructor type) {
-			ElementLink<MinecartElement> link = new ElementLink<>(MinecartElement.class);
-			MinecartElement cart = new MinecartElement(location, angle, type);
-			addInstruction(new CreateMinecartInstruction(10, Direction.DOWN, cart));
-			addInstruction(scene -> scene.linkElement(cart, link));
-			return link;
-		}
-
-		public void rotateCart(ElementLink<MinecartElement> link, float yRotation, int duration) {
-			addInstruction(AnimateMinecartInstruction.rotate(link, yRotation, duration));
-		}
-
-		public void moveCart(ElementLink<MinecartElement> link, Vec3 offset, int duration) {
-			addInstruction(AnimateMinecartInstruction.move(link, offset, duration));
-		}
-
-		public <T extends AnimatedSceneElement> void hideElement(ElementLink<T> link, Direction direction) {
-			addInstruction(new FadeOutOfSceneInstruction<>(15, direction, link));
-		}
-
 	}
 
 	public class WorldInstructions {
@@ -402,76 +287,11 @@ public class SceneBuilder {
 			});
 		}
 
-		public void showSection(Selection selection) {
-			addInstruction(new DisplayWorldSectionInstruction(15, Direction.DOWN, selection,
-					Optional.of(scene::getBaseWorldSection)));
-		}
-
-		public void showSection(Selection selection, Direction fadeInDirection) {
-			addInstruction(new DisplayWorldSectionInstruction(15, fadeInDirection, selection,
-				Optional.of(scene::getBaseWorldSection)));
-		}
-
-		public void showSectionAndMerge(Selection selection, Direction fadeInDirection,
-			ElementLink<WorldSectionElement> link) {
-			addInstruction(new DisplayWorldSectionInstruction(15, fadeInDirection, selection,
-				Optional.of(() -> scene.resolve(link))));
-		}
-
-		public ElementLink<WorldSectionElement> showIndependentSection(Selection selection, Direction fadeInDirection) {
-			DisplayWorldSectionInstruction instruction =
-				new DisplayWorldSectionInstruction(15, fadeInDirection, selection, Optional.empty());
-			addInstruction(instruction);
-			return instruction.createLink(scene);
-		}
-
-		public ElementLink<WorldSectionElement> showIndependentSection(Selection selection, Direction fadeInDirection,
-			int fadeInDuration) {
-			DisplayWorldSectionInstruction instruction =
-				new DisplayWorldSectionInstruction(fadeInDuration, fadeInDirection, selection, Optional.empty());
-			addInstruction(instruction);
-			return instruction.createLink(scene);
-		}
-
-		public ElementLink<WorldSectionElement> showIndependentSectionImmediately(Selection selection) {
-			DisplayWorldSectionInstruction instruction =
-				new DisplayWorldSectionInstruction(0, Direction.DOWN, selection, Optional.empty());
-			addInstruction(instruction);
-			return instruction.createLink(scene);
-		}
-
-		public void hideSection(Selection selection, Direction fadeOutDirection) {
-			WorldSectionElement worldSectionElement = new WorldSectionElement(selection);
-			ElementLink<WorldSectionElement> elementLink = new ElementLink<>(WorldSectionElement.class);
-
-			addInstruction(scene -> {
-				scene.getBaseWorldSection()
-					.erase(selection);
-				scene.linkElement(worldSectionElement, elementLink);
-				scene.addElement(worldSectionElement);
-				worldSectionElement.queueRedraw();
-			});
-
-			hideIndependentSection(elementLink, fadeOutDirection);
-		}
-
-		public void hideIndependentSection(ElementLink<WorldSectionElement> link, Direction fadeOutDirection) {
-			addInstruction(new FadeOutOfSceneInstruction<>(15, fadeOutDirection, link));
-		}
-
-		public void hideIndependentSection(ElementLink<WorldSectionElement> link, Direction fadeOutDirection,
-			int fadeOutDuration) {
-			addInstruction(new FadeOutOfSceneInstruction<>(fadeOutDuration, fadeOutDirection, link));
-		}
-
-		public void hideIndependentSectionImmediately(ElementLink<WorldSectionElement> link) {
-			addInstruction(new FadeOutOfSceneInstruction<>(0, Direction.DOWN, link));
-		}
-
-
 		public void restoreBlocks(Selection selection) {
-			addInstruction(scene -> scene.getWorld()
-				.restoreBlocks(selection));
+			addInstruction(scene -> {
+				scene.getWorld().restoreBlocks(selection);
+				scene.forEach(WorldSectionElement.class, WorldSectionElement::queueRedraw);
+			});
 		}
 
 		public ElementLink<WorldSectionElement> makeSectionIndependent(Selection selection) {
@@ -479,13 +299,11 @@ public class SceneBuilder {
 			ElementLink<WorldSectionElement> elementLink = new ElementLink<>(WorldSectionElement.class);
 
 			addInstruction(scene -> {
-				scene.getBaseWorldSection()
-					.erase(selection);
+				scene.getBaseWorldSection().erase(selection);
 				scene.linkElement(worldSectionElement, elementLink);
 				scene.addElement(worldSectionElement);
 				worldSectionElement.queueRedraw();
 				worldSectionElement.resetAnimatedTransform();
-				worldSectionElement.setVisible(true);
 				worldSectionElement.forceApplyFade(1);
 			});
 

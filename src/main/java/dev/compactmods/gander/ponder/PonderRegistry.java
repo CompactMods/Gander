@@ -4,10 +4,7 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.zip.GZIPInputStream;
@@ -31,47 +28,34 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 public class PonderRegistry {
 
 	// Map from item IDs to storyboard entries
-	public static final Map<ResourceLocation, List<PonderStoryBoardEntry>> ALL = new HashMap<>();
+	public static final Map<ResourceLocation, PonderStoryBoardEntry> ALL = new HashMap<>();
 
 	public static void addStoryBoard(PonderStoryBoardEntry entry) {
 		synchronized (ALL) {
-			List<PonderStoryBoardEntry> list = ALL.computeIfAbsent(entry.getComponent(), $ -> new ArrayList<>());
-			synchronized (list) {
-				list.add(entry);
-			}
+			ALL.putIfAbsent(entry.id(), entry);
 		}
 	}
 
-	public static List<PonderScene> compile(ResourceLocation id) {
-		List<PonderStoryBoardEntry> list = ALL.get(id);
-		if (list == null) {
-			return Collections.emptyList();
-		}
-		return compile(list);
+	public static PonderScene compile(ResourceLocation id) {
+		var storyboard = ALL.get(id);
+		return compile(storyboard);
 	}
 
-	public static List<PonderScene> compile(List<PonderStoryBoardEntry> entries) {
-		List<PonderScene> scenes = new ArrayList<>();
+	public static PonderScene compile(PonderStoryBoardEntry sb) {
+		StructureTemplate activeTemplate = loadSchematic(sb.getSchematicLocation());
+		PonderLevel world = new PonderLevel(BlockPos.ZERO, Minecraft.getInstance().level);
+		activeTemplate.placeInWorld(world, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings(), RandomSource.create(), Block.UPDATE_CLIENTS);
+		world.createBackup();
+		PonderScene scene = compileScene(sb, world);
+		scene.begin();
 
-		for (int i = 0; i < entries.size(); i++) {
-			PonderStoryBoardEntry sb = entries.get(i);
-			StructureTemplate activeTemplate = loadSchematic(sb.getSchematicLocation());
-			PonderLevel world = new PonderLevel(BlockPos.ZERO, Minecraft.getInstance().level);
-			activeTemplate.placeInWorld(world, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings(), RandomSource.create(), Block.UPDATE_CLIENTS);
-			world.createBackup();
-			PonderScene scene = compileScene(sb, world);
-			scene.begin();
-			scenes.add(scene);
-		}
-
-		return scenes;
+		return scene;
 	}
 
 	public static PonderScene compileScene(PonderStoryBoardEntry sb, PonderLevel world) {
-		PonderScene scene = new PonderScene(world, sb.getSchematicLocation().getNamespace(), sb.getComponent());
+		PonderScene scene = new PonderScene(world, sb.id());
 		SceneBuilder builder = scene.builder();
-		sb.getBoard()
-			.program(builder, scene.getSceneBuildingUtil());
+		sb.getBoard().program(builder, scene.getSceneBuildingUtil());
 		return scene;
 	}
 

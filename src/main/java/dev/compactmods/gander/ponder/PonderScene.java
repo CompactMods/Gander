@@ -1,20 +1,20 @@
 package dev.compactmods.gander.ponder;
 
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
 import dev.compactmods.gander.utility.math.PoseTransformStack;
+
+import net.minecraft.util.ArrayListDeque;
 
 import org.apache.commons.lang3.mutable.MutableDouble;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -25,12 +25,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import dev.compactmods.gander.gui.UIRenderHelper;
 import dev.compactmods.gander.outliner.Outliner;
 import dev.compactmods.gander.ponder.element.PonderElement;
-import dev.compactmods.gander.ponder.element.PonderOverlayElement;
 import dev.compactmods.gander.ponder.element.PonderSceneElement;
 import dev.compactmods.gander.ponder.element.WorldSectionElement;
-import dev.compactmods.gander.ponder.instruction.HideAllInstruction;
-import dev.compactmods.gander.ponder.instruction.PonderInstruction;
-import dev.compactmods.gander.ponder.ui.PonderUI;
+import dev.compactmods.gander.ponder.instruction.contract.PonderInstruction;
 import dev.compactmods.gander.render.DiffuseLightCalculator;
 import dev.compactmods.gander.render.ForcedDiffuseState;
 import dev.compactmods.gander.render.SuperRenderTypeBuffer;
@@ -43,7 +40,6 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -61,27 +57,21 @@ import net.minecraft.world.phys.Vec3;
 
 public class PonderScene {
 
-	public static final String TITLE_KEY = "header";
-
 	private boolean finished;
-//	private int sceneIndex;
-	private int textIndex;
 	ResourceLocation sceneId;
 
 	private final IntList keyframeTimes;
 
 	List<PonderInstruction> schedule;
-	private final List<PonderInstruction> activeSchedule;
+	private final Deque<PonderInstruction> activeSchedule;
 	private final Map<UUID, PonderElement> linkedElements;
 	private final Set<PonderElement> elements;
 
 	private final PonderLevel world;
-	private final String namespace;
 	private final ResourceLocation component;
 	private SceneTransform transform;
 	private final SceneCamera camera;
 	private final Outliner outliner;
-//	private String defaultTitle;
 
 	private Vec3 pointOfInterest;
 	private Vec3 chasingPointOfInterest;
@@ -94,39 +84,30 @@ public class PonderScene {
 	int basePlateSize;
 	float scaleFactor;
 	float yOffset;
-	boolean hidePlatformShadow;
 
 	private boolean stoppedCounting;
 	private int totalTime;
 	private int currentTime;
 
-	public PonderScene(PonderLevel world, String namespace, ResourceLocation component) {
-		if (world != null)
-			world.scene = this;
-
-		pointOfInterest = Vec3.ZERO;
-		textIndex = 1;
-		hidePlatformShadow = false;
-
+	public PonderScene(PonderLevel world, ResourceLocation component) {
 		this.world = world;
-		this.namespace = namespace;
 		this.component = component;
 
 		outliner = new Outliner();
 		elements = new HashSet<>();
 		linkedElements = new HashMap<>();
 		schedule = new ArrayList<>();
-		activeSchedule = new ArrayList<>();
+		activeSchedule = new ArrayListDeque<>();
 		transform = new SceneTransform();
 		basePlateSize = getBounds().getXSpan();
 		camera = new SceneCamera();
-		baseWorldSection = new WorldSectionElement();
-		renderViewEntity = world != null ? new ArmorStand(world, 0, 0, 0) : null;
+		baseWorldSection = new WorldSectionElement(Selection.of(world.getBounds()));
+		renderViewEntity = new ArmorStand(world, 0, 0, 0);
 		keyframeTimes = new IntArrayList(4);
 		scaleFactor = 1;
 		yOffset = 0;
 
-		setPointOfInterest(new Vec3(0, 4, 0));
+		this.pointOfInterest = world.getBounds().getCenter().getCenter();
 	}
 
 	public SceneCamera camera() {
@@ -149,8 +130,6 @@ public class PonderScene {
 
 		forEach(WorldSectionElement.class, wse -> {
 			wse.resetSelectedBlock();
-			if (!wse.isVisible())
-				return;
 			Pair<Vec3, BlockHitResult> rayTrace = wse.rayTrace(world, from, to);
 			if (rayTrace == null)
 				return;
@@ -215,7 +194,6 @@ public class PonderScene {
 		finished = false;
 		setPointOfInterest(new Vec3(0, 4, 0));
 
-		baseWorldSection.setEmpty();
 		baseWorldSection.forceApplyFade(1);
 		elements.add(baseWorldSection);
 
@@ -229,15 +207,6 @@ public class PonderScene {
 		return baseWorldSection;
 	}
 
-	public float getSceneProgress() {
-		return totalTime == 0 ? 0 : currentTime / (float) totalTime;
-	}
-
-	public void fadeOut() {
-		reset();
-		activeSchedule.add(new HideAllInstruction(10, null));
-	}
-
 	public void renderScene(SuperRenderTypeBuffer buffer, PoseStack ms, float pt) {
 		ForcedDiffuseState.pushCalculator(DiffuseLightCalculator.DEFAULT);
 		ms.pushPose();
@@ -246,13 +215,13 @@ public class PonderScene {
 		Entity prevRVE = mc.cameraEntity;
 
 		mc.cameraEntity = this.renderViewEntity;
-		forEachVisible(PonderSceneElement.class, e -> e.renderFirst(world, buffer, ms, pt));
+		forEach(PonderSceneElement.class, e -> e.renderFirst(world, buffer, ms, pt));
 		mc.cameraEntity = prevRVE;
 
 		for (RenderType type : RenderType.chunkBufferLayers())
-			forEachVisible(PonderSceneElement.class, e -> e.renderLayer(world, buffer, type, ms, pt));
+			forEach(PonderSceneElement.class, e -> e.renderLayer(world, buffer, type, ms, pt));
 
-		forEachVisible(PonderSceneElement.class, e -> e.renderLast(world, buffer, ms, pt));
+		forEach(PonderSceneElement.class, e -> e.renderLast(world, buffer, ms, pt));
 		camera.set(transform.xRotation.getValue(pt) + 90, transform.yRotation.getValue(pt) + 180);
 		world.renderEntities(ms, buffer, camera, pt);
 		world.renderParticles(ms, buffer, camera, pt);
@@ -260,13 +229,6 @@ public class PonderScene {
 
 		ms.popPose();
 		ForcedDiffuseState.popCalculator();
-	}
-
-	public void renderOverlay(PonderUI screen, GuiGraphics graphics, float partialTicks) {
-		PoseStack ms = graphics.pose();
-		ms.pushPose();
-		forEachVisible(PonderOverlayElement.class, e -> e.render(this, screen, graphics, partialTicks));
-		ms.popPose();
 	}
 
 	public void setPointOfInterest(Vec3 poi) {
@@ -292,33 +254,15 @@ public class PonderScene {
 		if (currentTime < totalTime)
 			currentTime++;
 
-		for (Iterator<PonderInstruction> iterator = activeSchedule.iterator(); iterator.hasNext();) {
-			PonderInstruction instruction = iterator.next();
-			instruction.tick(this);
-			if (instruction.isComplete()) {
-				iterator.remove();
-				if (instruction.isBlocking())
-					break;
-				continue;
-			}
-			if (instruction.isBlocking())
-				break;
-		}
-
-		if (activeSchedule.isEmpty())
+		if(activeSchedule.isEmpty()) {
 			finished = true;
-	}
-
-	public void seekToTime(int time) {
-		if (time < currentTime)
-			throw new IllegalStateException("Cannot seek backwards. Rewind first.");
-
-		while (currentTime < time && !finished) {
-			forEach(e -> e.whileSkipping(this));
-			tick();
+			return;
 		}
 
-		forEach(WorldSectionElement.class, WorldSectionElement::queueRedraw);
+		var current = activeSchedule.peek();
+		current.tick(this);
+		if(current.isComplete())
+			activeSchedule.pop();
 	}
 
 	public void addToSceneTime(int time) {
@@ -347,14 +291,6 @@ public class PonderScene {
 		return link.cast(linkedElements.get(link.getId()));
 	}
 
-	public <E extends PonderElement> void runWith(ElementLink<E> link, Consumer<E> callback) {
-		callback.accept(resolve(link));
-	}
-
-	public <E extends PonderElement, F> F applyTo(ElementLink<E> link, Function<E, F> function) {
-		return function.apply(resolve(link));
-	}
-
 	public void forEach(Consumer<? super PonderElement> function) {
 		for (PonderElement elemtent : elements)
 			function.accept(elemtent);
@@ -366,29 +302,11 @@ public class PonderScene {
 				function.accept(type.cast(element));
 	}
 
-	public <T extends PonderElement> void forEachVisible(Class<T> type, Consumer<T> function) {
-		for (PonderElement element : elements)
-			if (type.isInstance(element) && element.isVisible())
-				function.accept(type.cast(element));
-	}
-
 	public <T extends Entity> void forEachWorldEntity(Class<T> type, Consumer<T> function) {
 		world.getEntityStream()
 			.filter(type::isInstance)
 			.map(type::cast)
 			.forEach(function);
-		/*
-		 * for (Entity element : world.getEntities()) { if (type.isInstance(element))
-		 * function.accept(type.cast(element)); }
-		 */
-	}
-
-	public Supplier<String> registerText(String defaultText) {
-		final String key = "text_" + textIndex;
-		PonderLocalization.registerSpecific(sceneId, key, defaultText);
-		Supplier<String> supplier = () -> PonderLocalization.getSpecific(sceneId, key);
-		textIndex++;
-		return supplier;
 	}
 
 	public SceneBuilder builder() {
@@ -399,28 +317,12 @@ public class PonderScene {
 		return new SceneBuildingUtil(getBounds());
 	}
 
-	public String getTitle() {
-		return getString(TITLE_KEY);
-	}
-
 	public String getString(String key) {
 		return PonderLocalization.getSpecific(sceneId, key);
 	}
 
 	public PonderLevel getWorld() {
 		return world;
-	}
-
-	public String getNamespace() {
-		return namespace;
-	}
-
-	public int getKeyframeCount() {
-		return keyframeTimes.size();
-	}
-
-	public int getKeyframeTime(int index) {
-		return keyframeTimes.getInt(index);
 	}
 
 	public ResourceLocation getComponent() {
@@ -463,28 +365,8 @@ public class PonderScene {
 		return basePlateOffsetZ;
 	}
 
-	public boolean shouldHidePlatformShadow() {
-		return hidePlatformShadow;
-	}
-
 	public int getBasePlateSize() {
 		return basePlateSize;
-	}
-
-	public float getScaleFactor() {
-		return scaleFactor;
-	}
-
-	public float getYOffset() {
-		return yOffset;
-	}
-
-	public int getTotalTime() {
-		return totalTime;
-	}
-
-	public int getCurrentTime() {
-		return currentTime;
 	}
 
 	public class SceneTransform {
@@ -584,6 +466,26 @@ public class PonderScene {
 				.pose();
 		}
 
+		public SceneTransform rotate(Axis axis, float amount) {
+			return rotate(axis, amount, .1f);
+		}
+
+		public SceneTransform rotate(Axis axis, float amount, float speed) {
+			float target;
+			switch(axis) {
+				case X:
+					target = transform.xRotation.getChaseTarget() + amount;
+					transform.xRotation.chase(target, speed, LerpedFloat.Chaser.EXP);
+					break;
+
+				case Y:
+					target = transform.yRotation.getChaseTarget() + amount;
+					transform.yRotation.chase(target, speed, LerpedFloat.Chaser.EXP);
+					break;
+			}
+
+			return this;
+		}
 	}
 
 	public class SceneCamera extends Camera {

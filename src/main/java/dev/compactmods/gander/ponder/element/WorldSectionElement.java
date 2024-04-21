@@ -12,6 +12,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.SheetedDecalTextureGenerator;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+
 import dev.compactmods.gander.CreateClient;
 import dev.compactmods.gander.outliner.AABBOutline;
 import dev.compactmods.gander.ponder.PonderScene;
@@ -78,20 +79,9 @@ public class WorldSectionElement extends AnimatedSceneElement {
 
 	BlockPos selectedBlock;
 
-	public WorldSectionElement() {
-	}
-
 	public WorldSectionElement(Selection section) {
 		this.section = section.copy();
 		centerOfRotation = section.getCenter();
-	}
-
-	public void mergeOnto(WorldSectionElement other) {
-		setVisible(false);
-		if (other.isEmpty())
-			other.set(section);
-		else
-			other.add(section);
 	}
 
 	public void set(Selection selection) {
@@ -145,14 +135,6 @@ public class WorldSectionElement extends AnimatedSceneElement {
 		redraw = true;
 	}
 
-	public boolean isEmpty() {
-		return section == null;
-	}
-
-	public void setEmpty() {
-		section = null;
-	}
-
 	public void setAnimatedRotation(Vec3 eulerAngles, boolean force) {
 		this.animatedRotation = eulerAngles;
 		if (force)
@@ -173,16 +155,6 @@ public class WorldSectionElement extends AnimatedSceneElement {
 		return animatedOffset;
 	}
 
-	@Override
-	public boolean isVisible() {
-		return super.isVisible() && !isEmpty();
-	}
-
-	class WorldSectionRayTraceResult {
-		Vec3 actualHitVec;
-		BlockPos worldPos;
-	}
-
 	public Pair<Vec3, BlockHitResult> rayTrace(PonderLevel world, Vec3 source, Vec3 target) {
 		world.setMask(this.section);
 		Vec3 transformedTarget = reverseTransformVec(target);
@@ -190,7 +162,7 @@ public class WorldSectionElement extends AnimatedSceneElement {
 				ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, CollisionContext.empty()));
 		world.clearMask();
 
-        double t = rayTraceBlocks.getLocation()
+		double t = rayTraceBlocks.getLocation()
 				.subtract(transformedTarget)
 				.lengthSqr()
 				/ source.subtract(target)
@@ -253,8 +225,7 @@ public class WorldSectionElement extends AnimatedSceneElement {
 	public void tick(PonderScene scene) {
 		prevAnimatedOffset = animatedOffset;
 		prevAnimatedRotation = animatedRotation;
-		if (!isVisible())
-			return;
+
 		loadBEsIfMissing(scene.getWorld());
 		renderedBlockEntities.removeIf(be -> scene.getWorld()
 				.getBlockEntity(be.getBlockPos()) != be);
@@ -263,15 +234,6 @@ public class WorldSectionElement extends AnimatedSceneElement {
 						.getBlockPos()) != be.getFirst());
 		tickableBlockEntities.forEach(be -> be.getSecond()
 				.accept(scene.getWorld()));
-	}
-
-	@Override
-	public void whileSkipping(PonderScene scene) {
-		if (redraw) {
-			renderedBlockEntities = null;
-			tickableBlockEntities = null;
-		}
-		redraw = false;
 	}
 
 	protected void loadBEsIfMissing(PonderLevel world) {
@@ -332,10 +294,9 @@ public class WorldSectionElement extends AnimatedSceneElement {
 			}
 
 			VertexConsumer builder = new SheetedDecalTextureGenerator(
-					buffer.getBuffer(ModelBakery.DESTROY_TYPES.get(entry.getValue())), overlayMS.last()
-					.pose(),
-					overlayMS.last()
-							.normal(),
+					buffer.getBuffer(ModelBakery.DESTROY_TYPES.get(entry.getValue())),
+					overlayMS.last().pose(),
+					overlayMS.last().normal(),
 					1);
 
 			ms.pushPose();

@@ -4,6 +4,7 @@ import dev.compactmods.gander.GanderLib;
 import dev.compactmods.gander.ponder.PonderScene;
 import dev.compactmods.gander.ponder.PonderLevel;
 
+import dev.compactmods.gander.ponder.instruction.contract.TickingInstruction;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.particles.ParticleOptions;

@@ -5,18 +5,16 @@ import net.minecraft.resources.ResourceLocation;
 
 import net.minecraft.world.level.ItemLike;
 
-import org.joml.Vector2d;
-
 public class PonderStoryBoardEntry {
 
 	private final PonderStoryBoard board;
 	private final ResourceLocation schematicLocation;
-	private final ResourceLocation component;
+	private final ResourceLocation id;
 
-	protected PonderStoryBoardEntry(PonderStoryBoard board, ResourceLocation schematicLocation, ResourceLocation component) {
+	protected PonderStoryBoardEntry(PonderStoryBoard board, ResourceLocation schematicLocation, ResourceLocation id) {
 		this.board = board;
 		this.schematicLocation = schematicLocation;
-		this.component = component;
+		this.id = id;
 	}
 
 	public static Builder builder(PonderStoryBoard board) {
@@ -31,8 +29,8 @@ public class PonderStoryBoardEntry {
 		return schematicLocation;
 	}
 
-	public ResourceLocation getComponent() {
-		return component;
+	public ResourceLocation id() {
+		return id;
 	}
 	// Builder end
 

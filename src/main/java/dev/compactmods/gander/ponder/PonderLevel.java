@@ -49,8 +49,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class PonderLevel extends SchematicLevel {
 
-	public PonderScene scene;
-
 	protected Map<BlockPos, BlockState> originalBlocks;
 	protected Map<BlockPos, CompoundTag> originalBlockEntities;
 	protected Map<BlockPos, Integer> blockBreakingProgressions;
@@ -111,12 +109,6 @@ public class PonderLevel extends SchematicLevel {
 				blockEntities.put(p, blockEntity);
 			}
 		});
-		redraw();
-	}
-
-	private void redraw() {
-		if (scene != null)
-			scene.forEach(WorldSectionElement.class, WorldSectionElement::queueRedraw);
 	}
 
 	public void pushFakeLight(int light) {

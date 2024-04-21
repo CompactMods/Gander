@@ -3,6 +3,7 @@ package dev.compactmods.gander.ponder.instruction;
 import dev.compactmods.gander.ponder.PonderPalette;
 import dev.compactmods.gander.ponder.PonderScene;
 
+import dev.compactmods.gander.ponder.instruction.contract.TickingInstruction;
 import net.minecraft.world.phys.AABB;
 
 public class ChaseAABBInstruction extends TickingInstruction {

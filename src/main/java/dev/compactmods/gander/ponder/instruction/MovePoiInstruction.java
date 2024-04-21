@@ -2,6 +2,7 @@ package dev.compactmods.gander.ponder.instruction;
 
 import dev.compactmods.gander.ponder.PonderScene;
 
+import dev.compactmods.gander.ponder.instruction.contract.PonderInstruction;
 import net.minecraft.world.phys.Vec3;
 
 public class MovePoiInstruction extends PonderInstruction {

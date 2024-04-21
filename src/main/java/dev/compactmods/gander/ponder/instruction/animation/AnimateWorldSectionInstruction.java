@@ -1,4 +1,4 @@
-package dev.compactmods.gander.ponder.instruction;
+package dev.compactmods.gander.ponder.instruction.animation;
 
 import java.util.function.BiConsumer;
 import java.util.function.Function;
