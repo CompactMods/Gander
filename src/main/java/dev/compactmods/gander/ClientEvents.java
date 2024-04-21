@@ -36,11 +36,6 @@ public class ClientEvents {
 	}
 
 	@SubscribeEvent
-	public static void onJoin(ClientPlayerNetworkEvent.LoggingIn event) {
-		CreateClient.checkGraphicsFanciness();
-	}
-
-	@SubscribeEvent
 	public static void onLoadWorld(LevelEvent.Load event) {
 		LevelAccessor world = event.getLevel();
 		if (world.isClientSide() && world instanceof ClientLevel && !(world instanceof WrappedClientWorld)) {

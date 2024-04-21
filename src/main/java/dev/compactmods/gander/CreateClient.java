@@ -38,25 +38,4 @@ public class CreateClient {
 	public static void invalidateRenderers() {
 		BUFFER_CACHE.invalidate();
 	}
-
-	public static void checkGraphicsFanciness() {
-		Minecraft mc = Minecraft.getInstance();
-		if (mc.player == null)
-			return;
-
-		if (mc.options.graphicsMode().get() != GraphicsStatus.FABULOUS)
-			return;
-
-		MutableComponent text = ComponentUtils.wrapInSquareBrackets(Components.literal("WARN"))
-			.withStyle(ChatFormatting.GOLD)
-			.append(Components.literal(
-				" Some of Create's visual features will not be available while Fabulous graphics are enabled!"))
-			.withStyle(style -> style
-				.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/create dismissFabulousWarning"))
-				.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-					Components.literal("Click here to disable this warning"))));
-
-		mc.player.displayClientMessage(text, false);
-	}
-
 }
