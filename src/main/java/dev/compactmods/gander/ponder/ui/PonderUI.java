@@ -36,16 +36,8 @@ import org.joml.Vector2f;
 public class PonderUI extends Screen {
 
 	private Scene scene;
-
-	private boolean identifyMode;
-
-	private final ClipboardManager clipboardHelper;
-
-	protected int windowWidth, windowHeight;
-	protected int windowXOffset, windowYOffset;
-	protected int guiLeft, guiTop;
-
 	protected boolean autoRotate = false;
+
 	private SceneRenderer sceneRenderer;
 	private Vector2f mainCameraRotation;
 
@@ -53,36 +45,12 @@ public class PonderUI extends Screen {
 
 	public PonderUI(ResourceLocation sceneID) {
 		super(Component.empty());
-
-		clipboardHelper = new ClipboardManager();
-
 		PacketDistributor.SERVER.noArg().send(new SceneDataRequest(sceneID));
-	}
-
-	protected PonderUI(Scene scene) {
-		super(Component.empty());
-
-		this.scene = scene;
-		clipboardHelper = new ClipboardManager();
-	}
-
-	public void setScene(Scene scene) {
-		this.scene = scene;
-		this.sceneRenderer.setScene(scene);
 	}
 
 	@Override
 	protected void init() {
 		super.init();
-
-		guiLeft = (width - windowWidth) / 2;
-		guiTop = (height - windowHeight) / 2;
-		guiLeft += windowXOffset;
-		guiTop += windowYOffset;
-
-		Options bindings = minecraft.options;
-		int bX = (width / 2) - 10;
-		int bY = height - 20 - 31;
 
 		this.sceneRenderer = this.addRenderableOnly(new SceneRenderer(width, height));
 		this.sceneRenderer.setScene(scene);
@@ -94,37 +62,11 @@ public class PonderUI extends Screen {
 	public void tick() {
 		super.tick();
 
-		for (GuiEventListener listener : children()) {
-			if (listener instanceof TickableGuiEventListener tickable) {
-				tickable.tick();
-			}
-		}
-
-		if (!identifyMode && scene != null)
-			scene.tick();
+		if (scene != null) scene.tick();
 
 		if (autoRotate) {
 			this.mainCameraRotation.y += Math.toRadians(2.5);
 		}
-
-		updateIdentifiedItem(scene);
-	}
-
-	public Scene getActiveScene() {
-		return scene;
-	}
-
-	public void updateIdentifiedItem(Scene activeScene) {
-		if (!identifyMode)
-			return;
-
-		Window w = minecraft.getWindow();
-		double mouseX = minecraft.mouseHandler.xpos() * w.getGuiScaledWidth() / w.getScreenWidth();
-		double mouseY = minecraft.mouseHandler.ypos() * w.getGuiScaledHeight() / w.getScreenHeight();
-
-		Pair<ItemStack, BlockPos> pair = SceneRaytracer.rayTraceScene(activeScene, w.getWidth(), w.getHeight(), sceneRenderer.camera, mouseX, mouseY);
-		var hoveredTooltipItem = pair.getFirst();
-		var hoveredBlockPos = pair.getSecond();
 	}
 
 	@Override
@@ -136,18 +78,6 @@ public class PonderUI extends Screen {
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		this.sceneRenderer.prepareCamera(this.mainCameraRotation);
 		super.render(graphics, mouseX, mouseY, partialTicks);
-
-		// Chapter title
-		RenderSystem.enableBlend();
-		RenderSystem.disableDepthTest();
-
-		boolean noWidgetsHovered = true;
-		for (GuiEventListener child : children())
-			noWidgetsHovered &= !child.isMouseOver(mouseX, mouseY);
-
-		int tooltipColor = Color.WHITE.getRGB();
-
-		RenderSystem.enableDepthTest();
 	}
 
 	@Override
@@ -195,16 +125,7 @@ public class PonderUI extends Screen {
 			return true;
 		}
 
-		if (code == InputConstants.KEY_I) {
-			this.identifyMode = !identifyMode;
-			return true;
-		}
-
 		return super.keyPressed(code, scanCode, modifiers);
-	}
-
-	public Font getFontRenderer() {
-		return font;
 	}
 
 	@Override
@@ -212,7 +133,8 @@ public class PonderUI extends Screen {
 		return true;
 	}
 
-	public void drawRightAlignedString(GuiGraphics graphics, PoseStack ms, String string, int x, int y, int color) {
-		graphics.drawString(font, string, (float) (x - font.width(string)), (float) y, color, false);
+	public void setScene(Scene scene) {
+		this.scene = scene;
+		this.sceneRenderer.setScene(scene);
 	}
 }

@@ -40,7 +40,7 @@ public class WrappedLevel extends Level {
 	protected Level level;
 	protected ChunkSource chunkSource;
 
-	protected LevelEntityGetter<Entity> entityGetter = new DummyLevelEntityGetter<>();
+	protected LevelEntityGetter<Entity> entityGetter = new EmptyLevelEntityGetter<>();
 
 	public WrappedLevel(Level level) {
 		super((WritableLevelData) level.getLevelData(), level.dimension(), level.registryAccess(), level.dimensionTypeRegistration(),

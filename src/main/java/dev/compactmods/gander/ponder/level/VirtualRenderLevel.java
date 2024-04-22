@@ -62,7 +62,7 @@ public class VirtualRenderLevel extends Level {
 	protected final Map<BlockPos, BlockEntity> blockEntities = new HashMap<>();
 	protected final Object2ShortMap<SectionPos> nonEmptyBlockCounts = new Object2ShortOpenHashMap<>();
 
-	protected final LevelEntityGetter<Entity> entityGetter = new VirtualLevelEntityGetter<>();
+	protected final LevelEntityGetter<Entity> entityGetter = new EmptyLevelEntityGetter<>();
 
 	protected final BlockPos.MutableBlockPos scratchPos = new BlockPos.MutableBlockPos();
 
