@@ -1,32 +1,25 @@
 package dev.compactmods.gander.ponder.widget;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexSorting;
 import com.mojang.math.Axis;
 
-import dev.compactmods.gander.gui.UIRenderHelper;
-import dev.compactmods.gander.ponder.PonderScene;
+import dev.compactmods.gander.client.gui.UIRenderHelper;
+import dev.compactmods.gander.ponder.Scene;
 import dev.compactmods.gander.utility.Iterate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
-import org.joml.Matrix4f;
-
 public class CompassOverlay implements Renderable {
 
-	private final PonderScene scene;
+	private final Scene scene;
 	private final Font font;
 
-	public CompassOverlay(PonderScene scene) {
+	public CompassOverlay(Scene scene) {
 		this.scene = scene;
 		this.font = Minecraft.getInstance().font;
 	}

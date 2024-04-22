@@ -2,11 +2,12 @@ package dev.compactmods.gander.ponder.ui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 
-import dev.compactmods.gander.gui.TickableGuiEventListener;
+import dev.compactmods.gander.client.gui.TickableGuiEventListener;
+import dev.compactmods.gander.network.SceneDataRequest;
+import dev.compactmods.gander.ponder.Scene;
 import dev.compactmods.gander.ponder.SceneRaytracer;
-import dev.compactmods.gander.ponder.widget.SceneWidget;
+import dev.compactmods.gander.ponder.widget.SceneRenderer;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.network.chat.Component;
 
@@ -15,12 +16,9 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import dev.compactmods.gander.ponder.PonderRegistry;
-import dev.compactmods.gander.ponder.PonderScene;
 import dev.compactmods.gander.utility.Color;
 import dev.compactmods.gander.utility.Pair;
 import dev.compactmods.gander.utility.animation.LerpedFloat;
-import dev.compactmods.gander.utility.animation.LerpedFloat.Chaser;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -28,62 +26,49 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 
-import org.joml.Vector2d;
+import net.neoforged.neoforge.network.PacketDistributor;
+
 import org.joml.Vector2f;
-import org.joml.Vector3f;
 
 public class PonderUI extends Screen {
 
-	public static int ponderTicks;
-	public static float ponderPartialTicksPaused;
-
-	private final PonderScene scene;
-	ItemStack stack;
+	private Scene scene;
 
 	private boolean identifyMode;
-	private ItemStack hoveredTooltipItem;
-	private BlockPos hoveredBlockPos;
 
 	private final ClipboardManager clipboardHelper;
-
-	private final LerpedFloat lazyIndex;
-	private final int index = 0;
-
-	private int extendedTickLength = 0;
-	private int extendedTickTimer = 0;
 
 	protected int windowWidth, windowHeight;
 	protected int windowXOffset, windowYOffset;
 	protected int guiLeft, guiTop;
 
 	protected boolean autoRotate = false;
-	private SceneWidget sceneRenderer;
+	private SceneRenderer sceneRenderer;
 	private Vector2f mainCameraRotation;
+
 	private static final Vector2f DEFAULT_ROTATION = new Vector2f((float) Math.toRadians(-25), (float) Math.toRadians(-135));
 
-	protected PonderUI(PonderScene scene) {
+	public PonderUI(ResourceLocation sceneID) {
 		super(Component.empty());
 
-		ResourceLocation component = scene.getComponent();
-		if (BuiltInRegistries.ITEM.containsKey(component))
-			stack = new ItemStack(BuiltInRegistries.ITEM.get(component));
-		else
-			stack = new ItemStack(BuiltInRegistries.BLOCK.get(component));
+		clipboardHelper = new ClipboardManager();
+
+		PacketDistributor.SERVER.noArg().send(new SceneDataRequest(sceneID));
+	}
+
+	protected PonderUI(Scene scene) {
+		super(Component.empty());
 
 		this.scene = scene;
-		lazyIndex = LerpedFloat.linear()
-				.startWithValue(index);
-
 		clipboardHelper = new ClipboardManager();
 	}
 
-	public static PonderUI of(ResourceLocation id) {
-		return new PonderUI(PonderRegistry.compile(id));
+	public void setScene(Scene scene) {
+		this.scene = scene;
+		this.sceneRenderer.setScene(scene);
 	}
 
 	@Override
@@ -99,7 +84,8 @@ public class PonderUI extends Screen {
 		int bX = (width / 2) - 10;
 		int bY = height - 20 - 31;
 
-		this.sceneRenderer = this.addRenderableOnly(new SceneWidget(scene, width, height));
+		this.sceneRenderer = this.addRenderableOnly(new SceneRenderer(width, height));
+		this.sceneRenderer.setScene(scene);
 		// this.sceneRenderer.shouldRenderCompass(true);
 		this.mainCameraRotation = new Vector2f(DEFAULT_ROTATION);
 	}
@@ -114,23 +100,8 @@ public class PonderUI extends Screen {
 			}
 		}
 
-		lazyIndex.tickChaser();
-		extendedTickLength = 0;
-
-		if (extendedTickTimer == 0) {
-			if (!identifyMode) {
-				ponderTicks++;
-				scene.tick();
-			}
-
-			if (!identifyMode) {
-				float lazyIndexValue = lazyIndex.getValue();
-				if (Math.abs(lazyIndexValue - index) > 1 / 512f)
-					scene.tick();
-			}
-			extendedTickTimer = extendedTickLength;
-		} else
-			extendedTickTimer--;
+		if (!identifyMode && scene != null)
+			scene.tick();
 
 		if (autoRotate) {
 			this.mainCameraRotation.y += Math.toRadians(2.5);
@@ -139,13 +110,11 @@ public class PonderUI extends Screen {
 		updateIdentifiedItem(scene);
 	}
 
-	public PonderScene getActiveScene() {
+	public Scene getActiveScene() {
 		return scene;
 	}
 
-	public void updateIdentifiedItem(PonderScene activeScene) {
-		hoveredTooltipItem = ItemStack.EMPTY;
-		hoveredBlockPos = null;
+	public void updateIdentifiedItem(Scene activeScene) {
 		if (!identifyMode)
 			return;
 
@@ -153,9 +122,9 @@ public class PonderUI extends Screen {
 		double mouseX = minecraft.mouseHandler.xpos() * w.getGuiScaledWidth() / w.getScreenWidth();
 		double mouseY = minecraft.mouseHandler.ypos() * w.getGuiScaledHeight() / w.getScreenHeight();
 
-		Pair<ItemStack, BlockPos> pair = SceneRaytracer.rayTraceScene(activeScene, mouseX, mouseY);
-		hoveredTooltipItem = pair.getFirst();
-		hoveredBlockPos = pair.getSecond();
+		Pair<ItemStack, BlockPos> pair = SceneRaytracer.rayTraceScene(activeScene, w.getWidth(), w.getHeight(), sceneRenderer.camera, mouseX, mouseY);
+		var hoveredTooltipItem = pair.getFirst();
+		var hoveredBlockPos = pair.getSecond();
 	}
 
 	@Override
@@ -169,17 +138,8 @@ public class PonderUI extends Screen {
 		super.render(graphics, mouseX, mouseY, partialTicks);
 
 		// Chapter title
-		graphics.pose().pushPose();
-		graphics.pose().translate(0, 0, 400);
-		graphics.renderItem(stack, 20, 20);
-		graphics.pose().popPose();
-
 		RenderSystem.enableBlend();
-
 		RenderSystem.disableDepthTest();
-
-		float lazyIndexValue = lazyIndex.getValue(partialTicks);
-		float indexDiff = Math.abs(lazyIndexValue - index);
 
 		boolean noWidgetsHovered = true;
 		for (GuiEventListener child : children())
@@ -191,10 +151,14 @@ public class PonderUI extends Screen {
 	}
 
 	@Override
+	public boolean mouseScrolled(double pMouseX, double pMouseY, double pScrollX, double pScrollY) {
+		this.sceneRenderer.scale(pScrollY);
+		return true;
+	}
+
+	@Override
 	public boolean keyPressed(int code, int scanCode, int modifiers) {
 		Options settings = Minecraft.getInstance().options;
-
-		var transform = getActiveScene().getTransform();
 
 		final var rads = 1 / 12f;
 
@@ -209,14 +173,14 @@ public class PonderUI extends Screen {
 		}
 
 		if (code == InputConstants.KEY_UP) {
-			if(this.mainCameraRotation.x < -rads)
+			if (this.mainCameraRotation.x < -rads)
 				this.mainCameraRotation.x += rads;
 
 			return true;
 		}
 
 		if (code == InputConstants.KEY_DOWN) {
-			if(this.mainCameraRotation.x > -(Math.PI / 2) + (rads * 2))
+			if (this.mainCameraRotation.x > -(Math.PI / 2) + (rads * 2))
 				this.mainCameraRotation.x -= rads;
 			return true;
 		}
@@ -233,9 +197,6 @@ public class PonderUI extends Screen {
 
 		if (code == InputConstants.KEY_I) {
 			this.identifyMode = !identifyMode;
-			if (!identifyMode) {
-				scene.deselect();
-			}
 			return true;
 		}
 
@@ -246,37 +207,9 @@ public class PonderUI extends Screen {
 		return font;
 	}
 
-	public ItemStack getHoveredTooltipItem() {
-		return hoveredTooltipItem;
-	}
-
-	public ItemStack getSubject() {
-		return stack;
-	}
-
-	public static float getPartialTicks() {
-		float renderPartialTicks = Minecraft.getInstance()
-				.getFrameTime();
-
-		if (Minecraft.getInstance().screen instanceof PonderUI ui) {
-			if (ui.identifyMode)
-				return ponderPartialTicksPaused;
-
-			return (renderPartialTicks + (ui.extendedTickLength - ui.extendedTickTimer)) / (ui.extendedTickLength + 1);
-		}
-
-		return renderPartialTicks;
-	}
-
 	@Override
 	public boolean isPauseScreen() {
 		return true;
-	}
-
-	@Override
-	public void removed() {
-		super.removed();
-		hoveredTooltipItem = ItemStack.EMPTY;
 	}
 
 	public void drawRightAlignedString(GuiGraphics graphics, PoseStack ms, String string, int x, int y, int color) {

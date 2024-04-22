@@ -24,6 +24,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -57,7 +58,6 @@ public class PonderLevel extends SchematicLevel {
 	private final Map<ResourceLocation, ParticleProvider<?>> particleProviders;
 
 	int overrideLight;
-	Selection mask;
 	boolean currentlyTickingEntities;
 
 	public PonderLevel(BlockPos anchor, Level original) {
@@ -97,45 +97,16 @@ public class PonderLevel extends SchematicLevel {
 		particles.clearEffects();
 	}
 
-	public void restoreBlocks(Selection selection) {
-		selection.forEach(p -> {
-			if (originalBlocks.containsKey(p))
-				blocks.put(p, originalBlocks.get(p));
-			if (originalBlockEntities.containsKey(p)) {
-				BlockEntity blockEntity = BlockEntity.loadStatic(p, originalBlocks.get(p), originalBlockEntities.get(p));
-				onBEadded(blockEntity, blockEntity.getBlockPos());
-				blockEntities.put(p, blockEntity);
-			}
-		});
-	}
-
-	public void pushFakeLight(int light) {
-		this.overrideLight = light;
-	}
-
-	public void popLight() {
-		this.overrideLight = -1;
-	}
-
 	@Override
 	public int getBrightness(LightLayer p_226658_1_, BlockPos p_226658_2_) {
-		return overrideLight == -1 ? 15 : overrideLight;
-	}
-
-	public void setMask(Selection mask) {
-		this.mask = mask;
-	}
-
-	public void clearMask() {
-		this.mask = null;
+		return 15;
 	}
 
 	@Override
 	public BlockState getBlockState(BlockPos globalPos) {
-		if (mask != null && !mask.test(globalPos.subtract(anchor)))
-			return Blocks.AIR.defaultBlockState();
 		if (currentlyTickingEntities && globalPos.getY() < 0)
 			return Blocks.AIR.defaultBlockState();
+
 		return super.getBlockState(globalPos);
 	}
 
@@ -144,40 +115,7 @@ public class PonderLevel extends SchematicLevel {
 		return this;
 	}
 
-	public void renderEntities(PoseStack ms, MultiBufferSource buffer, Camera ari, float pt) {
-		Vec3 Vector3d = ari.getPosition();
-		double d0 = Vector3d.x();
-		double d1 = Vector3d.y();
-		double d2 = Vector3d.z();
 
-		for (Entity entity : entities) {
-			if (entity.tickCount == 0) {
-				entity.xOld = entity.getX();
-				entity.yOld = entity.getY();
-				entity.zOld = entity.getZ();
-			}
-			renderEntity(entity, d0, d1, d2, pt, ms, buffer);
-		}
-
-		var bs = Minecraft.getInstance().renderBuffers().bufferSource();
-		bs.endBatch(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));
-		bs.endBatch(RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS));
-		bs.endBatch(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS));
-		bs.endBatch(RenderType.entitySmoothCutout(InventoryMenu.BLOCK_ATLAS));
-	}
-
-	private void renderEntity(Entity entity, double x, double y, double z, float pt, PoseStack ms,
-							  MultiBufferSource buffer) {
-		double d0 = Mth.lerp(pt, entity.xOld, entity.getX());
-		double d1 = Mth.lerp(pt, entity.yOld, entity.getY());
-		double d2 = Mth.lerp(pt, entity.zOld, entity.getZ());
-		float f = Mth.lerp(pt, entity.yRotO, entity.getYRot());
-		EntityRenderDispatcher renderManager = Minecraft.getInstance()
-				.getEntityRenderDispatcher();
-		int light = renderManager.getRenderer(entity)
-				.getPackedLightCoords(entity, pt);
-		renderManager.render(entity, d0 - x, d1 - y, d2 - z, f, pt, ms, buffer, light);
-	}
 
 	public void renderParticles(PoseStack ms, MultiBufferSource buffer, Camera ari, float pt) {
 		particles.renderParticles(ms, buffer, ari, pt);
@@ -326,5 +264,9 @@ public class PonderLevel extends SchematicLevel {
 	@Override
 	public boolean hasNearbyAlivePlayer(double p_217358_1_, double p_217358_3_, double p_217358_5_, double p_217358_7_) {
 		return true; // always enable spawner animations
+	}
+
+	public Vec3i getDimensions() {
+		return new Vec3i(bounds.getXSpan(), bounds.getYSpan(), bounds.getZSpan());
 	}
 }

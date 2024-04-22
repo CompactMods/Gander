@@ -5,14 +5,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import dev.compactmods.gander.client.render.RenderBufferHelper;
 import net.minecraft.client.renderer.MultiBufferSource;
 
+import net.minecraft.world.item.DyeColor;
+
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import dev.compactmods.gander.render.RenderTypes;
+import dev.compactmods.gander.client.render.RenderTypes;
 import dev.compactmods.gander.utility.Iterate;
 
 import net.minecraft.core.BlockPos;
@@ -34,15 +36,15 @@ public class BlockClusterOutline extends Outline {
 
 	@Override
 	public void render(PoseStack ms, MultiBufferSource buffer, Vec3 camera, float pt) {
-		params.loadColor(colorTemp);
-		Vector4f color = colorTemp;
+		int color = DyeColor.WHITE.getTextColor();
+
 		int lightmap = params.lightmap;
 		boolean disableLineNormals = params.disableLineNormals;
 
 		renderEdges(ms, buffer, camera, pt, color, lightmap, disableLineNormals);
 	}
 
-	protected void renderEdges(PoseStack ms, MultiBufferSource buffer, Vec3 camera, float pt, Vector4f color, int lightmap, boolean disableNormals) {
+	protected void renderEdges(PoseStack ms, MultiBufferSource buffer, Vec3 camera, float pt, int color, int lightmap, boolean disableNormals) {
 		float lineWidth = params.getLineWidth();
 		if (lineWidth == 0)
 			return;
@@ -61,7 +63,7 @@ public class BlockClusterOutline extends Outline {
 			Vector3f origin = originTemp;
 			origin.set(pos.getX(), pos.getY(), pos.getZ());
 			Direction direction = Direction.get(AxisDirection.POSITIVE, edge.axis);
-			bufferCuboidLine(pose, consumer, origin, direction, 1, lineWidth, color, lightmap, disableNormals);
+			RenderBufferHelper.bufferCuboidLine(pose, consumer, origin, direction, 1, lineWidth, color, lightmap, disableNormals);
 		});
 
 		ms.popPose();

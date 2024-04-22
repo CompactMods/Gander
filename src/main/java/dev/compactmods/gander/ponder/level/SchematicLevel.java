@@ -40,6 +40,7 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.LevelTickAccess;
 
@@ -209,9 +210,11 @@ public class SchematicLevel extends WrappedLevel implements ServerLevelAccessor 
 
 	@Override
 	public boolean setBlock(BlockPos pos, BlockState arg1, int arg2) {
-		pos = pos.immutable()
-			.subtract(anchor);
-		bounds = BBHelper.encapsulate(bounds, pos);
+		pos = pos.immutable().subtract(anchor);
+
+		if(!bounds.isInside(pos))
+			bounds = BBHelper.encapsulate(bounds, pos);
+
 		blocks.put(pos, arg1);
 		if (blockEntities.containsKey(pos)) {
 			BlockEntity blockEntity = blockEntities.get(pos);
