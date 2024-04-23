@@ -48,7 +48,6 @@ public class CompassOverlay implements Renderable {
 		UIRenderHelper.flipForGuiRender(poseStack);
 		poseStack.scale(1 / 16f, 1 / 16f, 1 / 16f);
 		poseStack.translate(0, -8, 0);
-		// poseStack.translate(1, -8, -1 / 64f);
 
 		renderXAxis(graphics, poseStack, sceneBounds, color);
 		renderZAxis(graphics, poseStack, sceneBounds, color);
@@ -63,6 +62,8 @@ public class CompassOverlay implements Renderable {
 
 	private void renderCompassDirections(GuiGraphics graphics, PoseStack ms, BoundingBox bounds) {
 		ms.pushPose();
+		ms.scale(-1, -1, 1);
+
 		ms.translate(bounds.getXSpan() * -8, 0, bounds.getZSpan() * 8);
 		ms.mulPose(Axis.YP.rotationDegrees(-90));
 		for (Direction d : Iterate.horizontalDirections) {
