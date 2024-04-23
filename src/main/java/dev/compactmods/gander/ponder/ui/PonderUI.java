@@ -2,34 +2,18 @@ package dev.compactmods.gander.ponder.ui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 
-import dev.compactmods.gander.client.gui.TickableGuiEventListener;
 import dev.compactmods.gander.network.SceneDataRequest;
 import dev.compactmods.gander.ponder.Scene;
-import dev.compactmods.gander.ponder.SceneRaytracer;
-import dev.compactmods.gander.ponder.widget.SceneRenderer;
+import dev.compactmods.gander.ponder.widget.SpatialRenderer;
 import net.minecraft.client.gui.screens.Screen;
 
 import net.minecraft.network.chat.Component;
 
-import com.mojang.blaze3d.platform.ClipboardManager;
-import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
-
-import dev.compactmods.gander.utility.Color;
-import dev.compactmods.gander.utility.Pair;
-import dev.compactmods.gander.utility.animation.LerpedFloat;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import org.joml.Vector2f;
@@ -38,7 +22,7 @@ public class PonderUI extends Screen {
 
 	protected boolean autoRotate = false;
 
-	private SceneRenderer sceneRenderer;
+	private SpatialRenderer sceneRenderer;
 	private Vector2f mainCameraRotation;
 
 	private static final Vector2f DEFAULT_ROTATION = new Vector2f((float) Math.toRadians(-25), (float) Math.toRadians(-135));
@@ -52,7 +36,7 @@ public class PonderUI extends Screen {
 	protected void init() {
 		super.init();
 
-		this.sceneRenderer = this.addRenderableOnly(new SceneRenderer(width, height));
+		this.sceneRenderer = this.addRenderableOnly(new SpatialRenderer(width, height));
 		// this.sceneRenderer.shouldRenderCompass(true);
 		this.mainCameraRotation = new Vector2f(DEFAULT_ROTATION);
 	}

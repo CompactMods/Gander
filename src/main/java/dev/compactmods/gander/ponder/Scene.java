@@ -37,33 +37,6 @@ public class Scene {
 		level.animateTick();
 	}
 
-	public Pair<Vec3, BlockHitResult> rayTrace(Vector3f source, Vector3f target) {
-		var src = reverseTransformVec(source);
-		var srcV = VecHelper.fromJoml(source);
-
-		var targ = reverseTransformVec(target);
-		var targ2 = VecHelper.fromJoml(targ);
-		var targ3 = VecHelper.fromJoml(target);
-
-		BlockHitResult rayTraceBlocks = level.clip(new ClipContext(
-				VecHelper.fromJoml(src),
-				VecHelper.fromJoml(targ),
-				ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, CollisionContext.empty()));
-
-		double t = rayTraceBlocks.getLocation().subtract(targ2).lengthSqr() / source.sub(target).lengthSquared();
-
-		Vec3 actualHit = VecHelper.lerp((float) t, targ3, srcV);
-		return Pair.of(actualHit, rayTraceBlocks);
-	}
-
-	private Vector3f reverseTransformVec(Vector3f in) {
-		// float pt = AnimationTickHolder.getPartialTicks();
-
-		Vector3f clone = new Vector3f(in).lerp(new Vector3f(), 0);
-		in = in.sub(clone);
-		return in;
-	}
-
 	public PonderLevel getLevel() {
 		return level;
 	}

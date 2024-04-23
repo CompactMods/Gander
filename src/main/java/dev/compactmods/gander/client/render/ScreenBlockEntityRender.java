@@ -6,7 +6,6 @@ import javax.annotation.Nullable;
 
 import dev.compactmods.gander.GanderLib;
 import dev.compactmods.gander.ponder.level.BlockEntityResolver;
-import dev.compactmods.gander.utility.math.PoseTransformStack;
 
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -46,8 +45,7 @@ public class ScreenBlockEntityRender {
 
 			BlockPos pos = blockEntity.getBlockPos();
 			ms.pushPose();
-			PoseTransformStack.of(ms)
-				.translate(pos);
+			ms.translate(pos.getX(), pos.getY(), pos.getZ());
 
 			try {
 				BlockPos worldPos = getLightPos(lightTransform, pos);
