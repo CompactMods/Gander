@@ -5,11 +5,13 @@ import java.util.Iterator;
 import javax.annotation.Nullable;
 
 import dev.compactmods.gander.GanderLib;
+import dev.compactmods.gander.ponder.level.BlockEntityResolver;
 import dev.compactmods.gander.utility.math.PoseTransformStack;
 
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.registries.BuiltInRegistries;
 
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.neoforged.fml.loading.FMLEnvironment;
 
 import org.joml.Matrix4f;
@@ -17,27 +19,22 @@ import org.joml.Vector4f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import dev.compactmods.gander.ponder.level.VirtualRenderLevel;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-public class BlockEntityRenderHelper {
+public class ScreenBlockEntityRender {
 
-	public static void renderBlockEntities(Level world, Iterable<BlockEntity> customRenderBEs, PoseStack ms, MultiBufferSource buffer, float pt) {
-		renderBlockEntities(world, null, customRenderBEs, ms, null, buffer, pt);
+	public static void render(BlockAndTintGetter world, BlockEntityResolver resolver, PoseStack ms, MultiBufferSource buffer, float pt) {
+		render(world, resolver, ms, null, buffer, pt);
 	}
 
-	public static void renderBlockEntities(Level world, @Nullable VirtualRenderLevel renderWorld,
-			Iterable<BlockEntity> customRenderBEs, PoseStack ms, @Nullable Matrix4f lightTransform, MultiBufferSource buffer,
-			float pt) {
-		Iterator<BlockEntity> iterator = customRenderBEs.iterator();
+	public static void render(BlockAndTintGetter world, BlockEntityResolver resolver, PoseStack ms, @Nullable Matrix4f lightTransform, MultiBufferSource buffer, float pt) {
+		Iterator<BlockEntity> iterator = resolver.getBlockEntities();
 		while (iterator.hasNext()) {
 			BlockEntity blockEntity = iterator.next();
 
@@ -53,16 +50,10 @@ public class BlockEntityRenderHelper {
 				.translate(pos);
 
 			try {
-				int worldLight = getCombinedLight(world, getLightPos(lightTransform, pos), renderWorld, pos);
+				BlockPos worldPos = getLightPos(lightTransform, pos);
+				int worldLight = LevelRenderer.getLightColor(world, worldPos);
 
-				if (renderWorld != null) {
-					// Swap the real world for the render world so that the renderer gets contraption-local information
-					blockEntity.setLevel(renderWorld);
-					renderer.render(blockEntity, pt, ms, buffer, worldLight, OverlayTexture.NO_OVERLAY);
-					blockEntity.setLevel(world);
-				} else {
-					renderer.render(blockEntity, pt, ms, buffer, worldLight, OverlayTexture.NO_OVERLAY);
-				}
+				renderer.render(blockEntity, pt, ms, buffer, worldLight, OverlayTexture.NO_OVERLAY);
 
 			} catch (Exception e) {
 				iterator.remove();
@@ -86,18 +77,6 @@ public class BlockEntityRenderHelper {
 		} else {
 			return contraptionPos;
 		}
-	}
-
-	public static int getCombinedLight(Level world, BlockPos worldPos, @Nullable VirtualRenderLevel renderWorld,
-			BlockPos renderWorldPos) {
-		int worldLight = LevelRenderer.getLightColor(world, worldPos);
-
-		if (renderWorld != null) {
-			int renderWorldLight = LevelRenderer.getLightColor(renderWorld, renderWorldPos);
-			return maxLight(worldLight, renderWorldLight);
-		}
-
-		return worldLight;
 	}
 
 	private static int maxLight(int packedLight1, int packedLight2) {

@@ -1,4 +1,4 @@
-package dev.compactmods.gander.ponder;
+package dev.compactmods.gander.ponder.level;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,18 +11,17 @@ import javax.annotation.Nullable;
 
 import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.vertex.PoseStack;
-import dev.compactmods.gander.ponder.level.SchematicLevel;
+
 import dev.compactmods.gander.mixin.accessor.ParticleEngineAccessor;
-import dev.compactmods.gander.ponder.level.WrappedClientWorld;
 
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleProvider;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.core.particles.BlockParticleOption;
@@ -34,16 +33,17 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.TickingBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class PonderLevel extends SchematicLevel {
@@ -55,7 +55,6 @@ public class PonderLevel extends SchematicLevel {
 	private final Supplier<ClientLevel> asClientWorld = Suppliers.memoize(() -> WrappedClientWorld.of(this));
 
 	protected PonderWorldParticles particles;
-	private final Map<ResourceLocation, ParticleProvider<?>> particleProviders;
 
 	int overrideLight;
 	boolean currentlyTickingEntities;
@@ -67,16 +66,6 @@ public class PonderLevel extends SchematicLevel {
 		blockBreakingProgressions = new HashMap<>();
 		originalEntities = new ArrayList<>();
 		particles = new PonderWorldParticles(this);
-		particleProviders = ((ParticleEngineAccessor) Minecraft.getInstance().particleEngine).create$getProviders();
-	}
-
-	public void createBackup() {
-		originalBlocks.clear();
-		originalBlockEntities.clear();
-		blocks.forEach((k, v) -> originalBlocks.put(k, v));
-		blockEntities.forEach((k, v) -> originalBlockEntities.put(k, v.saveWithFullMetadata()));
-		entities.forEach(e -> EntityType.create(e.serializeNBT(), this)
-				.ifPresent(originalEntities::add));
 	}
 
 	public void restore() {
@@ -116,9 +105,8 @@ public class PonderLevel extends SchematicLevel {
 	}
 
 
-
-	public void renderParticles(PoseStack ms, MultiBufferSource buffer, Camera ari, float pt) {
-		particles.renderParticles(ms, buffer, ari, pt);
+	public void renderParticles(PoseStack ms, MultiBufferSource.BufferSource buffer, Camera camera, float partialTicks) {
+		particles.render(ms, buffer, Minecraft.getInstance().gameRenderer.lightTexture(), camera, partialTicks, null);
 	}
 
 	public void animateTick() {
@@ -149,6 +137,14 @@ public class PonderLevel extends SchematicLevel {
 
 	public void tick() {
 		currentlyTickingEntities = true;
+
+		blockEntities.forEach((pos, ent) -> {
+			final var state = ent.getBlockState();
+			@SuppressWarnings("unchecked") var possibleTicker = (BlockEntityTicker<BlockEntity>) state.getTicker(this, ent.getType());
+			if(possibleTicker != null)
+				possibleTicker.tick(this, pos, state, ent);
+
+		});
 
 		particles.tick();
 
@@ -185,8 +181,9 @@ public class PonderLevel extends SchematicLevel {
 	@SuppressWarnings("unchecked")
 	private <T extends ParticleOptions> Particle makeParticle(T data, double x, double y, double z, double mx, double my,
 															  double mz) {
+
 		ResourceLocation key = BuiltInRegistries.PARTICLE_TYPE.getKey(data.getType());
-		ParticleProvider<T> particleProvider = (ParticleProvider<T>) particleProviders.get(key);
+		ParticleProvider<T> particleProvider = (ParticleProvider<T>) particles.getProvider(key);
 		return particleProvider == null ? null
 				: particleProvider.createParticle(data, asClientWorld.get(), x, y, z, mx, my, mz);
 	}

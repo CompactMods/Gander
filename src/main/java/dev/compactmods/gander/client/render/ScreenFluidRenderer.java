@@ -27,7 +27,7 @@ import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtension
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
 
-public class FluidRenderer {
+public class ScreenFluidRenderer {
 
 	public static VertexConsumer getFluidBuilder(MultiBufferSource buffer) {
 		return buffer.getBuffer(RenderTypes.getFluid());
@@ -137,12 +137,12 @@ public class FluidRenderer {
 
 	public static void renderStillTiledFace(Direction dir, float left, float down, float right, float up, float depth,
 		VertexConsumer builder, PoseStack ms, int light, int color, TextureAtlasSprite texture) {
-		FluidRenderer.renderTiledFace(dir, left, down, right, up, depth, builder, ms, light, color, texture, 1);
+		ScreenFluidRenderer.renderTiledFace(dir, left, down, right, up, depth, builder, ms, light, color, texture, 1);
 	}
 
 	public static void renderFlowingTiledFace(Direction dir, float left, float down, float right, float up, float depth,
 		VertexConsumer builder, PoseStack ms, int light, int color, TextureAtlasSprite texture) {
-		FluidRenderer.renderTiledFace(dir, left, down, right, up, depth, builder, ms, light, color, texture, 0.5f);
+		ScreenFluidRenderer.renderTiledFace(dir, left, down, right, up, depth, builder, ms, light, color, texture, 0.5f);
 	}
 
 	public static void renderTiledFace(Direction dir, float left, float down, float right, float up, float depth,

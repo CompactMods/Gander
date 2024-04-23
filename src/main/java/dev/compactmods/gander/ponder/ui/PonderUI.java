@@ -29,13 +29,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import org.joml.Vector2f;
 
 public class PonderUI extends Screen {
 
-	private Scene scene;
 	protected boolean autoRotate = false;
 
 	private SceneRenderer sceneRenderer;
@@ -53,7 +53,6 @@ public class PonderUI extends Screen {
 		super.init();
 
 		this.sceneRenderer = this.addRenderableOnly(new SceneRenderer(width, height));
-		this.sceneRenderer.setScene(scene);
 		// this.sceneRenderer.shouldRenderCompass(true);
 		this.mainCameraRotation = new Vector2f(DEFAULT_ROTATION);
 	}
@@ -61,8 +60,7 @@ public class PonderUI extends Screen {
 	@Override
 	public void tick() {
 		super.tick();
-
-		if (scene != null) scene.tick();
+		sceneRenderer.tick();
 
 		if (autoRotate) {
 			this.mainCameraRotation.y += Math.toRadians(2.5);
@@ -130,11 +128,10 @@ public class PonderUI extends Screen {
 
 	@Override
 	public boolean isPauseScreen() {
-		return true;
+		return false;
 	}
 
 	public void setScene(Scene scene) {
-		this.scene = scene;
 		this.sceneRenderer.setScene(scene);
 	}
 }

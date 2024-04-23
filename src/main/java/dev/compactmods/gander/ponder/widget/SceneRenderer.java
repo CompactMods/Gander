@@ -6,14 +6,15 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 
 import dev.compactmods.gander.client.gui.UIRenderHelper;
 import dev.compactmods.gander.ponder.Scene;
-import dev.compactmods.gander.ponder.PonderSceneRenderer;
+import dev.compactmods.gander.ponder.ScreenSceneRenderer;
 import dev.compactmods.gander.ponder.SceneCamera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 
 import net.minecraft.util.Mth;
-import net.neoforged.neoforge.client.event.ScreenEvent;
+
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -27,14 +28,15 @@ public class SceneRenderer implements Renderable {
 	private final int width;
 	private final int height;
 
-	public final SceneCamera camera;
-	public Vector3f cameraTarget;
+	private final SceneCamera camera;
+	private final Vector3f cameraTarget;
+
 	private Vector3f lookFrom;
 	private boolean shouldRenderCompass;
 	private float scale;
 
 	public SceneRenderer(int width, int height) {
-		this.compassOverlay = new CompassOverlay(scene);
+		this.compassOverlay = new CompassOverlay();
 		this.width = width;
 		this.height = height;
 
@@ -60,6 +62,19 @@ public class SceneRenderer implements Renderable {
 
 	public void setScene(@Nullable Scene scene) {
 		this.scene = scene;
+		if(scene != null) {
+			this.shouldRenderCompass = true;
+			this.compassOverlay.setBounds(scene.getBounds());
+		} else {
+			this.shouldRenderCompass = false;
+			this.compassOverlay.setBounds(null);
+		}
+	}
+
+	public void tick() {
+		if(scene != null) {
+			scene.tick();
+		}
 	}
 
 	@Override
@@ -93,7 +108,7 @@ public class SceneRenderer implements Renderable {
 				ms.mulPose(camera.rotation());
 				ms.translate(scene.getBounds().getXSpan() / -2f, -1f * (scene.getBounds().getYSpan() / 2f), scene.getBounds().getZSpan() / -2f);
 
-				PonderSceneRenderer.renderScene(scene, camera, buffer, ms, partialTicks);
+				ScreenSceneRenderer.renderScene(scene, camera, buffer, ms, partialTicks);
 
 				if(this.shouldRenderCompass)
 					this.compassOverlay.render(graphics, mouseX, mouseY, partialTicks);

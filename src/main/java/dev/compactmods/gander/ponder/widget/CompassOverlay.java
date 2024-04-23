@@ -14,19 +14,30 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
+import org.jetbrains.annotations.Nullable;
+
 public class CompassOverlay implements Renderable {
 
-	private final Scene scene;
+	private @Nullable BoundingBox sceneBounds;
 	private final Font font;
 
-	public CompassOverlay(Scene scene) {
-		this.scene = scene;
+	public CompassOverlay() {
 		this.font = Minecraft.getInstance().font;
+	}
+
+	public CompassOverlay(BoundingBox bounds) {
+		this.sceneBounds = bounds;
+		this.font = Minecraft.getInstance().font;
+	}
+
+	public void setBounds(BoundingBox sceneBounds) {
+		this.sceneBounds = sceneBounds;
 	}
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		final var bounds = scene.getBounds();
+		if(sceneBounds == null)
+			return;
 
 		PoseStack poseStack = graphics.pose();
 
@@ -39,9 +50,9 @@ public class CompassOverlay implements Renderable {
 		poseStack.translate(0, -8, 0);
 		// poseStack.translate(1, -8, -1 / 64f);
 
-		renderXAxis(graphics, poseStack, bounds, color);
-		renderZAxis(graphics, poseStack, bounds, color);
-		renderCompassDirections(graphics, poseStack, bounds);
+		renderXAxis(graphics, poseStack, sceneBounds, color);
+		renderZAxis(graphics, poseStack, sceneBounds, color);
+		renderCompassDirections(graphics, poseStack, sceneBounds);
 
 		graphics.bufferSource().endBatch();
 
