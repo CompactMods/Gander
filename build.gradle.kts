@@ -47,7 +47,6 @@ sourceSets.main {
 
     resources {
         srcDir("src/main/resources")
-        srcDir("src/generated/resources")
     }
 }
 
@@ -98,15 +97,6 @@ runs {
         systemProperty("forge.enabledGameTestNamespaces", modId)
         environmentVariables("TEST_RESOURCES", project.file("src/test/resources").path)
         modSource(project.sourceSets.test.get())
-    }
-
-    create("data") {
-        dataGenerator(true)
-
-        programArguments("--mod", modId)
-        programArguments("--all")
-        programArguments("--output", file("src/generated/resources").absolutePath)
-        programArguments("--existing", file("src/main/resources").absolutePath)
     }
 
     create("gameTestServer") {
@@ -160,8 +150,6 @@ tasks.withType<Jar> {
     val mainGit = Grgit.open {
         currentDir = project.rootDir
     }
-
-    this.exclude("dev/compactmods/$modId/datagen/**")
 
     manifest {
         val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(Date())
