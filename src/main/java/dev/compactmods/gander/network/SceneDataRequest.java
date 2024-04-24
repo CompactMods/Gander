@@ -1,7 +1,6 @@
 package dev.compactmods.gander.network;
 
 import dev.compactmods.gander.client.network.SceneDataClientHandler;
-import dev.compactmods.gander.ponder.SceneBuilder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -9,6 +8,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.neoforged.neoforge.network.handling.IPlayPayloadHandler;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 public record SceneDataRequest(ResourceLocation templateID) implements CustomPacketPayload {
 
@@ -20,11 +20,10 @@ public record SceneDataRequest(ResourceLocation templateID) implements CustomPac
 
 	public static final IPlayPayloadHandler<SceneDataRequest> HANDLER = (req, ctx) -> {
 		ctx.workHandler().submitAsync(() -> {
-			var scene = SceneBuilder.forTemplate(req.templateID).build();
-			if(scene != null) {
-				var data = scene.makeTemplate();
-				ctx.replyHandler().send(new SceneData(data));
-			}
+			final var templateManager = ServerLifecycleHooks.getCurrentServer().getStructureManager();
+			templateManager.get(req.templateID).ifPresent(t -> {
+				ctx.replyHandler().send(new SceneData(t));
+			});
 		});
 	};
 

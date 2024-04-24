@@ -2,7 +2,7 @@ package dev.compactmods.gander.network;
 
 import dev.compactmods.gander.GanderLib;
 import dev.compactmods.gander.client.gui.ScreenOpener;
-import dev.compactmods.gander.ponder.ui.PonderUI;
+import dev.compactmods.gander.client.gui.PonderUI;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;

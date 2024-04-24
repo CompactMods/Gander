@@ -85,25 +85,12 @@ runs {
     }
 
     create("client") {
-        // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-        systemProperty("forge.enabledGameTestNamespaces", modId)
-
         programArguments("--username", "Nano")
         programArguments("--width", "1920")
         programArguments("--height", "1080")
     }
 
-    create("server") {
-        systemProperty("forge.enabledGameTestNamespaces", modId)
-        environmentVariables("TEST_RESOURCES", project.file("src/test/resources").path)
-        modSource(project.sourceSets.test.get())
-    }
-
-    create("gameTestServer") {
-        systemProperty("forge.enabledGameTestNamespaces", modId)
-        environmentVariable("TEST_RESOURCES", file("src/test/resources").path)
-        modSource(project.sourceSets.test.get())
-    }
+    create("server")
 }
 
 repositories {
@@ -154,7 +141,8 @@ tasks.withType<Jar> {
     manifest {
         val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(Date())
         val name = prop("mod_name")
-        attributes(mapOf(
+        attributes(
+            mapOf(
                 "Specification-Title" to name,
                 "Specification-Vendor" to "CompactMods",
                 "Specification-Version" to "1",
@@ -165,23 +153,24 @@ tasks.withType<Jar> {
                 "Minecraft-Version" to libraries.versions.minecraft.get(),
                 "NeoForge-Version" to libraries.versions.neoforge.get(),
                 "Main-Commit" to mainGit.head().id
-        ))
+            )
+        )
     }
 }
 
 tasks.withType<ProcessResources>().configureEach {
     var replaceProperties: Map<String, Any> = mapOf(
-            "minecraft_version" to libraries.versions.minecraft.get(),
-            "neo_version" to libraries.versions.neoforge.get(),
-            "minecraft_version_range" to prop("minecraft_version_range"),
-            "neo_version_range" to prop("neo_version_range"),
-            "loader_version_range" to prop("loader_version_range"),
-            "mod_id" to modId,
-            "mod_name" to prop("mod_name"),
-            "mod_license" to prop("mod_license"),
-            "mod_version" to envVersion,
-            "mod_authors" to prop("mod_authors"),
-            "mod_description" to prop("mod_description")
+        "minecraft_version" to libraries.versions.minecraft.get(),
+        "neo_version" to libraries.versions.neoforge.get(),
+        "minecraft_version_range" to prop("minecraft_version_range"),
+        "neo_version_range" to prop("neo_version_range"),
+        "loader_version_range" to prop("loader_version_range"),
+        "mod_id" to modId,
+        "mod_name" to prop("mod_name"),
+        "mod_license" to prop("mod_license"),
+        "mod_version" to envVersion,
+        "mod_authors" to prop("mod_authors"),
+        "mod_description" to prop("mod_description")
     )
 
     inputs.properties(replaceProperties)

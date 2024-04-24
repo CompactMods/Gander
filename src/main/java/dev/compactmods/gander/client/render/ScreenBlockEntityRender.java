@@ -5,7 +5,7 @@ import java.util.Iterator;
 import javax.annotation.Nullable;
 
 import dev.compactmods.gander.GanderLib;
-import dev.compactmods.gander.ponder.level.BlockEntityResolver;
+import dev.compactmods.gander.level.BlockEntityResolver;
 
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -33,47 +33,47 @@ public class ScreenBlockEntityRender {
 	}
 
 	public static void render(BlockAndTintGetter world, BlockEntityResolver resolver, PoseStack ms, @Nullable Matrix4f lightTransform, MultiBufferSource buffer, float pt) {
-		Iterator<BlockEntity> iterator = resolver.getBlockEntities();
-		while (iterator.hasNext()) {
-			BlockEntity blockEntity = iterator.next();
-
-			BlockEntityRenderer<BlockEntity> renderer = Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(blockEntity);
-			if (renderer == null) {
-				iterator.remove();
-				continue;
-			}
-
-			BlockPos pos = blockEntity.getBlockPos();
-			ms.pushPose();
-			ms.translate(pos.getX(), pos.getY(), pos.getZ());
-
-			try {
-				BlockPos worldPos = getLightPos(lightTransform, pos);
-				int worldLight = LevelRenderer.getLightColor(world, worldPos);
-
-				renderer.render(blockEntity, pt, ms, buffer, worldLight, OverlayTexture.NO_OVERLAY);
-
-			} catch (Exception e) {
-				iterator.remove();
-
-				String message = "BlockEntity " + BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(blockEntity.getType()) + " could not be rendered virtually.";
-				if (FMLEnvironment.production)
-					GanderLib.LOGGER.error(message, e);
-				else
-					GanderLib.LOGGER.error(message);
-			}
-
-			ms.popPose();
-		}
+		var iterator = resolver.getBlockEntities();
+		iterator.forEach(ent -> render(world, ent, ms, lightTransform, buffer, pt));
 	}
 
-	private static BlockPos getLightPos(@Nullable Matrix4f lightTransform, BlockPos contraptionPos) {
+	public static void render(BlockAndTintGetter world, BlockEntity blockEntity, PoseStack ms, MultiBufferSource buffer, float pt) {
+		render(world, blockEntity, ms, null, buffer, pt);
+	}
+
+	public static void render(BlockAndTintGetter world, BlockEntity blockEntity, PoseStack ms, @Nullable Matrix4f lightTransform, MultiBufferSource buffer, float pt) {
+		BlockEntityRenderer<BlockEntity> renderer = Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(blockEntity);
+		if (renderer == null)
+			return;
+
+		BlockPos pos = blockEntity.getBlockPos();
+		ms.pushPose();
+		ms.translate(pos.getX(), pos.getY(), pos.getZ());
+
+		try {
+			BlockPos worldPos = getLightPos(lightTransform, pos);
+			int worldLight = LevelRenderer.getLightColor(world, worldPos);
+
+			renderer.render(blockEntity, pt, ms, buffer, worldLight, OverlayTexture.NO_OVERLAY);
+
+		} catch (Exception e) {
+			String message = "BlockEntity " + BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(blockEntity.getType()) + " could not be rendered virtually.";
+			if (FMLEnvironment.production)
+				GanderLib.LOGGER.error(message, e);
+			else
+				GanderLib.LOGGER.error(message);
+		}
+
+		ms.popPose();
+	}
+
+	private static BlockPos getLightPos(@Nullable Matrix4f lightTransform, BlockPos pos) {
 		if (lightTransform != null) {
-			Vector4f lightVec = new Vector4f(contraptionPos.getX() + .5f, contraptionPos.getY() + .5f, contraptionPos.getZ() + .5f, 1);
+			Vector4f lightVec = new Vector4f(pos.getX() + .5f, pos.getY() + .5f, pos.getZ() + .5f, 1);
 			lightVec.mul(lightTransform);
 			return BlockPos.containing(lightVec.x(), lightVec.y(), lightVec.z());
 		} else {
-			return contraptionPos;
+			return pos;
 		}
 	}
 
