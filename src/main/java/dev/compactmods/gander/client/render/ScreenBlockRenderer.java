@@ -2,8 +2,6 @@ package dev.compactmods.gander.client.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import dev.compactmods.gander.diffuse.DiffuseLightCalculator;
-import dev.compactmods.gander.diffuse.ForcedDiffuseState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -24,12 +22,9 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 public class ScreenBlockRenderer {
 
 	public static void render(BlockAndTintGetter level, BoundingBox blockBoundaries, MultiBufferSource.BufferSource buffer, PoseStack pose, float partialTicks) {
-		ForcedDiffuseState.pushCalculator(DiffuseLightCalculator.DEFAULT);
 		pose.pushPose();
 
 		Minecraft mc = Minecraft.getInstance();
-
-		BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
 
 		for (RenderType type : RenderType.chunkBufferLayers()) {
 			var transTarget = mc.levelRenderer.getTranslucentTarget();
@@ -53,7 +48,6 @@ public class ScreenBlockRenderer {
 
 
 		pose.popPose();
-		ForcedDiffuseState.popCalculator();
 	}
 
 	public static void renderIntoBuffer(BlockAndTintGetter level, BoundingBox blockBoundaries, MultiBufferSource.BufferSource buffer, RenderType type, PoseStack pose) {

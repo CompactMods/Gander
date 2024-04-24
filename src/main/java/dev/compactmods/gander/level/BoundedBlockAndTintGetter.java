@@ -1,4 +1,4 @@
-package dev.compactmods.gander.things;
+package dev.compactmods.gander.level;
 
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;

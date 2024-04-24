@@ -7,7 +7,6 @@ import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import dev.compactmods.gander.utility.AngleHelper;
-import dev.compactmods.gander.utility.Iterate;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -29,6 +28,7 @@ import net.neoforged.neoforge.fluids.FluidType;
 
 import org.joml.Quaternionf;
 
+@SuppressWarnings("unused")
 public class ScreenFluidRenderer {
 
 	public static VertexConsumer getFluidBuilder(MultiBufferSource buffer) {
@@ -119,7 +119,7 @@ public class ScreenFluidRenderer {
 			ms.translate(-center.x, -center.y, -center.z);
 		}
 
-		for (Direction side : Iterate.directions) {
+		for (Direction side : Direction.values()) {
 			if (side == Direction.DOWN && !renderBottom)
 				continue;
 

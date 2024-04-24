@@ -2,7 +2,7 @@ package dev.compactmods.gander.network;
 
 import dev.compactmods.gander.GanderLib;
 import dev.compactmods.gander.client.gui.ScreenOpener;
-import dev.compactmods.gander.client.gui.PonderUI;
+import dev.compactmods.gander.client.gui.GanderUI;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -35,6 +35,6 @@ public record OpenUIPacket(ResourceLocation scene) implements CustomPacketPayloa
 	};
 
 	private static void handleOnClient(ResourceLocation scene) {
-		ScreenOpener.open(new PonderUI(scene));
+		ScreenOpener.open(new GanderUI(scene));
 	}
 }

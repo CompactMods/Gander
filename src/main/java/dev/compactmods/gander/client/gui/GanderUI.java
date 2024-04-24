@@ -4,7 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 
 import dev.compactmods.gander.network.SceneDataRequest;
 import dev.compactmods.gander.client.gui.widget.SpatialRenderer;
-import dev.compactmods.gander.things.BoundedBlockAndTintGetter;
+import dev.compactmods.gander.level.BoundedBlockAndTintGetter;
 import net.minecraft.client.gui.screens.Screen;
 
 import net.minecraft.network.chat.Component;
@@ -18,7 +18,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 import org.joml.Vector2f;
 
-public class PonderUI extends Screen {
+public class GanderUI extends Screen {
 
 	protected boolean autoRotate = false;
 
@@ -27,7 +27,7 @@ public class PonderUI extends Screen {
 
 	private static final Vector2f DEFAULT_ROTATION = new Vector2f((float) Math.toRadians(-25), (float) Math.toRadians(-135));
 
-	public PonderUI(ResourceLocation sceneID) {
+	public GanderUI(ResourceLocation sceneID) {
 		super(Component.empty());
 		PacketDistributor.SERVER.noArg().send(new SceneDataRequest(sceneID));
 	}

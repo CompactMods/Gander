@@ -3,7 +3,6 @@ package dev.compactmods.gander.client.gui.widget;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 
-import dev.compactmods.gander.utility.Iterate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -65,7 +64,9 @@ public class CompassOverlay implements Renderable {
 
 		ms.translate(bounds.getXSpan() * -8, 0, bounds.getZSpan() * 8);
 		ms.mulPose(Axis.YP.rotationDegrees(-90));
-		for (Direction d : Iterate.horizontalDirections) {
+
+		final var horizontals = Direction.Plane.HORIZONTAL.iterator();
+		horizontals.forEachRemaining(d -> {
 			ms.mulPose(Axis.YP.rotationDegrees(90));
 			ms.pushPose();
 			ms.translate(0, 0, bounds.getZSpan() * 16);
@@ -75,7 +76,7 @@ public class CompassOverlay implements Renderable {
 			graphics.drawString(font, "|", 2, 10, 0x44FFFFFF, false);
 			graphics.drawString(font, ".", 2, 14, 0x22FFFFFF, false);
 			ms.popPose();
-		}
+		});
 		ms.popPose();
 	}
 

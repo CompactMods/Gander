@@ -7,7 +7,7 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 import dev.compactmods.gander.client.render.ScreenBlockEntityRender;
 import dev.compactmods.gander.client.render.ScreenBlockRenderer;
 import dev.compactmods.gander.SceneCamera;
-import dev.compactmods.gander.things.BoundedBlockAndTintGetter;
+import dev.compactmods.gander.level.BoundedBlockAndTintGetter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
