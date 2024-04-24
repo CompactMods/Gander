@@ -51,3 +51,8 @@ plugins {
 }
 
 rootProject.name = "Gander"
+
+include("levels")
+include("rendering")
+
+include("testmod")
