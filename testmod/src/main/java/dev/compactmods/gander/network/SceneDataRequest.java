@@ -48,7 +48,9 @@ public record SceneDataRequest(ResourceLocation templateID) implements CustomPac
 		public static final ResourceLocation ID = new ResourceLocation("gander", "scene_data_response");
 
 		public static final IPlayPayloadHandler<SceneData> HANDLER = (pkt, ctx) -> {
-			SceneDataClientHandler.loadScene(pkt.data);
+			ctx.workHandler().submitAsync(() -> {
+				SceneDataClientHandler.loadScene(pkt.data);
+			});
 		};
 
 		@Override
