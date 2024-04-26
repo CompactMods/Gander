@@ -1,12 +1,14 @@
 package dev.compactmods.gander.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
@@ -69,15 +71,20 @@ public class ScreenBlockRenderer {
 				ModelData modelData;
 				if (state.getRenderShape() == RenderShape.MODEL) {
 					BakedModel model = dispatcher.getBlockModel(state);
-					BlockEntity blockEntity = level.getBlockEntity(pos);
-					modelData = blockEntity != null ? blockEntity.getModelData() : ModelData.EMPTY;
-					modelData = model.getModelData(level, pos, state, modelData);
+
+					if(state.hasBlockEntity()) {
+						BlockEntity blockEntity = level.getBlockEntity(pos);
+						modelData = blockEntity != null ? blockEntity.getModelData() : ModelData.EMPTY;
+						modelData = model.getModelData(level, pos, state, modelData);
+					} else {
+						modelData = ModelData.EMPTY;
+					}
 
 					long seed = state.getSeed(pos);
 					random.setSeed(seed);
 
 					if (model.getRenderTypes(state, random, modelData).contains(type)) {
-						dispatcher.renderBatched(state, pos, level, pose, vertices, true, random, modelData, type);
+						renderer.tesselateBlock(level, model, state, pos, pose, vertices, true, random, seed, OverlayTexture.NO_OVERLAY, modelData, type);
 					}
 				}
 

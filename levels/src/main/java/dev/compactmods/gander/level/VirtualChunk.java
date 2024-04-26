@@ -1,23 +1,23 @@
 package dev.compactmods.gander.level;
 
-import it.unimi.dsi.fastutil.longs.LongSet;
-import it.unimi.dsi.fastutil.longs.LongSets;
-import it.unimi.dsi.fastutil.shorts.ShortList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
+
 import javax.annotation.Nullable;
+
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.longs.LongSets;
+import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.EmptyLevelChunk;
@@ -35,7 +35,6 @@ public class VirtualChunk extends EmptyLevelChunk {
 
 	private final VirtualLevel virtualLevel;
 	private final VirtualChunkSection[] sections;
-	private final VirtualLevelBlocks blocks;
 
 	private boolean needsLight;
 
@@ -43,7 +42,6 @@ public class VirtualChunk extends EmptyLevelChunk {
 		super(world, new ChunkPos(x, z), VirtualLevelUtils.PLAINS.get());
 
 		this.virtualLevel = world;
-		this.blocks = new VirtualLevelBlocks();
 
 		int sectionCount = world.getSectionsCount();
 		this.sections = new VirtualChunkSection[sectionCount];
@@ -58,31 +56,12 @@ public class VirtualChunk extends EmptyLevelChunk {
 	@Override
 	@Nullable
 	public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
-		blocks.blocks().put(pos, state);
-		blocks.blockEntities().remove(pos);
-
-		if(state.hasBlockEntity()) {
-			var be = ((EntityBlock) state.getBlock()).newBlockEntity(pos, state);
-			if(be != null) {
-				blocks.blockEntities().put(pos, be);
-				setBlockEntity(be);
-			}
-		}
-
-		return state;
+		return virtualLevel.blocks().setBlockState(pos, state);
 	}
 
 	@Override
 	public void setBlockEntity(BlockEntity blockEntity) {
-		BlockPos blockpos = blockEntity.getBlockPos();
-		if (this.getBlockState(blockpos).hasBlockEntity()) {
-			blockEntity.setLevel(virtualLevel);
-			blockEntity.clearRemoved();
-			BlockEntity blockentity = this.blockEntities.put(blockpos.immutable(), blockEntity);
-			if (blockentity != null && blockentity != blockEntity) {
-				blockentity.setRemoved();
-			}
-		}
+		virtualLevel.blocks().setBlockEntity(blockEntity.getBlockPos(), blockEntity);
 	}
 
 	@Override
@@ -171,7 +150,7 @@ public class VirtualChunk extends EmptyLevelChunk {
 
 	@Override
 	public void removeBlockEntity(BlockPos pos) {
-		this.blocks.blockEntities().remove(pos);
+		virtualLevel.blocks().removeBlockEntity(pos);
 	}
 
 	@Override
@@ -193,13 +172,7 @@ public class VirtualChunk extends EmptyLevelChunk {
 
 	@Override
 	public void findBlocks(BiPredicate<BlockState, BlockPos> predicate, BiConsumer<BlockPos, BlockState> consumer) {
-		this.blocks.blocks().forEach((pos, state) -> {
-			if (SectionPos.blockToSectionCoord(pos.getX()) == chunkPos.x && SectionPos.blockToSectionCoord(pos.getZ()) == chunkPos.z) {
-				if (predicate.test(state, pos)) {
-					consumer.accept(pos, state);
-				}
-			}
-		});
+		virtualLevel.blocks().findBlocks(predicate, consumer);
 	}
 
 	@Override
@@ -239,22 +212,22 @@ public class VirtualChunk extends EmptyLevelChunk {
 	@Override
 	@Nullable
 	public BlockEntity getBlockEntity(BlockPos pos) {
-		return blocks.getBlockEntity(pos);
+		return virtualLevel.blocks().getBlockEntity(pos);
 	}
 
 	@org.jetbrains.annotations.Nullable
 	@Override
 	public BlockEntity getBlockEntity(BlockPos pos, EntityCreationType pCreationType) {
-		return blocks.getBlockEntity(pos);
+		return virtualLevel.blocks().getBlockEntity(pos);
 	}
 
 	@Override
 	public BlockState getBlockState(BlockPos pos) {
-		return blocks.getBlockState(pos);
+		return virtualLevel.blocks().getBlockState(pos);
 	}
 
 	@Override
 	public FluidState getFluidState(BlockPos pos) {
-		return blocks.getFluidState(pos);
+		return virtualLevel.blocks().getFluidState(pos);
 	}
 }

@@ -2,6 +2,10 @@ package dev.compactmods.gander.level;
 
 import java.util.List;
 import java.util.function.Supplier;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -23,10 +27,11 @@ import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkSource;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.LevelEntityGetter;
@@ -35,6 +40,7 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.level.storage.WritableLevelData;
@@ -42,8 +48,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.LevelTickAccess;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class VirtualLevel extends Level implements ServerLevelAccessor, BoundedBlockAndTintGetter {
 
@@ -52,6 +56,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, BoundedB
 	private final RegistryAccess access;
 	private final VirtualChunkSource chunkSource;
 	private final LevelLightEngine lightEngine;
+	private final VirtualLevelBlocks blocks;
 	private BoundingBox bounds;
 
 	private VirtualLevel(WritableLevelData pLevelData, ResourceKey<Level> pDimension,
@@ -63,6 +68,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, BoundedB
 		this.access = pRegistryAccess;
 		this.chunkSource = new VirtualChunkSource(this);
 		this.lightEngine = new VirtualLightEngine(block -> 15, sky -> 15, this);
+		this.blocks = new VirtualLevelBlocks();
 		this.bounds = BoundingBox.fromCorners(BlockPos.ZERO, BlockPos.ZERO);
 	}
 
@@ -78,6 +84,10 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, BoundedB
 		return chunkSource;
 	}
 
+	VirtualLevelBlocks blocks() {
+		return this.blocks;
+	}
+
 	@Override
 	public boolean setBlock(BlockPos pPos, BlockState pNewState, int pFlags) {
 		return this.setBlock(pPos, pNewState, 0, 512);
@@ -88,9 +98,17 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, BoundedB
 		if (this.isOutsideBuildHeight(pos)) {
 			return false;
 		} else {
-			LevelChunk chunk = this.getChunkAt(pos);
-			pos = pos.immutable();
-			chunk.setBlockState(pos, state, (pFlags & 64) != 0);
+			blocks.setBlockState(pos, state);
+			if(state.hasBlockEntity()) {
+				var be = ((EntityBlock) state.getBlock()).newBlockEntity(pos, state);
+
+				if(be != null) {
+					blocks.setBlockEntity(pos, be);
+					setBlockEntity(be);
+					be.setLevel(this);
+				}
+			}
+
 			return true;
 		}
 	}
@@ -100,10 +118,42 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, BoundedB
 		return this.setBlock(pPos, pState, Block.UPDATE_NONE);
 	}
 
+	@Override
+	public void setBlockEntity(BlockEntity blockEntity) {
+		BlockPos blockpos = blockEntity.getBlockPos();
+		if (this.getBlockState(blockpos).hasBlockEntity()) {
+			blockEntity.setLevel(this);
+			blockEntity.clearRemoved();
+			BlockEntity blockentity = blocks.setBlockEntity(blockpos.immutable(), blockEntity);
+			if (blockentity != null && blockentity != blockEntity) {
+				blockentity.setRemoved();
+			}
+		}
+	}
+
 	@Nullable
 	@Override
 	public BlockEntity getBlockEntity(BlockPos pPos) {
-		return super.getBlockEntity(pPos);
+		if(!bounds.isInside(pPos))
+			return null;
+
+		return blocks.getBlockEntity(pPos);
+	}
+
+	@Override
+	public BlockState getBlockState(BlockPos pPos) {
+		if(!bounds.isInside(pPos))
+			return Blocks.AIR.defaultBlockState();
+
+		return blocks.getBlockState(pPos);
+	}
+
+	@Override
+	public @NotNull FluidState getFluidState(BlockPos pos) {
+		if(!bounds.isInside(pos))
+			return Fluids.EMPTY.defaultFluidState();
+
+		return blocks.getFluidState(pos);
 	}
 
 	public void animateTick() {

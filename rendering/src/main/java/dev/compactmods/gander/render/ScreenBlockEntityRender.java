@@ -1,8 +1,18 @@
 package dev.compactmods.gander.render;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import java.util.Objects;
 import java.util.stream.Stream;
+
 import javax.annotation.Nullable;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.LightTexture;
@@ -14,10 +24,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.fml.loading.FMLEnvironment;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.joml.Matrix4f;
-import org.joml.Vector4f;
 
 public class ScreenBlockEntityRender {
 
@@ -28,14 +34,14 @@ public class ScreenBlockEntityRender {
 	}
 
 	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, @Nullable Matrix4f lightTransform, MultiBufferSource buffer, float pt) {
-		resolver.forEach(ent -> render(world, ent, ms, lightTransform, buffer, pt));
+		resolver.filter(Objects::nonNull).forEach(ent -> render(world, ent, ms, lightTransform, buffer, pt));
 	}
 
-	public static void render(BlockAndTintGetter world, BlockEntity blockEntity, PoseStack ms, MultiBufferSource buffer, float pt) {
+	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, MultiBufferSource buffer, float pt) {
 		render(world, blockEntity, ms, null, buffer, pt);
 	}
 
-	public static void render(BlockAndTintGetter world, BlockEntity blockEntity, PoseStack ms, @Nullable Matrix4f lightTransform, MultiBufferSource buffer, float pt) {
+	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, @Nullable Matrix4f lightTransform, MultiBufferSource buffer, float pt) {
 		BlockEntityRenderer<BlockEntity> renderer = Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(blockEntity);
 		if (renderer == null)
 			return;

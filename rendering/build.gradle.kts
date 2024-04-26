@@ -34,8 +34,6 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
-jarJar.enable()
-
 minecraft {
     accessTransformers {
         file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
@@ -88,11 +86,6 @@ tasks.withType<Jar> {
 }
 
 tasks.jar {
-    archiveClassifier.set("slim")
-    from(sourceSets.main.get().output)
-}
-
-tasks.jarJar {
     archiveClassifier.set("")
     from(sourceSets.main.get().output)
 }
@@ -100,7 +93,6 @@ tasks.jarJar {
 val PACKAGES_URL = System.getenv("GH_PKG_URL") ?: "https://maven.pkg.github.com/compactmods/gander"
 publishing {
     publications.register<MavenPublication>("levels") {
-        // this.artifact(tasks.jarJar)
         from(components.getByName("java"))
     }
 

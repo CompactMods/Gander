@@ -57,10 +57,6 @@ runs {
         modSource(sourceSets.main.get())
         modSource(project(":levels").sourceSets.main.get())
         modSource(project(":rendering").sourceSets.main.get())
-        dependencies {
-//             runtime(project(":levels"))
-//             runtime(project(":rendering"))
-        }
     }
 
     create("client") {
