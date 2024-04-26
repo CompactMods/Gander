@@ -40,7 +40,6 @@ java {
 jarJar.enable()
 
 minecraft {
-    modIdentifier.set(modId)
     accessTransformers {
         file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
     }

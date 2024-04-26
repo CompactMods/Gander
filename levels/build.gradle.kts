@@ -36,10 +36,6 @@ java {
 
 jarJar.enable()
 
-minecraft {
-    modIdentifier.set("ganderlevels")
-}
-
 runs {}
 
 repositories {

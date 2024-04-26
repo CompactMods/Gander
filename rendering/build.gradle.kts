@@ -37,7 +37,6 @@ java {
 jarJar.enable()
 
 minecraft {
-    modIdentifier.set("ganderrendering")
     accessTransformers {
         file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
     }
