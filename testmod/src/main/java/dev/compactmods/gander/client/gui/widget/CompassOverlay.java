@@ -2,7 +2,6 @@ package dev.compactmods.gander.client.gui.widget;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -10,7 +9,6 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
-
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
@@ -43,7 +41,7 @@ public class CompassOverlay implements Renderable {
 
 		int color = DyeColor.WHITE.getTextColor();
 
-		poseStack.mulPoseMatrix(new Matrix4f().scaling(1, -1, 1));
+		poseStack.mulPose(new Matrix4f().scaling(1, -1, 1));
 		poseStack.scale(1 / 16f, 1 / 16f, 1 / 16f);
 		poseStack.translate(0, -8, 0);
 

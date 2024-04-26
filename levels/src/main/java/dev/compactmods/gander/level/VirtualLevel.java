@@ -1,5 +1,7 @@
 package dev.compactmods.gander.level;
 
+import java.util.List;
+import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -14,6 +16,7 @@ import net.minecraft.world.TickRateManager;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
@@ -32,19 +35,15 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.level.storage.WritableLevelData;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.LevelTickAccess;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 public class VirtualLevel extends Level implements ServerLevelAccessor, BoundedBlockAndTintGetter {
 
@@ -139,11 +138,11 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, BoundedB
 	}
 
 	@Override
-	public void gameEvent(Entity pEntity, GameEvent pEvent, BlockPos pPos) {
+	public void gameEvent(Entity pEntity, Holder<GameEvent> pEvent, BlockPos pPos) {
 	}
 
 	@Override
-	public void gameEvent(GameEvent p_220404_, Vec3 p_220405_, GameEvent.Context p_220406_) {
+	public void gameEvent(Holder<GameEvent> p_220404_, Vec3 p_220405_, GameEvent.Context p_220406_) {
 	}
 
 	@Override
@@ -206,17 +205,17 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, BoundedB
 	}
 
 	@Override
-	public MapItemSavedData getMapData(String pMapName) {
+	public MapItemSavedData getMapData(MapId pMapName) {
 		return null;
 	}
 
 	@Override
-	public void setMapData(String pMapId, MapItemSavedData pData) {
+	public void setMapData(MapId pMapId, MapItemSavedData pData) {
 	}
 
 	@Override
-	public int getFreeMapId() {
-		return 0;
+	public MapId getFreeMapId() {
+		return null;
 	}
 
 	@Override
@@ -280,5 +279,10 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, BoundedB
 	@Override
 	public int getBrightness(LightLayer pLightType, BlockPos pBlockPos) {
 		return 15;
+	}
+
+	@Override
+	public PotionBrewing potionBrewing() {
+		return PotionBrewing.EMPTY;
 	}
 }

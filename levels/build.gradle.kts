@@ -1,8 +1,6 @@
 @file:Suppress("SpellCheckingInspection")
 
 import org.ajoberstar.grgit.Grgit
-import java.text.SimpleDateFormat
-import java.util.*
 
 var envVersion: String = System.getenv("VERSION") ?: "9.9.9"
 if (envVersion.startsWith("v"))
@@ -22,7 +20,7 @@ plugins {
     id("eclipse")
     id("maven-publish")
     id("java-library")
-    id("net.neoforged.gradle.userdev") version ("7.0.93")
+    id("net.neoforged.gradle.userdev") version ("7.0.107")
     id("org.ajoberstar.grgit") version ("5.2.1")
 }
 
@@ -33,7 +31,7 @@ base {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 jarJar.enable()

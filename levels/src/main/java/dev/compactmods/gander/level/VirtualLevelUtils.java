@@ -2,7 +2,6 @@ package dev.compactmods.gander.level;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.Holder;

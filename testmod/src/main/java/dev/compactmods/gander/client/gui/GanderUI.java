@@ -1,21 +1,16 @@
 package dev.compactmods.gander.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
-
-import dev.compactmods.gander.network.SceneDataRequest;
 import dev.compactmods.gander.client.gui.widget.SpatialRenderer;
 import dev.compactmods.gander.level.BoundedBlockAndTintGetter;
-import net.minecraft.client.gui.screens.Screen;
-
-import net.minecraft.network.chat.Component;
-
+import dev.compactmods.gander.network.SceneDataRequest;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-
 import net.neoforged.neoforge.network.PacketDistributor;
-
 import org.joml.Vector2f;
 
 public class GanderUI extends Screen {
@@ -29,7 +24,7 @@ public class GanderUI extends Screen {
 
 	public GanderUI(ResourceLocation sceneID) {
 		super(Component.empty());
-		PacketDistributor.SERVER.noArg().send(new SceneDataRequest(sceneID));
+		PacketDistributor.sendToServer(new SceneDataRequest(sceneID));
 	}
 
 	@Override

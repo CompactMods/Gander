@@ -1,16 +1,13 @@
 package dev.compactmods.gander;
 
 import dev.compactmods.gander.utility.VecHelper;
+import java.util.Optional;
 import net.minecraft.client.Camera;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
-
 import net.minecraft.world.phys.shapes.CollisionContext;
-
 import org.joml.Vector3f;
-
-import java.util.Optional;
 
 public class RaytraceHelper {
 

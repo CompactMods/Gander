@@ -1,40 +1,28 @@
 package dev.compactmods.gander.network;
 
 import dev.compactmods.gander.GanderLib;
-import dev.compactmods.gander.client.gui.ScreenOpener;
 import dev.compactmods.gander.client.gui.GanderUI;
-import net.minecraft.network.FriendlyByteBuf;
+import dev.compactmods.gander.client.gui.ScreenOpener;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.neoforge.network.handling.IPlayPayloadHandler;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record OpenUIPacket(ResourceLocation scene) implements CustomPacketPayload {
 
-	public static final ResourceLocation ID = GanderLib.asResource("open_scene");
+	public static final Type<OpenUIPacket> ID = new Type<>(GanderLib.asResource("open_scene"));
 
-	public OpenUIPacket(FriendlyByteBuf buffer) {
-		this(buffer.readResourceLocation());
+	public static final StreamCodec<? super ByteBuf, OpenUIPacket> STREAM_CODEC = ResourceLocation.STREAM_CODEC.map(OpenUIPacket::new, OpenUIPacket::scene);
+
+	public void handle(IPayloadContext context) {
+		if (FMLEnvironment.dist.isClient())
+			ScreenOpener.open(new GanderUI(scene));
 	}
 
 	@Override
-	public void write(FriendlyByteBuf buffer) {
-		buffer.writeResourceLocation(scene);
-	}
-
-	@Override
-	public ResourceLocation id() {
+	public Type<? extends CustomPacketPayload> type() {
 		return ID;
-	}
-
-	public static final IPlayPayloadHandler<OpenUIPacket> HANDLER = (pkt, ctx) -> {
-		ctx.workHandler().submitAsync(() -> {
-			if (FMLEnvironment.dist.isClient())
-				handleOnClient(pkt.scene);
-		});
-	};
-
-	private static void handleOnClient(ResourceLocation scene) {
-		ScreenOpener.open(new GanderUI(scene));
 	}
 }

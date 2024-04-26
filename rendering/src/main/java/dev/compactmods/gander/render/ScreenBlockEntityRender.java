@@ -1,29 +1,23 @@
 package dev.compactmods.gander.render;
 
-import javax.annotation.Nullable;
-
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.core.registries.BuiltInRegistries;
-
-import net.minecraft.world.level.BlockAndTintGetter;
-import net.neoforged.fml.loading.FMLEnvironment;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.joml.Matrix4f;
-import org.joml.Vector4f;
-
 import com.mojang.blaze3d.vertex.PoseStack;
-
+import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
-import java.util.stream.Stream;
+import net.neoforged.fml.loading.FMLEnvironment;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.joml.Matrix4f;
+import org.joml.Vector4f;
 
 public class ScreenBlockEntityRender {
 

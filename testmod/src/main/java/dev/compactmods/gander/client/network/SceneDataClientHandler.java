@@ -1,7 +1,7 @@
 package dev.compactmods.gander.client.network;
 
-import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.client.gui.GanderUI;
+import dev.compactmods.gander.level.VirtualLevel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;

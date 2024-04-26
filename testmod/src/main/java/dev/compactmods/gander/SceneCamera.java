@@ -1,9 +1,7 @@
 package dev.compactmods.gander;
 
 import net.minecraft.client.Camera;
-
 import net.minecraft.world.phys.Vec3;
-
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 

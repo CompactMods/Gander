@@ -6,7 +6,6 @@ package dev.compactmods.gander.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-
 import net.minecraft.core.BlockPos;
 
 /**
@@ -45,7 +44,7 @@ public record FluidVertexConsumer(VertexConsumer prior, PoseStack pose, BlockPos
 
 	@Override
 	public VertexConsumer normal(float x, float y, float z) {
-		return prior.normal(pose.last().normal(), x, y, z);
+		return prior.normal(pose.last(), x, y, z);
 	}
 
 	@Override

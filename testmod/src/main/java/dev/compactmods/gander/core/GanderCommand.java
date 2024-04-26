@@ -1,14 +1,11 @@
 package dev.compactmods.gander.core;
 
-import java.util.Collection;
-
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
-
 import dev.compactmods.gander.network.OpenUIPacket;
-
+import java.util.Collection;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -46,7 +43,7 @@ public class GanderCommand {
 			if (player instanceof FakePlayer)
 				continue;
 
-			PacketDistributor.PLAYER.with(player).send(new OpenUIPacket(sceneId));
+			PacketDistributor.sendToPlayer(player, new OpenUIPacket(sceneId));
 		}
 
 		return Command.SINGLE_SUCCESS;

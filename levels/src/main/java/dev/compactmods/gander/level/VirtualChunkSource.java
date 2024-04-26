@@ -1,18 +1,16 @@
 package dev.compactmods.gander.level;
 
-import java.util.function.BooleanSupplier;
-
-import org.jetbrains.annotations.Nullable;
-
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import java.util.function.BooleanSupplier;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkSource;
-import net.minecraft.world.level.chunk.ChunkStatus;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.lighting.LevelLightEngine;
+import org.jetbrains.annotations.Nullable;
 
 public class VirtualChunkSource extends ChunkSource {
 	private final VirtualLevel virtualLevel;

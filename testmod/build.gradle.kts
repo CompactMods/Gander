@@ -23,7 +23,7 @@ plugins {
     id("eclipse")
     id("maven-publish")
     id("java-library")
-    id("net.neoforged.gradle.userdev") version ("7.0.93")
+    id("net.neoforged.gradle.userdev") version ("7.0.107")
     id("org.ajoberstar.grgit") version ("5.2.1")
 }
 
@@ -34,7 +34,7 @@ base {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 jarJar.enable()
@@ -50,15 +50,17 @@ runs {
     configureEach {
         systemProperty("forge.logging.markers", "") // 'SCAN,REGISTRIES,REGISTRYDUMP'
         systemProperty("forge.logging.console.level", "debug")
-        if (!System.getenv().containsKey("CI")) {
+        /*if (!System.getenv().containsKey("CI")) {
             // JetBrains Runtime Hotswap
             jvmArgument("-XX:+AllowEnhancedClassRedefinition")
-        }
+        }*/
 
         modSource(sourceSets.main.get())
+        modSource(project(":levels").sourceSets.main.get())
+        modSource(project(":rendering").sourceSets.main.get())
         dependencies {
-            runtime(project(":levels"))
-            runtime(project(":rendering"))
+//             runtime(project(":levels"))
+//             runtime(project(":rendering"))
         }
     }
 
@@ -94,12 +96,12 @@ repositories {
 dependencies {
     // Core Projects and Libraries
     implementation(libraries.neoforge)
-    implementation(project(":levels"))
-    implementation(project(":rendering"))
+    implementation(project(":levels", "default"))
+    implementation(project(":rendering", "default"))
 
     // Mods
-    compileOnly(mods.bundles.jei)
-    compileOnly(mods.jade)
+    // compileOnly(mods.bundles.jei)
+    // compileOnly(mods.jade)
 }
 
 tasks.withType<ProcessResources> {
@@ -135,7 +137,7 @@ tasks.withType<Jar> {
 }
 
 tasks.withType<ProcessResources>().configureEach {
-    filesMatching("META-INF/mods.toml") {
+    filesMatching("META-INF/neoforge.mods.toml") {
         expand(
             "minecraft_version" to libraries.versions.minecraft.get(),
             "neo_version" to libraries.versions.neoforge.get(),

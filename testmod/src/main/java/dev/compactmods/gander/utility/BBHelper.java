@@ -1,10 +1,9 @@
 package dev.compactmods.gander.utility;
 
+import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
-
-import java.util.stream.Stream;
 
 public class BBHelper {
 

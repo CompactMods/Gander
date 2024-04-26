@@ -1,5 +1,6 @@
 package dev.compactmods.gander.level;
 
+import java.util.function.ToIntFunction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.BlockGetter;
@@ -10,10 +11,7 @@ import net.minecraft.world.level.chunk.LightChunk;
 import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.lighting.LayerLightEventListener;
 import net.minecraft.world.level.lighting.LevelLightEngine;
-
 import org.jetbrains.annotations.Nullable;
-
-import java.util.function.ToIntFunction;
 
 public final class VirtualLightEngine extends LevelLightEngine {
 	private final LayerLightEventListener blockListener;

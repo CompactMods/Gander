@@ -1,11 +1,9 @@
 package dev.compactmods.gander.render;
 
-import java.util.function.Function;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-
+import java.util.function.Function;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -23,7 +21,6 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
-
 import org.joml.Quaternionf;
 
 @SuppressWarnings("unused")
@@ -230,7 +227,7 @@ public class ScreenFluidRenderer {
 				.uv(u, v)
 				.overlayCoords(OverlayTexture.NO_OVERLAY)
 				.uv2(light)
-				.normal(peek.normal(), normal.getX(), normal.getY(), normal.getZ())
+				.normal(peek, normal.getX(), normal.getY(), normal.getZ())
 				.endVertex();
 	}
 

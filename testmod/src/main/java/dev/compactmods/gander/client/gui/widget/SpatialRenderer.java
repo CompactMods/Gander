@@ -3,18 +3,15 @@ package dev.compactmods.gander.client.gui.widget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexSorting;
-
-import dev.compactmods.gander.render.ScreenBlockEntityRender;
-import dev.compactmods.gander.render.ScreenBlockRenderer;
 import dev.compactmods.gander.SceneCamera;
 import dev.compactmods.gander.level.BoundedBlockAndTintGetter;
+import dev.compactmods.gander.render.ScreenBlockEntityRender;
+import dev.compactmods.gander.render.ScreenBlockRenderer;
 import dev.compactmods.gander.utility.BoundedLevelHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
-
 import net.minecraft.util.Mth;
-
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
@@ -93,7 +90,7 @@ public class SpatialRenderer implements Renderable {
 
 		// Center (screen)
 		poseStack.translate(width / 2f, height / 2f, 400);
-		poseStack.mulPoseMatrix(new Matrix4f().scaling(1, -1, 1));
+		poseStack.mulPose(new Matrix4f().scaling(1, -1, 1));
 
 		poseStack.scale(scale, scale, scale);
 
