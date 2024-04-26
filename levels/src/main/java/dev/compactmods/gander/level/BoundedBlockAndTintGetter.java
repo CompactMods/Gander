@@ -8,5 +8,4 @@ public interface BoundedBlockAndTintGetter extends BlockAndTintGetter {
 
 	BoundingBox bounds();
 
-	LevelChunk getChunk(int x, int z);
 }

@@ -1,5 +1,7 @@
 package dev.compactmods.gander.level;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -11,39 +13,41 @@ import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.FluidState;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
 
 public class VirtualLevelBlocks implements BlockAndTintGetter {
 
-	private final Map<BlockPos, BlockState> states;
-	private final Map<BlockPos, BlockEntity> blockEntities;
+	private final Long2ObjectMap<BlockState> states;
+	private final Long2ObjectMap<BlockEntity> blockEntities;
 
 	private final VirtualLightEngine lightEngine = new VirtualLightEngine(pos -> 0, pos -> 15, this);
 	private final Biome PLAINS;
 
 	public VirtualLevelBlocks() {
-		this.states = new HashMap<>();
-		this.blockEntities = new HashMap<>();
+		this.states = new Long2ObjectOpenHashMap<>();
+		this.blockEntities = new Long2ObjectOpenHashMap<>();
 
 		this.PLAINS = Minecraft.getInstance().level.registryAccess()
 				.registryOrThrow(Registries.BIOME)
 				.get(Biomes.PLAINS);
 	}
 
-	public Map<BlockPos, BlockState> blocks() {
-		return states;
+	public BlockState setBlockState(BlockPos pos, @NotNull BlockState state) {
+		this.states.put(pos.asLong(), state);
+		this.blockEntities.remove(pos.asLong());
+		return state;
 	}
 
-	public Map<BlockPos, BlockEntity> blockEntities() {
-		return blockEntities;
+	public BlockEntity setBlockEntity(BlockPos pos, BlockEntity be) {
+		this.blockEntities.put(pos.asLong(), be);
+		return be;
 	}
 
 	@Override
@@ -52,7 +56,7 @@ public class VirtualLevelBlocks implements BlockAndTintGetter {
 	}
 
 	@Override
-	public LevelLightEngine getLightEngine() {
+	public @NotNull LevelLightEngine getLightEngine() {
 		return lightEngine;
 	}
 
@@ -64,19 +68,21 @@ public class VirtualLevelBlocks implements BlockAndTintGetter {
 	@Nullable
 	@Override
 	public BlockEntity getBlockEntity(BlockPos pPos) {
-		return blockEntities.get(pPos);
+		return blockEntities.get(pPos.asLong());
+	}
+
+	public void removeBlockEntity(BlockPos pos) {
+		blockEntities.remove(pos.asLong());
 	}
 
 	@Override
 	public @NotNull BlockState getBlockState(BlockPos pos) {
-		if(!states.containsKey(pos))
-			return Blocks.AIR.defaultBlockState();
-
-		return this.states.get(pos);
+		var state = this.states.get(pos.asLong());
+		return state != null ? state : Blocks.AIR.defaultBlockState();
 	}
 
 	@Override
-	public FluidState getFluidState(BlockPos pos) {
+	public @NotNull FluidState getFluidState(@NotNull BlockPos pos) {
 		return getBlockState(pos).getFluidState();
 	}
 
@@ -88,5 +94,12 @@ public class VirtualLevelBlocks implements BlockAndTintGetter {
 	@Override
 	public int getMinBuildHeight() {
 		return 0;
+	}
+
+	public void findBlocks(BiPredicate<BlockState, BlockPos> o, BiConsumer<BlockPos, BlockState> consumer) {
+		states.forEach((pos, state) -> {
+			if (o.test(state, BlockPos.of(pos)))
+				consumer.accept(BlockPos.of(pos), state);
+		});
 	}
 }

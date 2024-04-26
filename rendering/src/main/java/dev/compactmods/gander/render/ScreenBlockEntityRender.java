@@ -10,6 +10,7 @@ import net.neoforged.fml.loading.FMLEnvironment;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 
@@ -23,6 +24,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class ScreenBlockEntityRender {
@@ -34,14 +36,14 @@ public class ScreenBlockEntityRender {
 	}
 
 	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, @Nullable Matrix4f lightTransform, MultiBufferSource buffer, float pt) {
-		resolver.forEach(ent -> render(world, ent, ms, lightTransform, buffer, pt));
+		resolver.filter(Objects::nonNull).forEach(ent -> render(world, ent, ms, lightTransform, buffer, pt));
 	}
 
-	public static void render(BlockAndTintGetter world, BlockEntity blockEntity, PoseStack ms, MultiBufferSource buffer, float pt) {
+	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, MultiBufferSource buffer, float pt) {
 		render(world, blockEntity, ms, null, buffer, pt);
 	}
 
-	public static void render(BlockAndTintGetter world, BlockEntity blockEntity, PoseStack ms, @Nullable Matrix4f lightTransform, MultiBufferSource buffer, float pt) {
+	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, @Nullable Matrix4f lightTransform, MultiBufferSource buffer, float pt) {
 		BlockEntityRenderer<BlockEntity> renderer = Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(blockEntity);
 		if (renderer == null)
 			return;

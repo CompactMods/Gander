@@ -8,21 +8,30 @@ import dev.compactmods.gander.render.ScreenBlockEntityRender;
 import dev.compactmods.gander.render.ScreenBlockRenderer;
 import dev.compactmods.gander.SceneCamera;
 import dev.compactmods.gander.level.BoundedBlockAndTintGetter;
-import dev.compactmods.gander.utility.BoundedLevelHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
+
+import net.minecraft.world.level.block.state.BlockState;
 
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public class SpatialRenderer implements Renderable {
 
 	private @Nullable BoundedBlockAndTintGetter blockAndTints;
+	private Set<BlockPos> blockEntityPositions;
+
 	private final CompassOverlay compassOverlay;
 	private final int width;
 	private final int height;
@@ -44,6 +53,7 @@ public class SpatialRenderer implements Renderable {
 		this.lookFrom = new Vector3f();
 		this.shouldRenderCompass = false;
 		this.scale = 24f;
+		this.blockEntityPositions = Collections.emptySet();
 	}
 
 	public void prepareCamera(Vector2f rotation) {
@@ -61,14 +71,13 @@ public class SpatialRenderer implements Renderable {
 
 	public void setData(@Nullable BoundedBlockAndTintGetter data) {
 		this.blockAndTints = data;
+		this.blockEntityPositions = BlockPos.betweenClosedStream(blockAndTints.bounds())
+				.filter(p -> blockAndTints.getBlockState(p).hasBlockEntity())
+				.map(BlockPos::immutable)
+				.collect(Collectors.toUnmodifiableSet());
 
-		if (data != null) {
-			this.shouldRenderCompass = true;
-			this.compassOverlay.setBounds(data.bounds());
-		} else {
-			this.shouldRenderCompass = false;
-			this.compassOverlay.setBounds(null);
-		}
+		this.shouldRenderCompass = true;
+		this.compassOverlay.setBounds(data.bounds());
 	}
 
 	@Override
@@ -79,7 +88,10 @@ public class SpatialRenderer implements Renderable {
 		var buffer = Minecraft.getInstance().renderBuffers().bufferSource();
 
 		final var renderBoundaries = blockAndTints.bounds();
-		final var blockEntities = BoundedLevelHelper.BLOCK_ENTITY_RESOLVER.getBlockEntities(blockAndTints);
+		final var blockEntities = blockEntityPositions
+				.stream()
+				.map(blockAndTints::getBlockEntity)
+				.filter(Objects::nonNull);
 
 		RenderSystem.enableBlend();
 		RenderSystem.enableDepthTest();
