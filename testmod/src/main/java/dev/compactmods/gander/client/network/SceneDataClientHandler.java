@@ -15,8 +15,8 @@ public class SceneDataClientHandler {
 		final var mc = Minecraft.getInstance();
 		if (mc.screen instanceof GanderUI ui) {
 			var virtualLevel = new VirtualLevel(mc.level.registryAccess());
-			data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings(), RandomSource.create(), Block.UPDATE_CLIENTS);
 			virtualLevel.setBounds(data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO));
+			data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings(), RandomSource.create(), Block.UPDATE_CLIENTS);
 			ui.setScene(virtualLevel);
 		}
 	}
