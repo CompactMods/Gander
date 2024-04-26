@@ -37,7 +37,7 @@ java {
 jarJar.enable()
 
 minecraft {
-    modIdentifier.set("gander")
+    modIdentifier.set("ganderlevels")
 }
 
 runs {}
