@@ -56,10 +56,8 @@ runs {
         }
 
         modSource(sourceSets.main.get())
-        dependencies {
-            runtime(project(":levels"))
-            runtime(project(":rendering"))
-        }
+        modSource(project(":levels").sourceSets.main.get())
+        modSource(project(":rendering").sourceSets.main.get())
     }
 
     create("client") {
@@ -94,8 +92,8 @@ repositories {
 dependencies {
     // Core Projects and Libraries
     implementation(libraries.neoforge)
-    implementation(project(":levels"))
-    implementation(project(":rendering"))
+    implementation(project(":levels", "default"))
+    implementation(project(":rendering", "default"))
 
     // Mods
     compileOnly(mods.bundles.jei)

@@ -36,14 +36,6 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
-jarJar.enable()
-
-minecraft {
-    modIdentifier.set("gander")
-}
-
-runs {}
-
 repositories {
     mavenLocal()
 }
@@ -88,11 +80,6 @@ tasks.withType<Jar> {
 }
 
 tasks.jar {
-    archiveClassifier.set("slim")
-    from(sourceSets.main.get().output)
-}
-
-tasks.jarJar {
     archiveClassifier.set("")
     from(sourceSets.main.get().output)
 }
@@ -100,7 +87,7 @@ tasks.jarJar {
 val PACKAGES_URL = System.getenv("GH_PKG_URL") ?: "https://maven.pkg.github.com/compactmods/gander"
 publishing {
     publications.register<MavenPublication>("levels") {
-        this.artifact(tasks.jarJar)
+        this.artifact(tasks.jar)
         from(components.getByName("java"))
     }
 
