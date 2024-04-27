@@ -50,9 +50,9 @@ public class GanderUI extends Screen {
 		super.tick();
 		// sceneRenderer.tick();
 
-//		if (autoRotate) {
-//			this.sceneRenderer.rotateY(Math.toRadians(2.5));
-//		}
+		if (autoRotate) {
+			this.sceneRenderer.camera().lookLeft((float) Math.toRadians(2.5));
+		}
 	}
 
 	@Override
@@ -82,42 +82,37 @@ public class GanderUI extends Screen {
 
 	@Override
 	public boolean keyPressed(int code, int scanCode, int modifiers) {
-		Options settings = Minecraft.getInstance().options;
-
-		final var rads = 1 / 12f;
+		final float rotateSpeed = 1 / 12f;
 
 		if (code == InputConstants.KEY_A) {
 			this.autoRotate = !autoRotate;
 			return true;
 		}
 
-//		if (code == InputConstants.KEY_R) {
-//			this.mainCameraRotation.set(DEFAULT_ROTATION);
-//			return true;
-//		}
-//
-//		if (code == InputConstants.KEY_UP) {
-//			if (this.mainCameraRotation.x < -rads)
-//				this.mainCameraRotation.x += rads;
-//
-//			return true;
-//		}
-//
-//		if (code == InputConstants.KEY_DOWN) {
-//			if (this.mainCameraRotation.x > -(Math.PI / 2) + (rads * 2))
-//				this.mainCameraRotation.x -= rads;
-//			return true;
-//		}
-//
-//		if (code == InputConstants.KEY_LEFT) {
-//			this.mainCameraRotation.y += rads;
-//			return true;
-//		}
-//
-//		if (code == InputConstants.KEY_RIGHT) {
-//			this.mainCameraRotation.y -= rads;
-//			return true;
-//		}
+		if (code == InputConstants.KEY_R) {
+			this.sceneRenderer.camera().resetLook();
+			return true;
+		}
+
+		if (code == InputConstants.KEY_UP) {
+			sceneRenderer.camera().lookUp(rotateSpeed);
+			return true;
+		}
+
+		if (code == InputConstants.KEY_DOWN) {
+			sceneRenderer.camera().lookDown(rotateSpeed);
+			return true;
+		}
+
+		if (code == InputConstants.KEY_LEFT) {
+			this.sceneRenderer.camera().lookLeft(rotateSpeed);
+			return true;
+		}
+
+		if (code == InputConstants.KEY_RIGHT) {
+			this.sceneRenderer.camera().lookRight(rotateSpeed);
+			return true;
+		}
 
 		return super.keyPressed(code, scanCode, modifiers);
 	}

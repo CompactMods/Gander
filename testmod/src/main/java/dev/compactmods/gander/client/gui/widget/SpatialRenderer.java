@@ -36,17 +36,12 @@ public class SpatialRenderer implements Renderable {
 	private @Nullable BoundingBox blockBoundaries;
 	private Set<BlockPos> blockEntityPositions;
 
-	private final Vector2f cameraRotation;
-	private static final Vector2f DEFAULT_ROTATION = new Vector2f((float) Math.toRadians(-25), (float) Math.toRadians(-135));
-
 	private final CompassOverlay compassOverlay;
 	private int screenWidth;
 	private int screenHeight;
 
 	private final SceneCamera camera;
-	private final Vector3f cameraTarget;
 
-	private Vector3f lookFrom;
 	private boolean shouldRenderCompass;
 	private float scale;
 
@@ -56,27 +51,14 @@ public class SpatialRenderer implements Renderable {
 		this.screenHeight = screenHeight;
 
 		this.camera = new SceneCamera();
-		this.cameraTarget = new Vector3f();
-		this.lookFrom = new Vector3f();
+
 		this.shouldRenderCompass = false;
 		this.scale = 1f;
 		this.blockEntityPositions = Collections.emptySet();
-		this.cameraRotation = new Vector2f(DEFAULT_ROTATION);
-
-		this.setCameraRotation(DEFAULT_ROTATION);
 	}
 
-	public void setCameraRotation(Vector2f rotation) {
-		var newLookFrom = new Vector3f(0, 0, 1);
-		newLookFrom.rotateX(rotation.x);
-		newLookFrom.rotateY(rotation.y);
-		// look.mul(16);
-
-		if (lookFrom.distance(newLookFrom) > 1 && bakedLevel != null)
-			bakedLevel.resortTranslucency(newLookFrom);
-
-		this.lookFrom = newLookFrom;
-		camera.lookAt(this.lookFrom, cameraTarget, new Vector3f(0, 1, 0));
+	public SceneCamera camera() {
+		return this.camera;
 	}
 
 	public void shouldRenderCompass(boolean render) {
@@ -138,6 +120,8 @@ public class SpatialRenderer implements Renderable {
 						-1f * (blockBoundaries.getYSpan() / 2f),
 						blockBoundaries.getZSpan() / -2f);
 
+				final var lookFrom = camera.getLookFrom();
+
 				if (bakedLevel != null) {
 					// ScreenBlockRenderer.render(bakedLevel, poseStack, lookFrom, projectionMatrix, partialTicks);
 
@@ -172,11 +156,5 @@ public class SpatialRenderer implements Renderable {
 	public void scale(double scale) {
 		this.scale += scale;
 		this.scale = Mth.clamp(this.scale, 1, 50);
-	}
-
-	public void resize(int width, int height) {
-		this.screenWidth = width;
-		this.screenHeight = height;
-		this.setCameraRotation(cameraRotation);
 	}
 }
