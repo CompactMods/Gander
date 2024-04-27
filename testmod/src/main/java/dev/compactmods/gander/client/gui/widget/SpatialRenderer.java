@@ -74,15 +74,16 @@ public class SpatialRenderer implements Renderable {
 	}
 
 	public void prepareCamera(Vector2f rotation) {
-		var look = new Vector3f(0, 0, 1);
-		look.rotateX(rotation.x);
-		look.rotateY(rotation.y);
+		var newLookFrom = new Vector3f(0, 0, 1);
+		newLookFrom.rotateX(rotation.x);
+		newLookFrom.rotateY(rotation.y);
 		// look.mul(16);
 
-		if (lookFrom.distance(look) > 1 && bakedLevel != null)
-			bakedLevel.resortTranslucency(look);
+		if (lookFrom.distance(newLookFrom) > 1 && bakedLevel != null)
+			bakedLevel.resortTranslucency(newLookFrom);
 
-		this.lookFrom = look;
+		this.lookFrom = newLookFrom;
+		camera.lookAt(this.lookFrom, cameraTarget, new Vector3f(0, 1, 0));
 	}
 
 	public void shouldRenderCompass(boolean render) {
@@ -121,7 +122,7 @@ public class SpatialRenderer implements Renderable {
 		// has to be outside of MS transforms, important for vertex sorting
 		RenderSystem.backupProjectionMatrix();
 		Matrix4f projectionMatrix = new Matrix4f(RenderSystem.getProjectionMatrix());
-		RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.ORTHOGRAPHIC_Z);
+		RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.DISTANCE_TO_ORIGIN);
 
 		PoseStack poseStack = graphics.pose();
 		poseStack.translate(0, 0, -10000);
@@ -131,8 +132,6 @@ public class SpatialRenderer implements Renderable {
 		poseStack.mulPoseMatrix(new Matrix4f().negateY());
 
 		// poseStack.scale(2.5f, 2.5f, 2.5f);
-
-		camera.lookAt(this.lookFrom, cameraTarget, new Vector3f(0, 1, 0));
 
 		poseStack.pushPose();
 		{
@@ -144,8 +143,8 @@ public class SpatialRenderer implements Renderable {
 					blockBoundaries.getZSpan() / -2f);
 
 			if (bakedLevel != null) {
-				ScreenBlockRenderer.renderBakedLevel(bakedLevel, poseStack, camera.getPosition().toVector3f(), projectionMatrix, partialTicks);
-				ScreenBlockEntityRender.render(blockAndTints, blockEntities, poseStack, camera.getPosition().toVector3f(), buffer, partialTicks);
+				ScreenBlockRenderer.renderBakedLevel(bakedLevel, poseStack, lookFrom, projectionMatrix, partialTicks);
+				ScreenBlockEntityRender.render(blockAndTints, blockEntities, poseStack, lookFrom, buffer, partialTicks);
 			}
 		}
 		poseStack.popPose();
