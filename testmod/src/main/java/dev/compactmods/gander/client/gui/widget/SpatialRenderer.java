@@ -136,7 +136,7 @@ public class SpatialRenderer implements Renderable {
 
 		poseStack.pushPose();
 		{
-//			poseStack.scale(16, 16, 16);
+			poseStack.scale(16, 16, 16);
 
 			poseStack.mulPose(camera.rotation());
 			poseStack.translate(blockBoundaries.getXSpan() / -2f,
@@ -144,7 +144,7 @@ public class SpatialRenderer implements Renderable {
 					blockBoundaries.getZSpan() / -2f);
 
 			if (bakedLevel != null) {
-				ScreenBlockRenderer.renderBakedLevel(bakedLevel, poseStack, camera.getPosition().toVector3f(), projectionMatrix);
+				ScreenBlockRenderer.renderBakedLevel(bakedLevel, poseStack, camera.getPosition().toVector3f(), projectionMatrix, partialTicks);
 				ScreenBlockEntityRender.render(blockAndTints, blockEntities, poseStack, camera.getPosition().toVector3f(), buffer, partialTicks);
 			}
 		}

@@ -60,15 +60,14 @@ public class ScreenBlockRenderer {
 //			var baked = LevelBakery.bakeVertices(level, blockBoundaries, camera.getPosition());
 //			baked.render();
 
-			if (isTranslucent && chain != null)
-				chain.process(partialTicks);
+
 		}
 
 
 		pose.popPose();
 	}
 
-	public static void renderBakedLevel(BakedLevel bakedLevel, PoseStack poseStack, Vector3f cameraPosition, Matrix4f projectionMatrix) {
+	public static void renderBakedLevel(BakedLevel bakedLevel, PoseStack poseStack, Vector3f cameraPosition, Matrix4f projectionMatrix, float partialTicks) {
 		poseStack.pushPose();
 		float scale = (1 / 16f);
 		// poseStack.scale(scale, scale, scale);
@@ -76,6 +75,11 @@ public class ScreenBlockRenderer {
 		RenderTypeHelper.RENDER_TYPE_BUFFERS.keySet().forEach(renderType -> {
 			renderSectionLayer(bakedLevel, renderType, poseStack, cameraPosition, projectionMatrix);
 		});
+
+		var chain = Minecraft.getInstance().levelRenderer.transparencyChain;
+		if (chain != null)
+			chain.process(partialTicks);
+
 		poseStack.popPose();
 	}
 
@@ -95,6 +99,7 @@ public class ScreenBlockRenderer {
 		if (vertexbuffer != null) {
 			BlockPos blockpos = BlockPos.ZERO;
 			if (uniform != null) {
+				shaderinstance.apply();
 				uniform.set(
 						(float) ((double) blockpos.getX() - cameraPosition.x),
 						(float) ((double) blockpos.getY() - cameraPosition.y),
