@@ -1,5 +1,6 @@
 @file:Suppress("SpellCheckingInspection")
 
+import net.neoforged.gradle.dsl.common.runs.type.RunType
 import org.ajoberstar.grgit.Grgit
 import java.text.SimpleDateFormat
 import java.util.*
@@ -34,6 +35,7 @@ base {
 }
 
 java {
+    toolchain.vendor.set(JvmVendorSpec.JETBRAINS)
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
@@ -64,6 +66,17 @@ runs {
         programArguments("--username", "Nano")
         programArguments("--width", "1920")
         programArguments("--height", "1080")
+    }
+
+    create("remoteClient") {
+        this.configure("client")
+        this.workingDirectory(file("runs/client"))
+
+        programArguments("--username", "Nano")
+        programArguments("--width", "1920")
+        programArguments("--height", "1080")
+
+        jvmArgument("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005")
     }
 
     create("server")

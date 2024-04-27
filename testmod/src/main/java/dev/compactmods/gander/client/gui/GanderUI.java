@@ -5,6 +5,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import dev.compactmods.gander.network.SceneDataRequest;
 import dev.compactmods.gander.client.gui.widget.SpatialRenderer;
 import dev.compactmods.gander.level.BoundedBlockAndTintGetter;
+import dev.compactmods.gander.render.baked.BakedLevel;
 import net.minecraft.client.gui.screens.Screen;
 
 import net.minecraft.network.chat.Component;
@@ -115,7 +116,7 @@ public class GanderUI extends Screen {
 		return false;
 	}
 
-	public void setScene(BoundedBlockAndTintGetter scene) {
+	public void setScene(BakedLevel scene) {
 		this.sceneRenderer.setData(scene);
 	}
 }

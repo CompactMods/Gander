@@ -3,6 +3,9 @@ package dev.compactmods.gander.render;
 import javax.annotation.Nullable;
 
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.Sheets;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -12,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -31,26 +35,37 @@ public class ScreenBlockEntityRender {
 
 	private static final Logger LOGS = LogManager.getLogger();
 
-	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, MultiBufferSource buffer, float pt) {
-		render(world, resolver, ms, null, buffer, pt);
+	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, Vector3f cameraPosition, MultiBufferSource.BufferSource buffer, float pt) {
+		render(world, resolver, ms, cameraPosition, null, buffer, pt);
 	}
 
-	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, @Nullable Matrix4f lightTransform, MultiBufferSource buffer, float pt) {
-		resolver.filter(Objects::nonNull).forEach(ent -> render(world, ent, ms, lightTransform, buffer, pt));
+	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, Vector3f cameraPosition, @Nullable Matrix4f lightTransform, MultiBufferSource.BufferSource buffer, float pt) {
+		resolver.filter(Objects::nonNull).forEach(ent -> render(world, ent, ms, cameraPosition, lightTransform, buffer, pt));
+		buffer.endBatch();
+//		buffer.endBatch(RenderType.solid());
+//		buffer.endBatch(RenderType.endPortal());
+//		buffer.endBatch(RenderType.endGateway());
+//		buffer.endBatch(Sheets.solidBlockSheet());
+//		buffer.endBatch(Sheets.cutoutBlockSheet());
+//		buffer.endBatch(Sheets.bedSheet());
+//		buffer.endBatch(Sheets.shulkerBoxSheet());
+//		buffer.endBatch(Sheets.signSheet());
+//		buffer.endBatch(Sheets.hangingSignSheet());
+//		buffer.endBatch(Sheets.chestSheet());
 	}
 
-	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, MultiBufferSource buffer, float pt) {
-		render(world, blockEntity, ms, null, buffer, pt);
+	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, Vector3f cameraPosition, MultiBufferSource buffer, float pt) {
+		render(world, blockEntity, ms, cameraPosition, null, buffer, pt);
 	}
 
-	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, @Nullable Matrix4f lightTransform, MultiBufferSource buffer, float pt) {
+	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, Vector3f cameraPosition, @Nullable Matrix4f lightTransform, MultiBufferSource buffer, float pt) {
 		BlockEntityRenderer<BlockEntity> renderer = Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(blockEntity);
 		if (renderer == null)
 			return;
 
 		BlockPos pos = blockEntity.getBlockPos();
 		ms.pushPose();
-		ms.translate(pos.getX(), pos.getY(), pos.getZ());
+		ms.translate(pos.getX() - cameraPosition.x, pos.getY() - cameraPosition.y, pos.getZ() - cameraPosition.z);
 
 		try {
 			BlockPos worldPos = getLightPos(lightTransform, pos);
