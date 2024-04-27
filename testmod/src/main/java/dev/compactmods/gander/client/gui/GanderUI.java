@@ -15,6 +15,7 @@ import net.minecraft.client.Options;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
+import net.minecraft.world.item.DyeColor;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import org.joml.Vector2f;
@@ -23,23 +24,25 @@ public class GanderUI extends Screen {
 
 	protected boolean autoRotate = false;
 
+	private BakedLevel scene;
 	private SpatialRenderer sceneRenderer;
-	private Vector2f mainCameraRotation;
 
 	private static final Vector2f DEFAULT_ROTATION = new Vector2f((float) Math.toRadians(-25), (float) Math.toRadians(-135));
+	private Component sceneSource;
 
 	public GanderUI(ResourceLocation sceneID) {
 		super(Component.empty());
 		PacketDistributor.SERVER.noArg().send(new SceneDataRequest(sceneID));
+
+
 	}
 
 	@Override
 	protected void init() {
 		super.init();
-
 		this.sceneRenderer = this.addRenderableOnly(new SpatialRenderer(width, height));
-		// this.sceneRenderer.shouldRenderCompass(true);
-		this.mainCameraRotation = new Vector2f(DEFAULT_ROTATION);
+		if(this.scene != null)
+			sceneRenderer.setData(scene);
 	}
 
 	@Override
@@ -47,9 +50,9 @@ public class GanderUI extends Screen {
 		super.tick();
 		// sceneRenderer.tick();
 
-		if (autoRotate) {
-			this.mainCameraRotation.y += Math.toRadians(2.5);
-		}
+//		if (autoRotate) {
+//			this.sceneRenderer.rotateY(Math.toRadians(2.5));
+//		}
 	}
 
 	@Override
@@ -59,8 +62,16 @@ public class GanderUI extends Screen {
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		this.sceneRenderer.prepareCamera(this.mainCameraRotation);
+		if(this.sceneSource != null) {
+			graphics.pose().pushPose();
+			// graphics.pose().translate(getRectangle().left(), );
+			graphics.drawCenteredString(font, sceneSource, width / 2, 10, DyeColor.WHITE.getFireworkColor());
+			graphics.pose().popPose();
+		}
+
 		super.render(graphics, mouseX, mouseY, partialTicks);
+
+
 	}
 
 	@Override
@@ -80,33 +91,33 @@ public class GanderUI extends Screen {
 			return true;
 		}
 
-		if (code == InputConstants.KEY_R) {
-			this.mainCameraRotation.set(DEFAULT_ROTATION);
-			return true;
-		}
-
-		if (code == InputConstants.KEY_UP) {
-			if (this.mainCameraRotation.x < -rads)
-				this.mainCameraRotation.x += rads;
-
-			return true;
-		}
-
-		if (code == InputConstants.KEY_DOWN) {
-			if (this.mainCameraRotation.x > -(Math.PI / 2) + (rads * 2))
-				this.mainCameraRotation.x -= rads;
-			return true;
-		}
-
-		if (code == InputConstants.KEY_LEFT) {
-			this.mainCameraRotation.y += rads;
-			return true;
-		}
-
-		if (code == InputConstants.KEY_RIGHT) {
-			this.mainCameraRotation.y -= rads;
-			return true;
-		}
+//		if (code == InputConstants.KEY_R) {
+//			this.mainCameraRotation.set(DEFAULT_ROTATION);
+//			return true;
+//		}
+//
+//		if (code == InputConstants.KEY_UP) {
+//			if (this.mainCameraRotation.x < -rads)
+//				this.mainCameraRotation.x += rads;
+//
+//			return true;
+//		}
+//
+//		if (code == InputConstants.KEY_DOWN) {
+//			if (this.mainCameraRotation.x > -(Math.PI / 2) + (rads * 2))
+//				this.mainCameraRotation.x -= rads;
+//			return true;
+//		}
+//
+//		if (code == InputConstants.KEY_LEFT) {
+//			this.mainCameraRotation.y += rads;
+//			return true;
+//		}
+//
+//		if (code == InputConstants.KEY_RIGHT) {
+//			this.mainCameraRotation.y -= rads;
+//			return true;
+//		}
 
 		return super.keyPressed(code, scanCode, modifiers);
 	}
@@ -116,7 +127,12 @@ public class GanderUI extends Screen {
 		return false;
 	}
 
+	public void setSceneSource(Component src) {
+		this.sceneSource = src;
+	}
+
 	public void setScene(BakedLevel scene) {
+		this.scene = scene;
 		this.sceneRenderer.setData(scene);
 	}
 }

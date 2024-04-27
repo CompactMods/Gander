@@ -4,33 +4,20 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexSorting;
 
-import com.mojang.math.Axis;
-
 import dev.compactmods.gander.render.ScreenBlockEntityRender;
 import dev.compactmods.gander.render.ScreenBlockRenderer;
 import dev.compactmods.gander.SceneCamera;
-import dev.compactmods.gander.level.BoundedBlockAndTintGetter;
-import dev.compactmods.gander.render.ScreenFluidRenderer;
 import dev.compactmods.gander.render.baked.BakedLevel;
-import dev.compactmods.gander.render.baked.LevelBakery;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 
 import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
-import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.phys.AABB;
-import net.neoforged.neoforge.fluids.FluidStack;
 
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -49,9 +36,12 @@ public class SpatialRenderer implements Renderable {
 	private @Nullable BoundingBox blockBoundaries;
 	private Set<BlockPos> blockEntityPositions;
 
+	private final Vector2f cameraRotation;
+	private static final Vector2f DEFAULT_ROTATION = new Vector2f((float) Math.toRadians(-25), (float) Math.toRadians(-135));
+
 	private final CompassOverlay compassOverlay;
-	private final int width;
-	private final int height;
+	private int screenWidth;
+	private int screenHeight;
 
 	private final SceneCamera camera;
 	private final Vector3f cameraTarget;
@@ -60,10 +50,10 @@ public class SpatialRenderer implements Renderable {
 	private boolean shouldRenderCompass;
 	private float scale;
 
-	public SpatialRenderer(int width, int height) {
+	public SpatialRenderer(int screenWidth, int screenHeight) {
 		this.compassOverlay = new CompassOverlay();
-		this.width = width;
-		this.height = height;
+		this.screenWidth = screenWidth;
+		this.screenHeight = screenHeight;
 
 		this.camera = new SceneCamera();
 		this.cameraTarget = new Vector3f();
@@ -71,9 +61,12 @@ public class SpatialRenderer implements Renderable {
 		this.shouldRenderCompass = false;
 		this.scale = 1f;
 		this.blockEntityPositions = Collections.emptySet();
+		this.cameraRotation = new Vector2f(DEFAULT_ROTATION);
+
+		this.setCameraRotation(DEFAULT_ROTATION);
 	}
 
-	public void prepareCamera(Vector2f rotation) {
+	public void setCameraRotation(Vector2f rotation) {
 		var newLookFrom = new Vector3f(0, 0, 1);
 		newLookFrom.rotateX(rotation.x);
 		newLookFrom.rotateY(rotation.y);
@@ -116,41 +109,59 @@ public class SpatialRenderer implements Renderable {
 				.map(blockAndTints::getBlockEntity)
 				.filter(Objects::nonNull);
 
-		RenderSystem.enableBlend();
-		RenderSystem.enableDepthTest();
-
-		// has to be outside of MS transforms, important for vertex sorting
-		RenderSystem.backupProjectionMatrix();
-		Matrix4f projectionMatrix = new Matrix4f(RenderSystem.getProjectionMatrix());
-		RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.DISTANCE_TO_ORIGIN);
-
 		PoseStack poseStack = graphics.pose();
-		poseStack.translate(0, 0, -10000);
-
-		// Center (screen)
-		poseStack.translate(width / 2f, height / 2f, 400);
-		poseStack.mulPoseMatrix(new Matrix4f().negateY());
-
-		// poseStack.scale(2.5f, 2.5f, 2.5f);
 
 		poseStack.pushPose();
 		{
-			poseStack.scale(16, 16, 16);
+			RenderSystem.enableBlend();
+			RenderSystem.enableDepthTest();
 
-			poseStack.mulPose(camera.rotation());
-			poseStack.translate(blockBoundaries.getXSpan() / -2f,
-					-1f * (blockBoundaries.getYSpan() / 2f),
-					blockBoundaries.getZSpan() / -2f);
+			// has to be outside of MS transforms, important for vertex sorting
+			RenderSystem.backupProjectionMatrix();
+			Matrix4f projectionMatrix = new Matrix4f(RenderSystem.getProjectionMatrix());
+			RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.DISTANCE_TO_ORIGIN);
 
-			if (bakedLevel != null) {
-				ScreenBlockRenderer.renderBakedLevel(bakedLevel, poseStack, lookFrom, projectionMatrix, partialTicks);
-				ScreenBlockEntityRender.render(blockAndTints, blockEntities, poseStack, lookFrom, buffer, partialTicks);
+			poseStack.translate(0, 0, -10000);
+
+			// Center (screen)
+			poseStack.translate(screenWidth / 2f, screenHeight / 2f, 400);
+			poseStack.mulPoseMatrix(new Matrix4f().negateY());
+
+			// poseStack.scale(2.5f, 2.5f, 2.5f);
+
+			poseStack.pushPose();
+			{
+				poseStack.scale(16, 16, 16);
+
+				poseStack.mulPose(camera.rotation());
+				poseStack.translate(blockBoundaries.getXSpan() / -2f,
+						-1f * (blockBoundaries.getYSpan() / 2f),
+						blockBoundaries.getZSpan() / -2f);
+
+				if (bakedLevel != null) {
+					// ScreenBlockRenderer.render(bakedLevel, poseStack, lookFrom, projectionMatrix, partialTicks);
+
+					ScreenBlockRenderer.maybePrepareTranslucency(RenderType.solid());
+					ScreenBlockRenderer.renderSectionLayer(bakedLevel, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
+
+					ScreenBlockRenderer.maybePrepareTranslucency(RenderType.cutoutMipped());
+					ScreenBlockRenderer.renderSectionLayer(bakedLevel, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
+
+					ScreenBlockRenderer.maybePrepareTranslucency(RenderType.cutout());
+					ScreenBlockRenderer.renderSectionLayer(bakedLevel, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
+
+					ScreenBlockEntityRender.render(blockAndTints, blockEntities, poseStack, lookFrom, buffer, partialTicks);
+
+					ScreenBlockRenderer.maybePrepareTranslucency(RenderType.translucent());
+					ScreenBlockRenderer.renderSectionLayer(bakedLevel, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
+					ScreenBlockRenderer.processTranslucency(partialTicks);
+				}
 			}
+			poseStack.popPose();
+
+			RenderSystem.restoreProjectionMatrix();
 		}
 		poseStack.popPose();
-
-		RenderSystem.restoreProjectionMatrix();
-
 		// TODO Fix Particles
 		// scene.getLevel().renderParticles(pose, buffer, camera, partialTicks);
 
@@ -161,5 +172,11 @@ public class SpatialRenderer implements Renderable {
 	public void scale(double scale) {
 		this.scale += scale;
 		this.scale = Mth.clamp(this.scale, 1, 50);
+	}
+
+	public void resize(int width, int height) {
+		this.screenWidth = width;
+		this.screenHeight = height;
+		this.setCameraRotation(cameraRotation);
 	}
 }

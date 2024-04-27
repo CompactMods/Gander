@@ -4,6 +4,7 @@ import dev.compactmods.gander.client.network.SceneDataClientHandler;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
@@ -22,7 +23,7 @@ public record SceneDataRequest(ResourceLocation templateID) implements CustomPac
 		ctx.workHandler().submitAsync(() -> {
 			final var templateManager = ServerLifecycleHooks.getCurrentServer().getStructureManager();
 			templateManager.get(req.templateID).ifPresent(t -> {
-				ctx.replyHandler().send(new SceneData(t));
+				ctx.replyHandler().send(new SceneData(Component.literal(req.templateID.toString()), t));
 			});
 		});
 	};
@@ -37,25 +38,27 @@ public record SceneDataRequest(ResourceLocation templateID) implements CustomPac
 		return ID;
 	}
 
-	public record SceneData(StructureTemplate data) implements CustomPacketPayload {
+	public record SceneData(Component sceneSource, StructureTemplate data) implements CustomPacketPayload {
 
 		public static SceneData fromBuffer(FriendlyByteBuf buffer) {
 			final var templateData = new StructureTemplate();
+			final var src = buffer.readComponent();
 			templateData.load(BuiltInRegistries.BLOCK.asLookup(), buffer.readNbt());
-			return new SceneData(templateData);
+			return new SceneData(src, templateData);
 		}
 
 		public static final ResourceLocation ID = new ResourceLocation("gander", "scene_data_response");
 
 		public static final IPlayPayloadHandler<SceneData> HANDLER = (pkt, ctx) -> {
 			ctx.workHandler().submitAsync(() -> {
-				SceneDataClientHandler.loadScene(pkt.data);
+				SceneDataClientHandler.loadScene(pkt.sceneSource, pkt.data);
 			});
 		};
 
 		@Override
 		public void write(FriendlyByteBuf buf) {
 			final var tag = data.save(new CompoundTag());
+			buf.writeComponent(sceneSource);
 			buf.writeNbt(tag);
 		}
 
