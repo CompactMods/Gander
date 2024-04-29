@@ -87,11 +87,6 @@ tasks.withType<Jar> {
     }
 }
 
-tasks.jar {
-    archiveClassifier.set("")
-    from(sourceSets.main.get().output)
-}
-
 val PACKAGES_URL = System.getenv("GH_PKG_URL") ?: "https://maven.pkg.github.com/compactmods/gander"
 publishing {
     publications.register<MavenPublication>("levels") {

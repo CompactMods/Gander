@@ -51,7 +51,6 @@ import java.util.stream.Stream;
 
 public class VirtualLevel extends Level implements ServerLevelAccessor {
 
-
 	private final TickRateManager tickManager = new TickRateManager();
 	private final RegistryAccess access;
 	private final VirtualChunkSource chunkSource;

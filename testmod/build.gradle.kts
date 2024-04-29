@@ -39,8 +39,6 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
-jarJar.enable()
-
 minecraft {
     modIdentifier.set(modId)
     accessTransformers {
@@ -164,21 +162,11 @@ tasks.withType<ProcessResources>().configureEach {
     }
 }
 
-tasks.jar {
-    archiveClassifier.set("slim")
-    from(sourceSets.main.get().output)
-}
-
-tasks.jarJar {
-    archiveClassifier.set("")
-    from(sourceSets.main.get().output)
-}
-
 val PACKAGES_URL = System.getenv("GH_PKG_URL") ?: "https://maven.pkg.github.com/compactmods/gander"
 publishing {
     publications.register<MavenPublication>(modId) {
         artifactId = "$modId-neoforge"
-        this.artifact(tasks.jarJar)
+        this.artifact(tasks.jar)
         from(components.getByName("java"))
     }
 
