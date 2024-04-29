@@ -8,13 +8,11 @@ import dev.compactmods.gander.render.baked.BakedLevel;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
 
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
-import net.minecraft.util.CommonColors;
 import net.minecraft.world.item.DyeColor;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -98,9 +96,10 @@ public class GanderUI extends Screen {
 		super.tick();
 		// sceneRenderer.tick();
 
-//		if (autoRotate) {
-//			this.orthoRenderer.camera().lookLeft((float) Math.toRadians(2.5));
-//		}
+		if (autoRotate) {
+			this.orthoRenderer.camera().lookLeft((float) Math.toRadians(2.5));
+			this.orthoRenderer.recalculateTranslucency();
+		}
 	}
 
 	@Override
@@ -122,8 +121,6 @@ public class GanderUI extends Screen {
 
 		poseStack.pushPose();
 		{
-			poseStack.translate(0, 0, -9999);
-
 //			graphics.drawCenteredString(font, frontRenderer.getRectangle().toString(), width / 2, 20, DyeColor.WHITE.getFireworkColor());
 
 //			graphics.fill(topRenderer.getX(), topRenderer.getY(), topRenderer.getX() + topRenderer.getWidth(), topRenderer.getY() + topRenderer.getHeight(), CommonColors.WHITE);
@@ -137,7 +134,7 @@ public class GanderUI extends Screen {
 
 	@Override
 	public boolean mouseScrolled(double pMouseX, double pMouseY, double pScrollX, double pScrollY) {
-		this.orthoRenderer.scale(pScrollY);
+		this.orthoRenderer.zoom(pScrollY);
 		return true;
 	}
 
@@ -152,26 +149,31 @@ public class GanderUI extends Screen {
 
 		if (code == InputConstants.KEY_R) {
 			orthoRenderer.camera().resetLook();
+			this.orthoRenderer.recalculateTranslucency();
 			return true;
 		}
 
 		if (code == InputConstants.KEY_UP) {
 			orthoRenderer.camera().lookUp(rotateSpeed);
+			this.orthoRenderer.recalculateTranslucency();
 			return true;
 		}
 
 		if (code == InputConstants.KEY_DOWN) {
 			orthoRenderer.camera().lookDown(rotateSpeed);
+			this.orthoRenderer.recalculateTranslucency();
 			return true;
 		}
 
 		if (code == InputConstants.KEY_LEFT) {
 			orthoRenderer.camera().lookLeft(rotateSpeed);
+			this.orthoRenderer.recalculateTranslucency();
 			return true;
 		}
 
 		if (code == InputConstants.KEY_RIGHT) {
 			orthoRenderer.camera().lookRight(rotateSpeed);
+			this.orthoRenderer.recalculateTranslucency();
 			return true;
 		}
 

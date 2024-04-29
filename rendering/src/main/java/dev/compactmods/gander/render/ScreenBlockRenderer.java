@@ -1,5 +1,6 @@
 package dev.compactmods.gander.render;
 
+import com.mojang.blaze3d.platform.GlConst;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -14,6 +15,7 @@ import net.minecraft.client.renderer.ShaderInstance;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.lwjgl.opengl.GL11;
 
 public class ScreenBlockRenderer {
 
@@ -27,7 +29,11 @@ public class ScreenBlockRenderer {
 		RenderSystem.assertOnRenderThread();
 		retargetedRenderType.setupRenderState();
 
-		mc.getProfiler().push("ganderBlockRenderer");
+		GL11.glEnable(GL11.GL_STENCIL_TEST);
+		RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_REPLACE);
+		RenderSystem.stencilFunc(GlConst.GL_ALWAYS, 1, 0xFF);
+		RenderSystem.stencilMask(0xFF);
+
 		mc.getProfiler().popPush(() -> "render_" + renderType);
 
 		ShaderInstance shaderinstance = RenderSystem.getShader();

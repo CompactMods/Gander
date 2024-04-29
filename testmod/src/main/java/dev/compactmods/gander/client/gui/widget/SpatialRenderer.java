@@ -2,9 +2,14 @@ package dev.compactmods.gander.client.gui.widget;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
+import com.mojang.blaze3d.platform.GlConst;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import com.mojang.blaze3d.vertex.VertexSorting;
+
+import dev.compactmods.gander.GanderLib;
 import dev.compactmods.gander.render.rendertypes.RedirectedRenderTypeStore;
 import dev.compactmods.gander.render.ScreenBlockEntityRender;
 import dev.compactmods.gander.render.ScreenBlockRenderer;
@@ -21,7 +26,6 @@ import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -39,6 +43,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.lwjgl.opengl.GL11;
+
 public class SpatialRenderer extends AbstractWidget {
 
 	private @Nullable BlockAndTintGetter blockAndTints;
@@ -53,7 +59,8 @@ public class SpatialRenderer extends AbstractWidget {
 	private boolean shouldRenderCompass;
 	private float scale;
 
-	private final RenderTarget RENDER_TARGET;
+	private final RenderTarget renderTarget;
+	private final PostChain translucencyChain;
 	private final RenderTypeStore renderTypeStore;
 
 	private boolean isDisposed = false;
@@ -64,30 +71,37 @@ public class SpatialRenderer extends AbstractWidget {
 		this.compassOverlay = new CompassOverlay();
 		this.camera = new SceneCamera();
 		this.shouldRenderCompass = false;
-		this.scale = 1f;
+		this.scale = 16f;
 		this.blockEntityPositions = Collections.emptySet();
 
 		final var mc = Minecraft.getInstance();
-		this.RENDER_TARGET = new TextureTarget(mc.getWindow().getWidth(), mc.getWindow().getHeight(), true, Minecraft.ON_OSX);
+		this.renderTarget = new TextureTarget(mc.getWindow().getWidth(), mc.getWindow().getHeight(), true, Minecraft.ON_OSX);
 
-		RENDER_TARGET.resize(RENDER_TARGET.width, RENDER_TARGET.height, Minecraft.ON_OSX);
-//		RENDER_TARGET.setClearColor(0, 0, 0, 0);
+		renderTarget.enableStencil();
+		renderTarget.setClearColor(0, 0, 0, 0);
 
 		// pulled from LevelRenderer
-		var translucencyChain = new PostChain(mc.textureManager, mc.getResourceManager(), RENDER_TARGET, new ResourceLocation("shaders/post/transparency.json"));
-		translucencyChain.resize(RENDER_TARGET.width, RENDER_TARGET.height);
+		var translucencyChain = new PostChain(mc.textureManager, mc.getResourceManager(), renderTarget, GanderLib.asResource("shaders/post/transparency.json"));
+		translucencyChain.resize(renderTarget.width, renderTarget.height);
+		this.translucencyChain = translucencyChain;
 		this.renderTypeStore = new RedirectedRenderTypeStore(translucencyChain);
 	}
 
 	public void dispose() {
 		if(isDisposed) return;
 		this.isDisposed = true;
-		RENDER_TARGET.destroyBuffers();
+		renderTarget.destroyBuffers();
 		renderTypeStore.dispose();
 	}
 
 	public SceneCamera camera() {
-		return this.camera;
+		return camera;
+	}
+
+	public void recalculateTranslucency() {
+		if (bakedLevel != null) {
+			bakedLevel.resortTranslucency(camera.getLookFrom());
+		}
 	}
 
 	public void shouldRenderCompass(boolean render) {
@@ -115,6 +129,25 @@ public class SpatialRenderer extends AbstractWidget {
 
 		var buffer = graphics.bufferSource();
 
+		var width = Minecraft.getInstance().getWindow().getWidth();
+		var height = Minecraft.getInstance().getWindow().getHeight();
+		if (width != renderTarget.width || height != renderTarget.height)
+		{
+			renderTarget.resize(width, height, true);
+			translucencyChain.resize(renderTarget.width, renderTarget.height);
+			recalculateTranslucency();
+		}
+
+		var originalMatrix = RenderSystem.getProjectionMatrix();
+		var originalSorting = RenderSystem.getVertexSorting();
+
+		final var renderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance() * 16 * 4;
+		var projectionMatrix = new Matrix4f().setPerspective(
+				(float)Math.PI / 2f,
+				(float)renderTarget.width / (float)renderTarget.height,
+				0.05f,
+				renderDistance);
+
 		final var blockEntities = blockEntityPositions
 				.stream()
 				.map(blockAndTints::getBlockEntity)
@@ -122,11 +155,42 @@ public class SpatialRenderer extends AbstractWidget {
 		PoseStack poseStack = graphics.pose();
 		poseStack.pushPose();
 		{
-			poseStack.translate(getX(), getY(), 0);
-			// graphics.fill(0,0, width, height, CommonColors.WHITE);
-			renderScene(graphics, blockEntities, buffer, partialTicks);
+			var poseStack2 = RenderSystem.getModelViewStack();
+			poseStack2.pushPose();
+			poseStack2.setIdentity();
+			RenderSystem.applyModelViewMatrix();
+
+			poseStack.setIdentity();
+			poseStack.mulPose(camera.rotation());
+			RenderSystem.enableBlend();
+			RenderSystem.enableDepthTest();
+
+			renderTypeStore.clear();
+			renderTarget.bindWrite(true);
+			renderMinecraft();
+
+			RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
+			renderScene(blockEntities, buffer, partialTicks, poseStack);
+
+			RenderSystem.stencilFunc(GlConst.GL_EQUAL, 1, 0xFF);
+			RenderSystem.stencilMask(0xFF);
+
+			final var mainTarget = Minecraft.getInstance().getMainRenderTarget();
+
+			mainTarget.bindWrite(true);
+			renderTarget.blitToScreen(renderTarget.width, renderTarget.height, false);
+
+			GL11.glDisable(GL11.GL_STENCIL_TEST);
+
+			RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
+			renderCompass(graphics, partialTicks, poseStack);
+
+			poseStack2.popPose();
+			RenderSystem.applyModelViewMatrix();
 		}
 		poseStack.popPose();
+
+		RenderSystem.setProjectionMatrix(originalMatrix, originalSorting);
 
 		// TODO Fix Particles
 		// scene.getLevel().renderParticles(pose, buffer, camera, partialTicks);
@@ -135,41 +199,44 @@ public class SpatialRenderer extends AbstractWidget {
 //			ScreenEntityRenderer.renderEntities(entityGetter, poseStack, buffer, camera, partialTicks);
 	}
 
-	private void renderScene(GuiGraphics graphics, Stream<BlockEntity> blockEntities, MultiBufferSource.BufferSource buffer, float partialTicks) {
-		PoseStack poseStack = graphics.pose();
-
-		RenderSystem.enableBlend();
-		RenderSystem.enableDepthTest();
-
-		RENDER_TARGET.clear(Minecraft.ON_OSX);
-		renderTypeStore.clear();
-		RENDER_TARGET.bindWrite(true);
-
-		renderSceneForRealsies(blockEntities, buffer, partialTicks, poseStack);
-
-		final var mainTarget = Minecraft.getInstance().getMainRenderTarget();
-
-		RenderSystem.backupProjectionMatrix();
-		mainTarget.bindWrite(false);
-		RENDER_TARGET.blitToScreen(RENDER_TARGET.width, RENDER_TARGET.height, false);
-		RenderSystem.restoreProjectionMatrix();
-
-		renderCompass(graphics, partialTicks, poseStack);
+	private void renderMinecraft()
+	{
+		var target = renderTarget;
+		var other = Minecraft.getInstance().getMainRenderTarget();
+		GlStateManager._glBindFramebuffer(GlConst.GL_READ_FRAMEBUFFER, other.frameBufferId);
+		GlStateManager._glBindFramebuffer(GlConst.GL_DRAW_FRAMEBUFFER, target.frameBufferId);
+		GlStateManager._glBlitFrameBuffer(0,
+				0,
+				other.width,
+				other.height,
+				0,
+				0,
+				target.width,
+				target.height,
+				GlConst.GL_COLOR_BUFFER_BIT,
+				GlConst.GL_NEAREST);
+		GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, 0);
 	}
 
-	private void renderSceneForRealsies(Stream<BlockEntity> blockEntities, MultiBufferSource.BufferSource buffer, float partialTicks, PoseStack poseStack) {
+	private void renderScene(Stream<BlockEntity> blockEntities, MultiBufferSource.BufferSource buffer, float partialTicks, PoseStack poseStack) {
 		poseStack.pushPose();
 		{
-			poseStack.translate(0, 0, -10000);
-
-			// Center (screen)
-			preparePose(poseStack);
+			poseStack.scale(16, 16, 16);
+			poseStack.translate(
+					blockBoundaries.getXSpan() / -2f,
+					blockBoundaries.getYSpan() / -2f,
+					blockBoundaries.getZSpan() / -2f);
 
 			final var lookFrom = camera.getLookFrom();
 
 			if (bakedLevel != null) {
-//					final var projectionMatrix = new Matrix4f();
-				final var projectionMatrix = RenderSystem.getProjectionMatrix();
+				var projectionMatrix = RenderSystem.getProjectionMatrix();
+
+				GL11.glEnable(GL11.GL_STENCIL_TEST);
+				RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_REPLACE);
+				RenderSystem.stencilFunc(GlConst.GL_ALWAYS, 1, 0xFF);
+				RenderSystem.stencilMask(0xFF);
+				RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, Minecraft.ON_OSX);
 
 				ScreenBlockRenderer.renderSectionLayer(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
 				ScreenBlockRenderer.renderSectionLayer(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
@@ -179,7 +246,11 @@ public class SpatialRenderer extends AbstractWidget {
 
 				renderTypeStore.prepareTranslucency();
 				ScreenBlockRenderer.renderSectionLayer(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
-				RENDER_TARGET.bindWrite(false);
+
+				RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP);
+				RenderSystem.stencilFunc(GlConst.GL_EQUAL, 1, 0xFF);
+				RenderSystem.stencilMask(0xFF);
+
 				renderTypeStore.processTransclucency(partialTicks);
 			}
 		}
@@ -190,31 +261,27 @@ public class SpatialRenderer extends AbstractWidget {
 	private void renderCompass(GuiGraphics graphics, float partialTicks, PoseStack poseStack) {
 		poseStack.pushPose();
 		{
-			preparePose(poseStack);
+			poseStack.translate(
+					blockBoundaries.getXSpan() / -2f,
+					blockBoundaries.getYSpan() / -2f,
+					blockBoundaries.getZSpan() / -2f);
+
+			var position = camera.getLookFrom();
+			poseStack.translate(-position.x, -position.y, -position.z);
+			poseStack.last().pose().negateY();
+			poseStack.scale(1/16f, 1/16f, 1/16f);
+
 			compassOverlay.render(graphics, partialTicks);
 		}
 		poseStack.popPose();
-	}
-
-	private void preparePose(PoseStack poseStack) {
-		poseStack.translate(width / 2f, height / 2f, 400);
-		poseStack.mulPoseMatrix(new Matrix4f().negateY());
-
-		poseStack.scale(16, 16, 16);
-
-		poseStack.mulPose(camera.rotation());
-		poseStack.translate(blockBoundaries.getXSpan() / -2f,
-				-1f * (blockBoundaries.getYSpan() / 2f),
-				blockBoundaries.getZSpan() / -2f);
 	}
 
 	@Override
 	protected void updateWidgetNarration(NarrationElementOutput narrator) {
 	}
 
-	public void scale(double scale) {
-		this.scale += scale;
-		this.scale = Mth.clamp(this.scale, 1, 50);
+	public void zoom(double factor) {
+		camera.zoom((float)factor);
 	}
 
 	@Override

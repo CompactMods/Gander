@@ -11,6 +11,7 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 
 import dev.compactmods.gander.render.FluidVertexConsumer;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
+import jogamp.common.os.elf.Section;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
@@ -44,12 +45,11 @@ import java.util.Set;
 
 public class LevelBakery {
 
-	private static final SectionBufferBuilderPack SECTION_BUILDER = new SectionBufferBuilderPack();
-
 	public static BakedLevel bakeVertices(Level level, BoundingBox blockBoundaries, Vector3f cameraPosition) {
 
 		final Set<RenderType> visitedRenderTypes = new HashSet<>();
 		final RenderRegionCache regionCache = new RenderRegionCache();
+		final SectionBufferBuilderPack pack = new SectionBufferBuilderPack();
 
 		PoseStack pose = new PoseStack();
 
@@ -88,7 +88,7 @@ public class LevelBakery {
 
 				ModelData finalModelData = modelData;
 				model.getRenderTypes(state, random, modelData).forEach(type -> {
-					var typedVC = SECTION_BUILDER.builder(type);
+					var typedVC = pack.builder(type);
 					if (visitedRenderTypes.add(type)) {
 						typedVC.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 					}
@@ -99,7 +99,7 @@ public class LevelBakery {
 
 			if (!fluidState.isEmpty()) {
 				final var fluidRenderType = ItemBlockRenderTypes.getRenderLayer(fluidState);
-				var typedVC = SECTION_BUILDER.builder(fluidRenderType);
+				var typedVC = pack.builder(fluidRenderType);
 				if (visitedRenderTypes.add(fluidRenderType)) {
 					typedVC.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 				}
@@ -115,18 +115,23 @@ public class LevelBakery {
 
 		// TODO - Hook for multiplatform?
 		net.neoforged.neoforge.client.ClientHooks.addAdditionalGeometry(additionalRenderers, (type) -> {
-			BufferBuilder builder = SECTION_BUILDER.builder(type);
+			BufferBuilder builder = pack.builder(type);
 			if (visitedRenderTypes.add(type)) {
 				builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 			}
 			return builder;
 		}, createRegion(regionCache, additionalRenderers, level, blockBoundaries), pose);
 
-		BufferBuilder.SortState transparencyState = sortTranslucency(cameraPosition, visitedRenderTypes);
+		BufferBuilder.SortState transparencyState = null;
+		if (visitedRenderTypes.contains(RenderType.translucent())) {
+			final var builder = pack.builder(RenderType.translucent());
+			builder.setQuadSorting(VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z));
+			transparencyState = builder.getSortState();
+		}
 
 		Reference2ObjectArrayMap<RenderType, VertexBuffer> renderers = new Reference2ObjectArrayMap<>();
 		visitedRenderTypes.forEach(renderType -> {
-			final var builder = SECTION_BUILDER.builder(renderType);
+			final var builder = pack.builder(renderType);
 			final var buffer = builder.endOrDiscardIfEmpty();
 
 			if(buffer != null) {
@@ -138,18 +143,7 @@ public class LevelBakery {
 			}
 		});
 
-		return new BakedLevel(new WeakReference<>(level), renderers, transparencyState, blockBoundaries);
-	}
-
-	public static BufferBuilder.@Nullable SortState sortTranslucency(Vector3f cameraPosition, Set<RenderType> visitedRenderTypes) {
-		if (visitedRenderTypes.contains(RenderType.translucent())) {
-			var translucent = RenderType.translucent();
-			final var builder = SECTION_BUILDER.builder(translucent);
-			builder.setQuadSorting(VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z));
-			return builder.getSortState();
-		}
-
-		return null;
+		return new BakedLevel(new WeakReference<>(level), pack, renderers, transparencyState, blockBoundaries);
 	}
 
 	private static RenderChunkRegion createRegion(RenderRegionCache cache, List<AddSectionGeometryEvent.AdditionalSectionRenderer> additionalRenderers, Level level, BoundingBox bounds) {

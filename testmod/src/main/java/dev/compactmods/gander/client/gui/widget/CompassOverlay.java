@@ -1,13 +1,20 @@
 package dev.compactmods.gander.client.gui.widget;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import com.mojang.math.Axis;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
@@ -47,17 +54,10 @@ public class CompassOverlay implements Renderable {
 
 		int color = DyeColor.WHITE.getTextColor();
 
-		poseStack.mulPoseMatrix(new Matrix4f().scaling(1, -1, 1));
-		poseStack.scale(1 / 16f, 1 / 16f, 1 / 16f);
-		poseStack.translate(0, -8, 0);
-
 		renderXAxis(graphics, poseStack, sceneBounds, color);
 		renderZAxis(graphics, poseStack, sceneBounds, color);
 		renderCompassDirections(graphics, poseStack, sceneBounds);
-
-		graphics.bufferSource().endBatch();
-
-		// renderAxisWidget(graphics, poseStack);
+		renderAxisWidget(graphics, poseStack);
 
 		poseStack.popPose();
 	}
@@ -70,10 +70,13 @@ public class CompassOverlay implements Renderable {
 		ms.mulPose(Axis.YP.rotationDegrees(-90));
 
 		final var horizontals = Direction.Plane.HORIZONTAL.iterator();
+		final var distance = Math.max(
+				sceneBounds.getXSpan(),
+				sceneBounds.getZSpan());
 		horizontals.forEachRemaining(d -> {
 			ms.mulPose(Axis.YP.rotationDegrees(90));
 			ms.pushPose();
-			ms.translate(0, 0, bounds.getZSpan() * 16);
+			ms.translate(0, 0, distance * 16);
 			ms.mulPose(Axis.XP.rotationDegrees(-90));
 			graphics.drawString(font, d.name()
 					.substring(0, 1), 0, 0, 0x66FFFFFF, false);
@@ -86,21 +89,21 @@ public class CompassOverlay implements Renderable {
 
 	private void renderXAxis(GuiGraphics graphics, PoseStack ms, BoundingBox bounds, int color) {
 		ms.pushPose();
-		ms.translate(-5, -4, 0);
-		ms.mulPose(Axis.YP.rotationDegrees(180));
-		ms.translate(0, 0, -2 / 1024f);
+		ms.translate((bounds.getXSpan() + 2) * 16, -8, 0);
+		ms.mulPose(Axis.YP.rotation((float)Math.PI));
+		ms.translate(4, -4, 0);
 		for (int x = 0; x <= bounds.getXSpan(); x++) {
-			ms.translate(-16, 0, 0);
-			graphics.drawString(font, x == bounds.getXSpan() ? "x" : "" + x, 0, 0, color, true);
+			ms.translate(16, 0, 0);
+			graphics.drawString(font, x == 0 ? "x" : Integer.toString(bounds.getXSpan() - x), 0, 0, color, true);
 		}
 		ms.popPose();
 	}
 
 	private void renderZAxis(GuiGraphics graphics, PoseStack ms, BoundingBox bounds, int color) {
 		ms.pushPose();
-		ms.translate(0, -2, -3);
-		ms.mulPose(Axis.YP.rotationDegrees(-90));
-		ms.translate(-8, -2, 2 / 64f);
+		ms.translate(0, -8, -16);
+		ms.mulPose(Axis.YP.rotation(-(float)Math.PI / 2f));
+		ms.translate(4, -4, 0);
 		for (int z = 0; z <= bounds.getZSpan(); z++) {
 			ms.translate(16, 0, 0);
 			graphics.drawString(font, z == bounds.getZSpan() ? "z" : "" + z, 0, 0, color, true);
@@ -109,34 +112,31 @@ public class CompassOverlay implements Renderable {
 	}
 
 	private void renderAxisWidget(GuiGraphics graphics, PoseStack poseStack) {
+		float pLineLength = Math.max(
+				Math.max(
+						sceneBounds.getXSpan(),
+						sceneBounds.getYSpan()),
+				sceneBounds.getZSpan()) * 16;
 
-		// TODO - Figure out a less cursed system, this won't work
+		var pose = graphics.pose().last().pose();
 
-//		double pLineLength = 1000;
-//
-//		RenderSystem.disableDepthTest();
-//		RenderSystem.disableCull();
-//		RenderSystem.lineWidth(4.0F);
-//
-//		poseStack.pushPose();
-//		poseStack.scale(100, 100, 100);
-//
-//		var bufferbuilder = graphics.bufferSource().getBuffer(RenderType.LINES);
-//		bufferbuilder.vertex(0.0, 0.0, 0.0).color(255, 0, 0, 255).normal(1.0F, 0.0F, 0.0F).endVertex();
-//		bufferbuilder.vertex(pLineLength, 0.0, 0.0).color(255, 0, 0, 255).normal(1.0F, 0.0F, 0.0F).endVertex();
-//
-//		bufferbuilder.vertex(0.0, 0.0, 0.0).color(0, 255, 0, 255).normal(0.0F, 1.0F, 0.0F).endVertex();
-//		bufferbuilder.vertex(0.0, pLineLength, 0.0).color(0, 255, 0, 255).normal(0.0F, 1.0F, 0.0F).endVertex();
-//
-//		bufferbuilder.vertex(0.0, 0.0, 0.0).color(127, 127, 255, 255).normal(0.0F, 0.0F, 1.0F).endVertex();
-//		bufferbuilder.vertex(0.0, 0.0, pLineLength).color(127, 127, 255, 255).normal(0.0F, 0.0F, 1.0F).endVertex();
-//
-//		graphics.bufferSource().endBatch(RenderType.LINES);
-//
-//		poseStack.popPose();
-//
-//		RenderSystem.lineWidth(1.0F);
-//		RenderSystem.enableCull();
-//		RenderSystem.enableDepthTest();
+		var tesselator = RenderSystem.renderThreadTesselator();
+		var buffer = tesselator.getBuilder();
+		buffer.begin(Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+		buffer.vertex(pose, 0.0f, 0.0f, 0.0f).color(255, 0, 0, 255).normal(1.0F, 0.0F, 0.0F).endVertex();
+		buffer.vertex(pose, pLineLength, 0.0f, 0.0f).color(255, 0, 0, 255).normal(1.0F, 0.0F, 0.0F).endVertex();
+
+		buffer.vertex(pose, 0.0f, 0.0f, 0.0f).color(0, 255, 0, 255).normal(0.0F, 1.0F, 0.0F).endVertex();
+		buffer.vertex(pose, 0.0f, -pLineLength, 0.0f).color(0, 255, 0, 255).normal(0.0F, 1.0F, 0.0F).endVertex();
+
+		buffer.vertex(pose, 0.0f, 0.0f, 0.0f).color(127, 127, 255, 255).normal(0.0F, 0.0F, 1.0F).endVertex();
+		buffer.vertex(pose, 0.0f, 0.0f, pLineLength).color(127, 127, 255, 255).normal(0.0F, 0.0F, 1.0F).endVertex();
+
+		//RenderSystem.depthMask(false);
+		RenderSystem.disableCull();
+		RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
+		tesselator.end();
+		RenderSystem.enableCull();
+		//RenderSystem.depthMask(true);
 	}
 }

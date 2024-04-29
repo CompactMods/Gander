@@ -65,6 +65,7 @@ tasks.withType<Jar> {
     }
 
     manifest {
+        from("src/main/resources/META-INF/MANIFEST.MF")
         val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(Date())
         val name = prop("mod_name")
 
