@@ -2,6 +2,7 @@ package dev.compactmods.gander;
 
 import net.minecraft.client.Camera;
 
+import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 
 import org.joml.Quaternionf;
@@ -60,7 +61,6 @@ public class SceneCamera extends Camera {
 		var newLookFrom = new Vector3f(0, 0, 1);
 		newLookFrom.rotateX(cameraRotation.x);
 		newLookFrom.rotateY(cameraRotation.y);
-		// look.mul(16);
 
 //		if (lookFrom.distance(newLookFrom) > 1 && bakedLevel != null)
 //			bakedLevel.resortTranslucency(newLookFrom);
@@ -78,5 +78,33 @@ public class SceneCamera extends Camera {
 		this.setPosition(new Vec3(from.x, from.y, from.z));
 
 		return this;
+	}
+
+	public void lookDirection(Direction direction) {
+		switch (direction) {
+			case UP:
+				this.cameraRotation.set(0, Math.PI);
+				break;
+
+			case DOWN:
+				this.cameraRotation.set(Math.PI / 2, Math.PI);
+				break;
+
+			case NORTH:
+				this.cameraRotation.set(0, Math.PI);
+				break;
+
+			case SOUTH:
+				this.cameraRotation.set(Math.PI / 2, -Math.PI);
+				break;
+
+			case WEST:
+				break;
+
+			case EAST:
+				break;
+		}
+
+		this.recalcLook();
 	}
 }

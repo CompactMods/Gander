@@ -32,6 +32,10 @@ public class CompassOverlay implements Renderable {
 		this.sceneBounds = sceneBounds;
 	}
 
+	public void render(GuiGraphics graphics, float partialTicks) {
+		render(graphics, 0, 0, partialTicks);
+	}
+
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		if(sceneBounds == null)

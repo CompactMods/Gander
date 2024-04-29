@@ -1,2 +1,3 @@
 FMLModType: GAMELIBRARY
 Automatic-Module-Name: ganderrendering
+MixinConfigs: gander_render.mixins.json

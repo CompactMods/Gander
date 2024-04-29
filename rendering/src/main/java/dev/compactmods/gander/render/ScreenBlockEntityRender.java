@@ -2,7 +2,11 @@ package dev.compactmods.gander.render;
 
 import javax.annotation.Nullable;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -28,37 +32,46 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class ScreenBlockEntityRender {
-
 	private static final Logger LOGS = LogManager.getLogger();
 
-	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, Vector3f cameraPosition, MultiBufferSource.BufferSource buffer, float pt) {
-		render(world, resolver, ms, cameraPosition, null, buffer, pt);
+	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, Vector3f cameraPosition,
+							  PostChain translucencyChain, MultiBufferSource.BufferSource buffer, float pt) {
+		render(world, Stream.of(blockEntity), ms, cameraPosition, null, translucencyChain, buffer, pt);
 	}
 
-	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, Vector3f cameraPosition, @Nullable Matrix4f lightTransform, MultiBufferSource.BufferSource buffer, float pt) {
-		resolver.filter(Objects::nonNull).forEach(ent -> render(world, ent, ms, cameraPosition, lightTransform, buffer, pt));
-		buffer.endBatch(RenderType.solid());
-		buffer.endBatch(RenderType.endPortal());
-		buffer.endBatch(RenderType.endGateway());
-		buffer.endBatch(Sheets.solidBlockSheet());
-		buffer.endBatch(Sheets.cutoutBlockSheet());
-		buffer.endBatch(Sheets.bedSheet());
-		buffer.endBatch(Sheets.shulkerBoxSheet());
-		buffer.endBatch(Sheets.signSheet());
-		buffer.endBatch(Sheets.hangingSignSheet());
-		buffer.endBatch(Sheets.chestSheet());
-		buffer.endBatch();
+	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, Vector3f cameraPosition,
+							  PostChain translucencyChain, MultiBufferSource.BufferSource buffer, float pt) {
+		render(world, resolver, ms, cameraPosition, null, translucencyChain, buffer, pt);
 	}
 
-	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, Vector3f cameraPosition, MultiBufferSource buffer, float pt) {
-		render(world, blockEntity, ms, cameraPosition, null, buffer, pt);
+	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, Vector3f cameraPosition,
+							  @Nullable Matrix4f lightTransform, PostChain translucencyChain, MultiBufferSource.BufferSource buffer, float pt) {
+
+		final var wrappedBuffer = WrappedBufferSource.from(translucencyChain, buffer);
+
+		resolver.filter(Objects::nonNull).forEach(ent -> render(world, ent, ms, cameraPosition, lightTransform, wrappedBuffer, pt));
+		wrappedBuffer.endBatch(RenderType.solid());
+		wrappedBuffer.endBatch(RenderType.endPortal());
+		wrappedBuffer.endBatch(RenderType.endGateway());
+		wrappedBuffer.endBatch(Sheets.solidBlockSheet());
+		wrappedBuffer.endBatch(Sheets.cutoutBlockSheet());
+		wrappedBuffer.endBatch(Sheets.bedSheet());
+		wrappedBuffer.endBatch(Sheets.shulkerBoxSheet());
+		wrappedBuffer.endBatch(Sheets.signSheet());
+		wrappedBuffer.endBatch(Sheets.hangingSignSheet());
+		wrappedBuffer.endBatch(Sheets.chestSheet());
+		wrappedBuffer.endBatch();
 	}
 
-	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, Vector3f cameraPosition, @Nullable Matrix4f lightTransform, MultiBufferSource buffer, float pt) {
+	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, Vector3f cameraPosition,
+							  @Nullable Matrix4f lightTransform, MultiBufferSource.BufferSource buffer, float pt) {
+
 		BlockEntityRenderer<BlockEntity> renderer = Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(blockEntity);
 		if (renderer == null)
 			return;
@@ -93,13 +106,4 @@ public class ScreenBlockEntityRender {
 			return pos;
 		}
 	}
-
-	private static int maxLight(int packedLight1, int packedLight2) {
-		int blockLight1 = LightTexture.block(packedLight1);
-		int skyLight1 = LightTexture.sky(packedLight1);
-		int blockLight2 = LightTexture.block(packedLight2);
-		int skyLight2 = LightTexture.sky(packedLight2);
-		return LightTexture.pack(Math.max(blockLight1, blockLight2), Math.max(skyLight1, skyLight2));
-	}
-
 }

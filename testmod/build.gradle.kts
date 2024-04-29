@@ -44,6 +44,7 @@ jarJar.enable()
 minecraft {
     modIdentifier.set(modId)
     accessTransformers {
+        file(project(":rendering").file("src/main/resources/META-INF/accesstransformer.cfg"))
         file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
     }
 }
