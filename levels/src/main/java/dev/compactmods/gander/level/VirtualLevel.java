@@ -49,7 +49,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public class VirtualLevel extends Level implements ServerLevelAccessor, BoundedBlockAndTintGetter {
+public class VirtualLevel extends Level implements ServerLevelAccessor {
 
 
 	private final TickRateManager tickManager = new TickRateManager();
@@ -135,7 +135,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, BoundedB
 	public BlockEntity getBlockEntity(BlockPos pPos) {
 		if(!bounds.isInside(pPos))
 			return null;
-		
+
 		return blocks.getBlockEntity(pPos);
 	}
 
@@ -313,11 +313,6 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, BoundedB
 
 	public void setBounds(BoundingBox bounds) {
 		this.bounds = bounds;
-	}
-
-	@Override
-	public BoundingBox bounds() {
-		return bounds;
 	}
 
 	@Override

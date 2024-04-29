@@ -58,25 +58,29 @@ tasks.withType<Jar> {
         currentDir = project.rootDir
     }
 
-//    manifest {
-//        val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(Date())
-//        val name = prop("mod_name")
-//
-//        val attrs = mapOf<String, Any>(
-//            "Specification-Title" to name,
-//            "Specification-Vendor" to "CompactMods",
-//            "Specification-Version" to "1",
-//            "Implementation-Title" to name,
-//            "Implementation-Version" to envVersion,
-//            "Implementation-Vendor" to "CompactMods",
-//            "Implementation-Timestamp" to now,
-//            "Minecraft-Version" to libraries.versions.minecraft.get(),
-//            "NeoForge-Version" to libraries.versions.neoforge.get(),
-//            "Main-Commit" to mainGit.head().id
-//        )
-//
-//        attributes(attrs)
-//    }
+    manifest {
+        val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(Date())
+        val name = prop("mod_name")
+
+        val attrs = mapOf<String, Any>(
+            "Specification-Title" to name,
+            "Specification-Vendor" to "CompactMods",
+            "Specification-Version" to "1",
+            "Implementation-Title" to name,
+            "Implementation-Version" to envVersion,
+            "Implementation-Vendor" to "CompactMods",
+            "Implementation-Timestamp" to now,
+            "Minecraft-Version" to libraries.versions.minecraft.get(),
+            "NeoForge-Version" to libraries.versions.neoforge.get(),
+            "Main-Commit" to mainGit.head().id,
+            "FMLModType" to "GAMELIBRARY",
+            "Automatic-Module-Name" to "ganderrendering",
+            "MixinConfigs" to "gander_render.mixins.json"
+
+        )
+
+        attributes(attrs)
+    }
 }
 
 tasks.jar {

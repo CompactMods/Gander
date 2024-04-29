@@ -55,13 +55,13 @@ public class SpatialRenderer extends AbstractWidget {
 	private final RenderTarget RENDER_TARGET;
 	private final PostChain translucencyChain;
 
+	private boolean isDisposed = false;
+
 	public SpatialRenderer(int x, int y, int width, int height) throws IOException {
 		super(x, y, width, height, Component.empty());
 
 		this.compassOverlay = new CompassOverlay();
-
 		this.camera = new SceneCamera();
-
 		this.shouldRenderCompass = false;
 		this.scale = 1f;
 		this.blockEntityPositions = Collections.emptySet();
@@ -70,11 +70,18 @@ public class SpatialRenderer extends AbstractWidget {
 		this.RENDER_TARGET = new TextureTarget(mc.getWindow().getWidth(), mc.getWindow().getHeight(), true, Minecraft.ON_OSX);
 
 		RENDER_TARGET.resize(RENDER_TARGET.width, RENDER_TARGET.height, Minecraft.ON_OSX);
-		RENDER_TARGET.setClearColor(0, 0, 0, 0);
+//		RENDER_TARGET.setClearColor(0, 0, 0, 0);
 
 		// pulled from LevelRenderer
 		this.translucencyChain = new PostChain(mc.textureManager, mc.getResourceManager(), RENDER_TARGET, new ResourceLocation("shaders/post/transparency.json"));
 		this.translucencyChain.resize(RENDER_TARGET.width, RENDER_TARGET.height);
+	}
+
+	public void dispose() {
+		if(isDisposed) return;
+		this.isDisposed = true;
+		translucencyChain.close();
+		RENDER_TARGET.destroyBuffers();
 	}
 
 	public SceneCamera camera() {

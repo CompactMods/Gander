@@ -83,6 +83,16 @@ public class GanderUI extends Screen {
 		}
 	}
 
+	private void disposeSceneRenderers() {
+		if (this.scene != null) {
+//			topRenderer.setData(scene);
+//			frontRenderer.setData(scene);
+//			leftRenderer.setData(scene);
+			orthoRenderer.dispose();
+			renderables.remove(orthoRenderer);
+		}
+	}
+
 	@Override
 	public void tick() {
 		super.tick();
@@ -171,6 +181,11 @@ public class GanderUI extends Screen {
 	@Override
 	public boolean isPauseScreen() {
 		return false;
+	}
+
+	@Override
+	public void removed() {
+		this.disposeSceneRenderers();
 	}
 
 	public void setSceneSource(Component src) {
