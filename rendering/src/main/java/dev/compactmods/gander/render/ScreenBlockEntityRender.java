@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 
+import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.RenderType;
@@ -41,19 +42,19 @@ public class ScreenBlockEntityRender {
 	private static final Logger LOGS = LogManager.getLogger();
 
 	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, Vector3f cameraPosition,
-							  PostChain translucencyChain, MultiBufferSource.BufferSource buffer, float pt) {
-		render(world, Stream.of(blockEntity), ms, cameraPosition, null, translucencyChain, buffer, pt);
+							  RenderTypeStore renderTypeStore, MultiBufferSource.BufferSource buffer, float pt) {
+		render(world, Stream.of(blockEntity), ms, cameraPosition, null, renderTypeStore, buffer, pt);
 	}
 
 	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, Vector3f cameraPosition,
-							  PostChain translucencyChain, MultiBufferSource.BufferSource buffer, float pt) {
-		render(world, resolver, ms, cameraPosition, null, translucencyChain, buffer, pt);
+							  RenderTypeStore renderTypeStore, MultiBufferSource.BufferSource buffer, float pt) {
+		render(world, resolver, ms, cameraPosition, null, renderTypeStore, buffer, pt);
 	}
 
 	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, Vector3f cameraPosition,
-							  @Nullable Matrix4f lightTransform, PostChain translucencyChain, MultiBufferSource.BufferSource buffer, float pt) {
+							  @Nullable Matrix4f lightTransform, RenderTypeStore renderTypeStore, MultiBufferSource.BufferSource buffer, float pt) {
 
-		final var wrappedBuffer = WrappedBufferSource.from(translucencyChain, buffer);
+		final var wrappedBuffer = WrappedBufferSource.from(renderTypeStore, buffer);
 
 		resolver.filter(Objects::nonNull).forEach(ent -> render(world, ent, ms, cameraPosition, lightTransform, wrappedBuffer, pt));
 		wrappedBuffer.endBatch(RenderType.solid());

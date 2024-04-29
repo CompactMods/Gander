@@ -5,11 +5,12 @@ import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import dev.compactmods.gander.render.RenderTypeHelper;
+import dev.compactmods.gander.render.rendertypes.RedirectedRenderTypeStore;
 import dev.compactmods.gander.render.ScreenBlockEntityRender;
 import dev.compactmods.gander.render.ScreenBlockRenderer;
 import dev.compactmods.gander.SceneCamera;
 import dev.compactmods.gander.render.baked.BakedLevel;
+import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -53,7 +54,7 @@ public class SpatialRenderer extends AbstractWidget {
 	private float scale;
 
 	private final RenderTarget RENDER_TARGET;
-	private final PostChain translucencyChain;
+	private final RenderTypeStore renderTypeStore;
 
 	private boolean isDisposed = false;
 
@@ -73,15 +74,16 @@ public class SpatialRenderer extends AbstractWidget {
 //		RENDER_TARGET.setClearColor(0, 0, 0, 0);
 
 		// pulled from LevelRenderer
-		this.translucencyChain = new PostChain(mc.textureManager, mc.getResourceManager(), RENDER_TARGET, new ResourceLocation("shaders/post/transparency.json"));
-		this.translucencyChain.resize(RENDER_TARGET.width, RENDER_TARGET.height);
+		var translucencyChain = new PostChain(mc.textureManager, mc.getResourceManager(), RENDER_TARGET, new ResourceLocation("shaders/post/transparency.json"));
+		translucencyChain.resize(RENDER_TARGET.width, RENDER_TARGET.height);
+		this.renderTypeStore = new RedirectedRenderTypeStore(translucencyChain);
 	}
 
 	public void dispose() {
 		if(isDisposed) return;
 		this.isDisposed = true;
-		translucencyChain.close();
 		RENDER_TARGET.destroyBuffers();
+		renderTypeStore.dispose();
 	}
 
 	public SceneCamera camera() {
@@ -140,10 +142,7 @@ public class SpatialRenderer extends AbstractWidget {
 		RenderSystem.enableDepthTest();
 
 		RENDER_TARGET.clear(Minecraft.ON_OSX);
-		RenderTypeHelper.OUTPUT_STATE_SHARD_MAP.values().forEach(output -> {
-			final var t = translucencyChain.getRenderTarget(output);
-			if (t != null) t.clear(Minecraft.ON_OSX);
-		});
+		renderTypeStore.clear();
 		RENDER_TARGET.bindWrite(true);
 
 		renderSceneForRealsies(blockEntities, buffer, partialTicks, poseStack);
@@ -172,16 +171,16 @@ public class SpatialRenderer extends AbstractWidget {
 //					final var projectionMatrix = new Matrix4f();
 				final var projectionMatrix = RenderSystem.getProjectionMatrix();
 
-				ScreenBlockRenderer.renderSectionLayer(bakedLevel, translucencyChain, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
-				ScreenBlockRenderer.renderSectionLayer(bakedLevel, translucencyChain, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
-				ScreenBlockRenderer.renderSectionLayer(bakedLevel, translucencyChain, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
+				ScreenBlockRenderer.renderSectionLayer(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
+				ScreenBlockRenderer.renderSectionLayer(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
+				ScreenBlockRenderer.renderSectionLayer(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
 
-				ScreenBlockEntityRender.render(blockAndTints, blockEntities, poseStack, lookFrom, translucencyChain, buffer, partialTicks);
+				ScreenBlockEntityRender.render(blockAndTints, blockEntities, poseStack, lookFrom, renderTypeStore, buffer, partialTicks);
 
-				ScreenBlockRenderer.prepareTranslucency(this.translucencyChain);
-				ScreenBlockRenderer.renderSectionLayer(bakedLevel, translucencyChain, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
+				renderTypeStore.prepareTranslucency();
+				ScreenBlockRenderer.renderSectionLayer(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
 				RENDER_TARGET.bindWrite(false);
-				translucencyChain.process(partialTicks);
+				renderTypeStore.processTransclucency(partialTicks);
 			}
 		}
 

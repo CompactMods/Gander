@@ -2,6 +2,8 @@ package dev.compactmods.gander.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
+import dev.compactmods.gander.render.rendertypes.RedirectedRenderTypeStore;
+import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.RenderType;
@@ -11,15 +13,15 @@ import java.util.Optional;
 
 class WrappedBufferSource extends MultiBufferSource.BufferSource {
 
-	private final PostChain translucencyChain;
+	private final RenderTypeStore renderStore;
 
-	protected WrappedBufferSource(PostChain translucencyChain, BufferSource original) {
+	protected WrappedBufferSource(RenderTypeStore renderStore, BufferSource original) {
 		super(original.builder, original.fixedBuffers);
-		this.translucencyChain = translucencyChain;
+		this.renderStore = renderStore;
 	}
 
-	public static WrappedBufferSource from(PostChain translucencyChain, BufferSource original) {
-		return new WrappedBufferSource(translucencyChain, original);
+	public static WrappedBufferSource from(RenderTypeStore renderStore, BufferSource original) {
+		return new WrappedBufferSource(renderStore, original);
 	}
 
 	@Override
@@ -29,7 +31,7 @@ class WrappedBufferSource extends MultiBufferSource.BufferSource {
 		boolean flag = Objects.equals(this.lastState, renderType.asOptional());
 		if (flag || builder != this.builder) {
 			if (this.startedBuffers.remove(builder)) {
-				RenderTypeHelper.redirectedRenderType(renderType, translucencyChain)
+				renderStore.redirectedRenderType(renderType)
 						.end(builder, RenderSystem.getVertexSorting());
 
 				if (flag) {

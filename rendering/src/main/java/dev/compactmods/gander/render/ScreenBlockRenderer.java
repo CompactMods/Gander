@@ -1,34 +1,28 @@
 package dev.compactmods.gander.render;
 
-import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import dev.compactmods.gander.render.baked.BakedLevel;
+import dev.compactmods.gander.render.rendertypes.RedirectedRenderTypeStore;
+import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.core.BlockPos;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 public class ScreenBlockRenderer {
 
-	public static void prepareTranslucency(PostChain translucencyChain) {
-		var target = translucencyChain.getRenderTarget("translucent");
-		target.clear(Minecraft.ON_OSX);
-		target.copyDepthFrom(translucencyChain.getRenderTarget(RenderTypeHelper.MAIN_TARGET));
-	}
-
-	public static void renderSectionLayer(BakedLevel bakedLevel, PostChain translucencyChain, RenderType renderType, PoseStack poseStack,
+	public static void renderSectionLayer(BakedLevel bakedLevel, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
 										  Vector3f cameraPosition, Matrix4f pProjectionMatrix) {
 
 		final var mc = Minecraft.getInstance();
 
-		final var retargetedRenderType = RenderTypeHelper.redirectedRenderType(renderType, translucencyChain);
+		final var retargetedRenderType = renderTypeStore.redirectedRenderType(renderType);
 
 		RenderSystem.assertOnRenderThread();
 		retargetedRenderType.setupRenderState();
