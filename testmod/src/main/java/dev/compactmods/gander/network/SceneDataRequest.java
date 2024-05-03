@@ -1,70 +1,34 @@
 package dev.compactmods.gander.network;
 
-import dev.compactmods.gander.client.network.SceneDataClientHandler;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-import net.neoforged.neoforge.network.handling.IPlayPayloadHandler;
+import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 public record SceneDataRequest(ResourceLocation templateID) implements CustomPacketPayload {
+	public static final Type<SceneDataRequest> ID = new Type<>(new ResourceLocation("gander", "scene_data"));
 
-	public SceneDataRequest(FriendlyByteBuf buffer) {
-		this(buffer.readResourceLocation());
-	}
+	public static final StreamCodec<RegistryFriendlyByteBuf, SceneDataRequest> STREAM_CODEC = StreamCodec.composite(
+			ResourceLocation.STREAM_CODEC, SceneDataRequest::templateID,
+			SceneDataRequest::new
+	);
 
-	public static final ResourceLocation ID = new ResourceLocation("gander", "scene_data");
 
-	public static final IPlayPayloadHandler<SceneDataRequest> HANDLER = (req, ctx) -> {
-		ctx.workHandler().submitAsync(() -> {
+	public static final IPayloadHandler<SceneDataRequest> HANDLER = (req, ctx) -> {
+		ctx.enqueueWork(() -> {
 			final var templateManager = ServerLifecycleHooks.getCurrentServer().getStructureManager();
 			templateManager.get(req.templateID).ifPresent(t -> {
-				ctx.replyHandler().send(new SceneData(Component.literal(req.templateID.toString()), t));
+				ctx.reply(new SceneDataResponse(Component.literal(req.templateID.toString()), t));
 			});
 		});
 	};
 
 	@Override
-	public void write(FriendlyByteBuf buf) {
-		buf.writeResourceLocation(templateID);
-	}
-
-	@Override
-	public ResourceLocation id() {
+	public Type<? extends CustomPacketPayload> type()
+	{
 		return ID;
-	}
-
-	public record SceneData(Component sceneSource, StructureTemplate data) implements CustomPacketPayload {
-
-		public static SceneData fromBuffer(FriendlyByteBuf buffer) {
-			final var templateData = new StructureTemplate();
-			final var src = buffer.readComponent();
-			templateData.load(BuiltInRegistries.BLOCK.asLookup(), buffer.readNbt());
-			return new SceneData(src, templateData);
-		}
-
-		public static final ResourceLocation ID = new ResourceLocation("gander", "scene_data_response");
-
-		public static final IPlayPayloadHandler<SceneData> HANDLER = (pkt, ctx) -> {
-			ctx.workHandler().submitAsync(() -> {
-				SceneDataClientHandler.loadScene(pkt.sceneSource, pkt.data);
-			});
-		};
-
-		@Override
-		public void write(FriendlyByteBuf buf) {
-			final var tag = data.save(new CompoundTag());
-			buf.writeComponent(sceneSource);
-			buf.writeNbt(tag);
-		}
-
-		@Override
-		public ResourceLocation id() {
-			return ID;
-		}
 	}
 }

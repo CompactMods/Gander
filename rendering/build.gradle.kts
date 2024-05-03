@@ -22,7 +22,7 @@ plugins {
     id("eclipse")
     id("maven-publish")
     id("java-library")
-    id("net.neoforged.gradle.userdev") version ("7.0.93")
+    alias(neoforged.plugins.userdev)
     id("org.ajoberstar.grgit") version ("5.2.1")
 }
 
@@ -30,10 +30,6 @@ base {
     archivesName.set("levels")
     group = "dev.compactmods.gander"
     version = envVersion
-}
-
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
 minecraft {
@@ -47,7 +43,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly(libraries.neoforge)
+    minecraft(neoforged.neoforge)
 }
 
 tasks.withType<ProcessResources> {
@@ -69,7 +65,7 @@ tasks.withType<Jar> {
         val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(Date())
         val name = prop("mod_name")
 
-        val attrs = mapOf<String, Any>(
+        attributes(
             "Specification-Title" to name,
             "Specification-Vendor" to "CompactMods",
             "Specification-Version" to "1",
@@ -77,14 +73,12 @@ tasks.withType<Jar> {
             "Implementation-Version" to envVersion,
             "Implementation-Vendor" to "CompactMods",
             "Implementation-Timestamp" to now,
-            "Minecraft-Version" to libraries.versions.minecraft.get(),
-            "NeoForge-Version" to libraries.versions.neoforge.get(),
+            "Minecraft-Version" to mojang.versions.minecraft.get(),
+            "NeoForge-Version" to neoforged.versions.neoforge.get(),
             "Main-Commit" to mainGit.head().id,
             "FMLModType" to "GAMELIBRARY",
             "Automatic-Module-Name" to "ganderlevels"
         )
-
-        attributes(attrs)
     }
 }
 

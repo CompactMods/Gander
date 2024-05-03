@@ -6,14 +6,15 @@ import com.mojang.logging.LogUtils;
 
 import dev.compactmods.gander.network.SceneDataRequest;
 import dev.compactmods.gander.network.OpenUIPacket;
+import dev.compactmods.gander.network.SceneDataResponse;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
-import net.neoforged.neoforge.network.registration.IPayloadRegistrar;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.HandlerThread;
 
 import org.slf4j.Logger;
 
@@ -38,14 +39,15 @@ public class GanderLib {
 		return new ResourceLocation(ID, path);
 	}
 
-	private static void onPacketRegistration(final RegisterPayloadHandlerEvent payloads) {
-		final IPayloadRegistrar main = payloads.registrar(GanderLib.ID)
-				.versioned("1.0.0");
+	private static void onPacketRegistration(final RegisterPayloadHandlersEvent payloads) {
+		final var main = payloads.registrar("1");
 
-		main.play(OpenUIPacket.ID, OpenUIPacket::new, builder -> builder.client(OpenUIPacket.HANDLER));
+		main.playToClient(OpenUIPacket.ID, OpenUIPacket.STREAM_CODEC, OpenUIPacket.HANDLER)
+				.executesOn(HandlerThread.MAIN);
 
-		// Scene sync
-		main.play(SceneDataRequest.ID, SceneDataRequest::new, builder -> builder.server(SceneDataRequest.HANDLER));
-		main.play(SceneDataRequest.SceneData.ID, SceneDataRequest.SceneData::fromBuffer, builder -> builder.client(SceneDataRequest.SceneData.HANDLER));
+		main.playToServer(SceneDataRequest.ID, SceneDataRequest.STREAM_CODEC, SceneDataRequest.HANDLER)
+				.executesOn(HandlerThread.MAIN);
+		main.playToClient(SceneDataResponse.ID, SceneDataResponse.STREAM_CODEC, SceneDataResponse.HANDLER)
+				.executesOn(HandlerThread.MAIN);
 	}
 }

@@ -33,7 +33,7 @@ public class GanderUI extends Screen {
 
 	public GanderUI(ResourceLocation sceneID) {
 		super(Component.empty());
-		PacketDistributor.SERVER.noArg().send(new SceneDataRequest(sceneID));
+		PacketDistributor.sendToServer(new SceneDataRequest(sceneID));
 	}
 
 	@Override

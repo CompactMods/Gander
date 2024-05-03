@@ -2,10 +2,11 @@ package dev.compactmods.gander;
 
 import dev.compactmods.gander.core.GanderCommand;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
-@Mod.EventBusSubscriber
+@EventBusSubscriber
 public class CommonEvents {
 
 	@SubscribeEvent

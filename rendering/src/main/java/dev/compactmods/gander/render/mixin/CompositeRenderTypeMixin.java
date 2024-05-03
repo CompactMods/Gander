@@ -5,6 +5,7 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import dev.compactmods.gander.render.rendertypes.GanderCompositeRenderType;
+import dev.compactmods.gander.render.translucency.TranslucentRenderTargetLayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
@@ -48,7 +49,7 @@ public abstract class CompositeRenderTypeMixin extends RenderType implements Gan
 
 	//region Actual code
 	@Override
-	public RenderType targetingRenderTarget(RenderTarget newTarget, RenderTarget mainTarget) {
+	public RenderType targetingTranslucentRenderTarget(TranslucentRenderTargetLayer newTarget, TranslucentRenderTargetLayer mainTarget) {
 		var newState = new RenderType.CompositeState(state.textureState,
 				state.shaderState, state.transparencyState, state.depthTestState, state.cullState,
 				state.lightmapState, state.overlayState, state.layeringState, new RenderStateShard.OutputStateShard(newTarget.toString(), () -> {
@@ -67,7 +68,7 @@ public abstract class CompositeRenderTypeMixin extends RenderType implements Gan
 				this.bufferSize(), affectsCrumbling(), sortOnUpload, newState);
 
 		((CompositeRenderTypeMixin) (Object) thing).setOutline(this.outline
-				.map(o -> ((GanderCompositeRenderType) o).targetingRenderTarget(mainTarget, mainTarget)));
+				.map(o -> ((GanderCompositeRenderType) o).targetingTranslucentRenderTarget(mainTarget, mainTarget)));
 
 		//noinspection UnreachableCode
 		return thing;

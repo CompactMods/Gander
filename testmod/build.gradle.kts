@@ -1,6 +1,5 @@
 @file:Suppress("SpellCheckingInspection")
 
-import net.neoforged.gradle.dsl.common.runs.type.RunType
 import org.ajoberstar.grgit.Grgit
 import java.text.SimpleDateFormat
 import java.util.*
@@ -24,7 +23,7 @@ plugins {
     id("eclipse")
     id("maven-publish")
     id("java-library")
-    id("net.neoforged.gradle.userdev") version ("7.0.93")
+    alias(neoforged.plugins.userdev)
     id("org.ajoberstar.grgit") version ("5.2.1")
 }
 
@@ -32,11 +31,6 @@ base {
     archivesName.set(modId)
     group = prop("mod_group_id")
     version = envVersion
-}
-
-java {
-    toolchain.vendor.set(JvmVendorSpec.JETBRAINS)
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
 minecraft {
@@ -103,13 +97,14 @@ repositories {
 
 dependencies {
     // Core Projects and Libraries
-    implementation(libraries.neoforge)
+    minecraft(neoforged.neoforge)
+
     implementation(project(":levels", "default"))
     implementation(project(":rendering", "default"))
 
     // Mods
-    compileOnly(mods.bundles.jei)
-    compileOnly(mods.jade)
+    //mod(mods.bundles.jei)
+    //mod(mods.jade)
 }
 
 tasks.withType<ProcessResources> {
@@ -137,18 +132,18 @@ tasks.withType<Jar> {
             "Implementation-Version" to envVersion,
             "Implementation-Vendor" to "CompactMods",
             "Implementation-Timestamp" to now,
-            "Minecraft-Version" to libraries.versions.minecraft.get(),
-            "NeoForge-Version" to libraries.versions.neoforge.get(),
+            "Minecraft-Version" to mojang.versions.minecraft.get(),
+            "NeoForge-Version" to neoforged.versions.neoforge.get(),
             "Main-Commit" to mainGit.head().id
         )
     }
 }
 
 tasks.withType<ProcessResources>().configureEach {
-    filesMatching("META-INF/mods.toml") {
+    filesMatching("META-INF/*.toml") {
         expand(
-            "minecraft_version" to libraries.versions.minecraft.get(),
-            "neo_version" to libraries.versions.neoforge.get(),
+            "minecraft_version" to mojang.versions.minecraft.get(),
+            "neo_version" to neoforged.versions.neoforge.get(),
             "minecraft_version_range" to prop("minecraft_version_range"),
             "neo_version_range" to prop("neo_version_range"),
             "loader_version_range" to prop("loader_version_range"),

@@ -5,11 +5,11 @@ import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import com.mojang.blaze3d.vertex.VertexBuffer;
+
 import dev.compactmods.gander.render.baked.BakedLevel;
-import dev.compactmods.gander.render.rendertypes.RedirectedRenderTypeStore;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 
@@ -17,11 +17,22 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
+import java.util.Map;
+
 public class ScreenBlockRenderer {
 
-	public static void renderSectionLayer(BakedLevel bakedLevel, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
+	public static void renderSectionBlocks(BakedLevel bakedLevel, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
 										  Vector3f cameraPosition, Matrix4f pProjectionMatrix) {
+		renderSectionLayer(bakedLevel.blockRenderBuffers(), renderTypeStore, renderType, poseStack, cameraPosition, pProjectionMatrix);
+	}
 
+	public static void renderSectionFluids(BakedLevel bakedLevel, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
+			Vector3f cameraPosition, Matrix4f pProjectionMatrix) {
+		renderSectionLayer(bakedLevel.fluidRenderBuffers(), renderTypeStore, renderType, poseStack, cameraPosition, pProjectionMatrix);
+	}
+
+	private static void renderSectionLayer(Map<RenderType, VertexBuffer> renderBuffers, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
+			Vector3f cameraPosition, Matrix4f pProjectionMatrix) {
 		final var mc = Minecraft.getInstance();
 
 		final var retargetedRenderType = renderTypeStore.redirectedRenderType(renderType);
@@ -29,17 +40,12 @@ public class ScreenBlockRenderer {
 		RenderSystem.assertOnRenderThread();
 		retargetedRenderType.setupRenderState();
 
-		GL11.glEnable(GL11.GL_STENCIL_TEST);
-		RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_REPLACE);
-		RenderSystem.stencilFunc(GlConst.GL_ALWAYS, 1, 0xFF);
-		RenderSystem.stencilMask(0xFF);
-
 		mc.getProfiler().popPush(() -> "render_" + renderType);
 
 		ShaderInstance shaderinstance = RenderSystem.getShader();
 		Uniform uniform = shaderinstance.CHUNK_OFFSET;
 
-		final var vertexbuffer = bakedLevel.renderBuffers().get(renderType);
+		final var vertexbuffer = renderBuffers.get(renderType);
 		if (vertexbuffer != null) {
 			if (uniform != null) {
 				shaderinstance.apply();

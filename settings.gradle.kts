@@ -1,10 +1,17 @@
 dependencyResolutionManagement {
-    versionCatalogs.create("libraries") {
-        library("neoforge", "net.neoforged", "neoforge")
-                .versionRef("neoforge")
+    versionCatalogs.create("mojang") {
+        version("minecraft", "1.20.6")
+    }
 
-        version("minecraft", "1.20.4")
-        version("neoforge", "20.4.225")
+    versionCatalogs.create("neoforged") {
+        version("neogradle", "7.0.119")
+        version("neoforge", "20.6.18-beta")
+
+        library("neoforge", "net.neoforged", "neoforge")
+            .versionRef("neoforge")
+
+        plugin("userdev", "net.neoforged.gradle.userdev")
+            .versionRef("neogradle")
     }
 
     versionCatalogs.create("mods") {

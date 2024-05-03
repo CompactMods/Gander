@@ -16,17 +16,16 @@ import dev.compactmods.gander.render.ScreenBlockRenderer;
 import dev.compactmods.gander.SceneCamera;
 import dev.compactmods.gander.render.baked.BakedLevel;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
+import dev.compactmods.gander.render.translucency.TranslucencyChain;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
 
 import net.minecraft.world.level.BlockAndTintGetter;
 
@@ -43,8 +42,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.lwjgl.opengl.GL11;
-
 public class SpatialRenderer extends AbstractWidget {
 
 	private @Nullable BlockAndTintGetter blockAndTints;
@@ -59,8 +56,9 @@ public class SpatialRenderer extends AbstractWidget {
 	private boolean shouldRenderCompass;
 	private float scale;
 
+	// TODO: audit if this extra render target is needed
 	private final RenderTarget renderTarget;
-	private final PostChain translucencyChain;
+	private final TranslucencyChain translucencyChain;
 	private final RenderTypeStore renderTypeStore;
 
 	private boolean isDisposed = false;
@@ -81,7 +79,16 @@ public class SpatialRenderer extends AbstractWidget {
 		renderTarget.setClearColor(0, 0, 0, 0);
 
 		// pulled from LevelRenderer
-		var translucencyChain = new PostChain(mc.textureManager, mc.getResourceManager(), renderTarget, GanderLib.asResource("shaders/post/transparency.json"));
+		var translucencyChain = new TranslucencyChain(GanderLib.asResource("transparency"), renderTarget, mc.getResourceManager())
+				.addLayer(GanderLib.asResource("main"))
+				.addLayer(GanderLib.asResource("entity"))
+				.addLayer(GanderLib.asResource("water"))
+				.addLayer(GanderLib.asResource("translucent"))
+				.addLayer(GanderLib.asResource("item_entity"))
+				.addLayer(GanderLib.asResource("particles"))
+				.addLayer(GanderLib.asResource("clouds"))
+				.addLayer(GanderLib.asResource("weather"));
+
 		translucencyChain.resize(renderTarget.width, renderTarget.height);
 		this.translucencyChain = translucencyChain;
 		this.renderTypeStore = new RedirectedRenderTypeStore(translucencyChain);
@@ -141,12 +148,11 @@ public class SpatialRenderer extends AbstractWidget {
 		var originalMatrix = RenderSystem.getProjectionMatrix();
 		var originalSorting = RenderSystem.getVertexSorting();
 
-		final var renderDistance = Minecraft.getInstance().options.getEffectiveRenderDistance() * 16 * 4;
 		var projectionMatrix = new Matrix4f().setPerspective(
 				(float)Math.PI / 2f,
 				(float)renderTarget.width / (float)renderTarget.height,
 				0.05f,
-				renderDistance);
+				10000000);
 
 		final var blockEntities = blockEntityPositions
 				.stream()
@@ -156,36 +162,36 @@ public class SpatialRenderer extends AbstractWidget {
 		poseStack.pushPose();
 		{
 			var poseStack2 = RenderSystem.getModelViewStack();
-			poseStack2.pushPose();
-			poseStack2.setIdentity();
+			poseStack2.pushMatrix();
+			poseStack2.identity();
 			RenderSystem.applyModelViewMatrix();
 
 			poseStack.setIdentity();
 			poseStack.mulPose(camera.rotation());
-			RenderSystem.enableBlend();
-			RenderSystem.enableDepthTest();
+			//RenderSystem.enableBlend();
+			//RenderSystem.enableDepthTest();
 
-			renderTypeStore.clear();
+			translucencyChain.clear();
 			renderTarget.bindWrite(true);
 			renderMinecraft();
 
 			RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
 			renderScene(blockEntities, buffer, partialTicks, poseStack);
 
-			RenderSystem.stencilFunc(GlConst.GL_EQUAL, 1, 0xFF);
-			RenderSystem.stencilMask(0xFF);
+			//RenderSystem.stencilFunc(GlConst.GL_EQUAL, 1, 0xFF);
+			//RenderSystem.stencilMask(0xFF);
 
 			final var mainTarget = Minecraft.getInstance().getMainRenderTarget();
 
 			mainTarget.bindWrite(true);
 			renderTarget.blitToScreen(renderTarget.width, renderTarget.height, false);
 
-			GL11.glDisable(GL11.GL_STENCIL_TEST);
+			//GL11.glDisable(GL11.GL_STENCIL_TEST);
 
 			RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
 			renderCompass(graphics, partialTicks, poseStack);
 
-			poseStack2.popPose();
+			poseStack2.popMatrix();
 			RenderSystem.applyModelViewMatrix();
 		}
 		poseStack.popPose();
@@ -232,26 +238,42 @@ public class SpatialRenderer extends AbstractWidget {
 			if (bakedLevel != null) {
 				var projectionMatrix = RenderSystem.getProjectionMatrix();
 
-				GL11.glEnable(GL11.GL_STENCIL_TEST);
+				/*GL11.glEnable(GL11.GL_STENCIL_TEST);
 				RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_REPLACE);
 				RenderSystem.stencilFunc(GlConst.GL_ALWAYS, 1, 0xFF);
 				RenderSystem.stencilMask(0xFF);
-				RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, Minecraft.ON_OSX);
+				RenderSystem.clear(GL11.GL_STENCIL_BUFFER_BIT, Minecraft.ON_OSX);*/
 
-				ScreenBlockRenderer.renderSectionLayer(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
-				ScreenBlockRenderer.renderSectionLayer(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
-				ScreenBlockRenderer.renderSectionLayer(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
+				translucencyChain.prepareLayer(GanderLib.asResource("main"));
+				ScreenBlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
+				ScreenBlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
 
+				ScreenBlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
+				ScreenBlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
+
+				ScreenBlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
+				ScreenBlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
+
+				translucencyChain.prepareLayer(GanderLib.asResource("entity"));
 				ScreenBlockEntityRender.render(blockAndTints, blockEntities, poseStack, lookFrom, renderTypeStore, buffer, partialTicks);
 
-				renderTypeStore.prepareTranslucency();
-				ScreenBlockRenderer.renderSectionLayer(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
+				// TODO: water z buffer seems to be getting clobbered somehow... :(
+				translucencyChain.prepareLayer(GanderLib.asResource("water"));
+				ScreenBlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
 
-				RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP);
+				translucencyChain.prepareLayer(GanderLib.asResource("translucent"));
+				ScreenBlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
+
+				translucencyChain.prepareLayer(GanderLib.asResource("item_entity"));
+				translucencyChain.prepareLayer(GanderLib.asResource("particles"));
+				translucencyChain.prepareLayer(GanderLib.asResource("clouds"));
+				translucencyChain.prepareLayer(GanderLib.asResource("weather"));
+
+				/*RenderSystem.stencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP);
 				RenderSystem.stencilFunc(GlConst.GL_EQUAL, 1, 0xFF);
-				RenderSystem.stencilMask(0xFF);
+				RenderSystem.stencilMask(0xFF);*/
 
-				renderTypeStore.processTransclucency(partialTicks);
+				translucencyChain.process();
 			}
 		}
 

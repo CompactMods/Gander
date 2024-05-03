@@ -6,7 +6,8 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [],
   "client": [
-    "CompositeRenderTypeMixin"
+    "CompositeRenderTypeMixin",
+    "GlStateManagerAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -22,7 +22,7 @@ plugins {
     id("eclipse")
     id("maven-publish")
     id("java-library")
-    id("net.neoforged.gradle.userdev") version ("7.0.93")
+    alias(neoforged.plugins.userdev)
     id("org.ajoberstar.grgit") version ("5.2.1")
 }
 
@@ -32,16 +32,12 @@ base {
     version = envVersion
 }
 
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
-}
-
 repositories {
     mavenLocal()
 }
 
 dependencies {
-    compileOnly(libraries.neoforge)
+    minecraft(neoforged.neoforge)
 }
 
 tasks.withType<ProcessResources> {
@@ -71,8 +67,8 @@ tasks.withType<Jar> {
             "Implementation-Version" to envVersion,
             "Implementation-Vendor" to "CompactMods",
             "Implementation-Timestamp" to now,
-            "Minecraft-Version" to libraries.versions.minecraft.get(),
-            "NeoForge-Version" to libraries.versions.neoforge.get(),
+            "Minecraft-Version" to mojang.versions.minecraft.get(),
+            "NeoForge-Version" to neoforged.versions.neoforge.get(),
             "Main-Commit" to mainGit.head().id,
             "FMLModType" to "GAMELIBRARY",
             "Automatic-Module-Name" to "ganderrendering",

@@ -6,11 +6,5 @@ public interface RenderTypeStore {
 
 	RenderType redirectedRenderType(RenderType desiredType);
 
-	void prepareTranslucency();
-
-	void clear();
-
 	void dispose();
-
-	void processTransclucency(float partialTicks);
 }

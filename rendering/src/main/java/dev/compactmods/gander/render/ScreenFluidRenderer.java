@@ -230,7 +230,7 @@ public class ScreenFluidRenderer {
 				.uv(u, v)
 				.overlayCoords(OverlayTexture.NO_OVERLAY)
 				.uv2(light)
-				.normal(peek.normal(), normal.getX(), normal.getY(), normal.getZ())
+				.normal(peek, normal.getX(), normal.getY(), normal.getZ())
 				.endVertex();
 	}
 

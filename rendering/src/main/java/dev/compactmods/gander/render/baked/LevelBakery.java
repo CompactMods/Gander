@@ -11,7 +11,6 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 
 import dev.compactmods.gander.render.FluidVertexConsumer;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
-import jogamp.common.os.elf.Section;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
@@ -34,8 +33,6 @@ import net.neoforged.neoforge.client.ClientHooks;
 import net.neoforged.neoforge.client.event.AddSectionGeometryEvent;
 import net.neoforged.neoforge.client.model.data.ModelData;
 
-import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.lang.ref.WeakReference;
@@ -47,9 +44,11 @@ public class LevelBakery {
 
 	public static BakedLevel bakeVertices(Level level, BoundingBox blockBoundaries, Vector3f cameraPosition) {
 
-		final Set<RenderType> visitedRenderTypes = new HashSet<>();
+		final Set<RenderType> visitedBlockRenderTypes = new HashSet<>();
+		final Set<RenderType> visitedFluidRenderTypes = new HashSet<>();
 		final RenderRegionCache regionCache = new RenderRegionCache();
-		final SectionBufferBuilderPack pack = new SectionBufferBuilderPack();
+		final SectionBufferBuilderPack blockPack = new SectionBufferBuilderPack();
+		final SectionBufferBuilderPack fluidPack = new SectionBufferBuilderPack();
 
 		PoseStack pose = new PoseStack();
 
@@ -88,8 +87,8 @@ public class LevelBakery {
 
 				ModelData finalModelData = modelData;
 				model.getRenderTypes(state, random, modelData).forEach(type -> {
-					var typedVC = pack.builder(type);
-					if (visitedRenderTypes.add(type)) {
+					var typedVC = blockPack.builder(type);
+					if (visitedBlockRenderTypes.add(type)) {
 						typedVC.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 					}
 
@@ -99,8 +98,8 @@ public class LevelBakery {
 
 			if (!fluidState.isEmpty()) {
 				final var fluidRenderType = ItemBlockRenderTypes.getRenderLayer(fluidState);
-				var typedVC = pack.builder(fluidRenderType);
-				if (visitedRenderTypes.add(fluidRenderType)) {
+				var typedVC = fluidPack.builder(fluidRenderType);
+				if (visitedFluidRenderTypes.add(fluidRenderType)) {
 					typedVC.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 				}
 
@@ -115,23 +114,31 @@ public class LevelBakery {
 
 		// TODO - Hook for multiplatform?
 		net.neoforged.neoforge.client.ClientHooks.addAdditionalGeometry(additionalRenderers, (type) -> {
-			BufferBuilder builder = pack.builder(type);
-			if (visitedRenderTypes.add(type)) {
+			BufferBuilder builder = blockPack.builder(type);
+			if (visitedBlockRenderTypes.add(type)) {
 				builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 			}
 			return builder;
 		}, createRegion(regionCache, additionalRenderers, level, blockBoundaries), pose);
 
-		BufferBuilder.SortState transparencyState = null;
-		if (visitedRenderTypes.contains(RenderType.translucent())) {
-			final var builder = pack.builder(RenderType.translucent());
+		BufferBuilder.SortState blockTransparencyState = null;
+		if (visitedBlockRenderTypes.contains(RenderType.translucent())) {
+			final var builder = blockPack.builder(RenderType.translucent());
 			builder.setQuadSorting(VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z));
-			transparencyState = builder.getSortState();
+			blockTransparencyState = builder.getSortState();
 		}
 
-		Reference2ObjectArrayMap<RenderType, VertexBuffer> renderers = new Reference2ObjectArrayMap<>();
-		visitedRenderTypes.forEach(renderType -> {
-			final var builder = pack.builder(renderType);
+		BufferBuilder.SortState fluidTransparencyState = null;
+		if (visitedFluidRenderTypes.contains(RenderType.translucent())) {
+			final var builder = fluidPack.builder(RenderType.translucent());
+			builder.setQuadSorting(VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z));
+			fluidTransparencyState = builder.getSortState();
+		}
+
+		Reference2ObjectArrayMap<RenderType, VertexBuffer> blockGeometry = new Reference2ObjectArrayMap<>();
+		Reference2ObjectArrayMap<RenderType, VertexBuffer> fluidGeometry = new Reference2ObjectArrayMap<>();
+		visitedBlockRenderTypes.forEach(renderType -> {
+			final var builder = blockPack.builder(renderType);
 			final var buffer = builder.endOrDiscardIfEmpty();
 
 			if(buffer != null) {
@@ -139,11 +146,24 @@ public class LevelBakery {
 				vb.bind();
 				vb.upload(buffer);
 				VertexBuffer.unbind();
-				renderers.put(renderType, vb);
+				blockGeometry.put(renderType, vb);
 			}
 		});
 
-		return new BakedLevel(new WeakReference<>(level), pack, renderers, transparencyState, blockBoundaries);
+		visitedFluidRenderTypes.forEach(renderType -> {
+			final var builder = fluidPack.builder(renderType);
+			final var buffer = builder.endOrDiscardIfEmpty();
+
+			if(buffer != null) {
+				var vb = new VertexBuffer(VertexBuffer.Usage.STATIC);
+				vb.bind();
+				vb.upload(buffer);
+				VertexBuffer.unbind();
+				fluidGeometry.put(renderType, vb);
+			}
+		});
+
+		return new BakedLevel(new WeakReference<>(level), blockPack, fluidPack, blockGeometry, fluidGeometry, blockTransparencyState, fluidTransparencyState, blockBoundaries);
 	}
 
 	private static RenderChunkRegion createRegion(RenderRegionCache cache, List<AddSectionGeometryEvent.AdditionalSectionRenderer> additionalRenderers, Level level, BoundingBox bounds) {
