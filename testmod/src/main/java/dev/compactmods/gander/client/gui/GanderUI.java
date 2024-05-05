@@ -63,14 +63,16 @@ public class GanderUI extends Screen {
 
 		final var ui = new GanderUI();
 
-		var virtualLevel = new VirtualLevel(mc.level.registryAccess());
-		var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
-		virtualLevel.setBounds(bounds);
-		data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings(), RandomSource.create(), Block.UPDATE_CLIENTS);
+		mc.tell(() -> {
+			var virtualLevel = new VirtualLevel(mc.level.registryAccess());
+			var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
+			virtualLevel.setBounds(bounds);
+			data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings(), RandomSource.create(), Block.UPDATE_CLIENTS);
 
-		var bakedLevel = LevelBakery.bakeVertices(virtualLevel, bounds, new Vector3f());
-		ui.setSceneSource(source);
-		ui.setScene(bakedLevel);
+			var bakedLevel = LevelBakery.bakeVertices(virtualLevel, bounds, new Vector3f());
+			ui.setSceneSource(source);
+			ui.setScene(bakedLevel);
+		});
 
 		return ui;
 	}

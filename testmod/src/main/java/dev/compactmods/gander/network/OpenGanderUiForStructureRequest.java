@@ -37,7 +37,7 @@ public record OpenGanderUiForStructureRequest(Component sceneSource, StructureTe
 
 	public static final IPayloadHandler<OpenGanderUiForStructureRequest> HANDLER = (pkt, ctx) -> {
 		ctx.enqueueWork(() -> {
-			ScreenOpener.open(GanderUI.forStructureData(pkt.sceneSource, pkt.data));
+			ScreenOpener.open(() -> GanderUI.forStructureData(pkt.sceneSource, pkt.data));
 		});
 	};
 

@@ -13,6 +13,9 @@ import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.OpenGanderUiForDeferredStructureRequest;
 
 import dev.compactmods.gander.network.OpenGanderUiForStructureRequest;
+
+import java.util.concurrent.CompletableFuture;
+
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -28,12 +31,17 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.FixedBiomeSource;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.structure.StructureCheck;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -99,22 +107,24 @@ public class GanderCommand {
 			RegistryAccess regAccess = ctx.getSource().registryAccess();
 
 			VirtualLevel level = new VirtualLevel(regAccess);
+			var seed = level.random.nextLong();
 
 			final var biomeReg = regAccess
 					.registry(Registries.BIOME)
 					.get();
 
-			final var theVoid = biomeReg.getHolderOrThrow(Biomes.THE_VOID);
+			final var theVoid = key.value().biomes().getRandomElement(level.random).orElseGet(() -> biomeReg.getHolderOrThrow(Biomes.PLAINS));
 			final var biomeSource = new FixedBiomeSource(theVoid);
 			final var chunkGenerator = new VirtualChunkGenerator(biomeSource);
 
+			var pRandomState = RandomState.create(regAccess.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.OVERWORLD).value(), regAccess.lookupOrThrow(Registries.NOISE), seed);
 			final var structureStart = key.value().generate(
 					regAccess,
 					chunkGenerator,
 					biomeSource,
-					RandomState.create(NoiseGeneratorSettings.dummy(), regAccess.lookupOrThrow(Registries.NOISE), 0),
+					pRandomState,
 					server.getStructureManager(),
-					0,
+					seed,
 					ChunkPos.ZERO,
 					0,
 					level,
@@ -127,14 +137,29 @@ public class GanderCommand {
 
 			// GENERATE
 			BoundingBox boundingbox = structureStart.getBoundingBox();
+			level.setBounds(boundingbox);
 			ChunkPos startChunk = new ChunkPos(SectionPos.blockToSectionCoord(boundingbox.minX()), SectionPos.blockToSectionCoord(boundingbox.minZ()));
 			ChunkPos endChunk = new ChunkPos(SectionPos.blockToSectionCoord(boundingbox.maxX()), SectionPos.blockToSectionCoord(boundingbox.maxZ()));
+
+			var structureCheck = new StructureCheck(
+					(pChunkPos, pVisitor) -> CompletableFuture.completedFuture(null),
+					regAccess,
+					server.getStructureManager(),
+					Level.OVERWORLD,
+					chunkGenerator,
+					pRandomState,
+					level,
+					biomeSource,
+					seed,
+					server.getFixerUpper()
+			);
+			var structureManager = new StructureManager(level, new WorldOptions(seed, true, false), structureCheck);
 
 			ChunkPos.rangeClosed(startChunk, endChunk)
 					.forEach(
 							chunkPos -> structureStart.placeInChunk(
 									level,
-									server.overworld().structureManager(),
+									structureManager,
 									chunkGenerator,
 									level.getRandom(),
 									new BoundingBox(
@@ -150,7 +175,11 @@ public class GanderCommand {
 					);
 
 			final var finalStructure = new StructureTemplate();
-			finalStructure.fillFromWorld(level, BlockPos.ZERO, boundingbox.getLength(), false, null);
+			finalStructure.fillFromWorld(level, new BlockPos(
+					boundingbox.minX(),
+					boundingbox.minY(),
+					boundingbox.minZ()
+			), boundingbox.getLength(), false, Blocks.AIR);
 
 			PacketDistributor.sendToPlayer(player, new OpenGanderUiForStructureRequest(Component.literal("Generated: " + key.key().location()), finalStructure));
 		}

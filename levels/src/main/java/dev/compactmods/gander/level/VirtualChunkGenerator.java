@@ -2,6 +2,8 @@ package dev.compactmods.gander.level;
 
 import com.mojang.serialization.MapCodec;
 
+import java.util.stream.IntStream;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.world.level.LevelHeightAccessor;
@@ -9,6 +11,8 @@ import net.minecraft.world.level.NoiseColumn;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.GenerationStep;
@@ -48,12 +52,12 @@ public class VirtualChunkGenerator extends ChunkGenerator {
 
 	@Override
 	public int getGenDepth() {
-		return 0;
+		return 384;
 	}
 
 	@Override
 	public CompletableFuture<ChunkAccess> fillFromNoise(Executor pExecutor, Blender pBlender, RandomState pRandom, StructureManager pStructureManager, ChunkAccess pChunk) {
-		return null;
+		return CompletableFuture.completedFuture(pChunk);
 	}
 
 	@Override
@@ -63,17 +67,23 @@ public class VirtualChunkGenerator extends ChunkGenerator {
 
 	@Override
 	public int getMinY() {
-		return 0;
+		return -64;
 	}
 
 	@Override
 	public int getBaseHeight(int pX, int pZ, Heightmap.Types pType, LevelHeightAccessor pLevel, RandomState pRandom) {
-		return 0;
+		// return pLevel.getMinBuildHeight();
+		return -63;
 	}
 
 	@Override
 	public NoiseColumn getBaseColumn(int pX, int pZ, LevelHeightAccessor pHeight, RandomState pRandom) {
-		return null;
+		return new NoiseColumn(
+				pHeight.getMinBuildHeight(),
+				IntStream.range(0, pHeight.getHeight())
+						.mapToObj(i -> Blocks.AIR.defaultBlockState())
+						.toArray(BlockState[]::new)
+		);
 	}
 
 	@Override
