@@ -12,17 +12,14 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
+import dev.compactmods.gander.render.translucency.shader.TranslucencyEffectInstance;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.EffectInstance;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.ResourceProvider;
 
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,20 +30,27 @@ public final class TranslucencyChain implements AutoCloseable
 {
 	private final TranslucencyEffectInstance shader;
 	private final RenderTarget screenTarget;
-	private final TranslucentRenderTarget layeredTargets;
-	private final RenderTarget intermediaryCopyTarget;
-	// TODO: toposort?
 	private final List<ResourceLocation> renderTargets;
 
+	private final TranslucentRenderTarget layeredTargets;
+	private final RenderTarget intermediaryCopyTarget;
 	private final Matrix4f shaderOrthoMatrix;
 
-	public TranslucencyChain(final ResourceLocation shaderPath, final RenderTarget screenTarget, final ResourceProvider resourceProvider) throws IOException
+	public static TranslucencyChainBuilder builder()
 	{
-		this.shader = new TranslucencyEffectInstance(resourceProvider, shaderPath.toString());
+		return new TranslucencyChainBuilder();
+	}
+
+	TranslucencyChain(
+		final RenderTarget screenTarget,
+		final List<ResourceLocation> layers)
+	{
+		this.shader = new TranslucencyEffectInstance(layers.size());
 		this.screenTarget = screenTarget;
+		this.renderTargets = layers;
+
 		this.layeredTargets = new TranslucentRenderTarget();
 		this.intermediaryCopyTarget = new RenderTarget(true){};
-		this.renderTargets = new ArrayList<>();
 		this.shaderOrthoMatrix = new Matrix4f();
 	}
 
@@ -57,19 +61,6 @@ public final class TranslucencyChain implements AutoCloseable
 		shader.close();
 	}
 
-	public TranslucencyChain addLayer(final ResourceLocation name)
-	{
-		// TODO: better exception
-		if (renderTargets.contains(name))
-		{
-			throw new IllegalArgumentException("Already registered");
-		}
-
-		renderTargets.add(name);
-
-		return this;
-	}
-
 	public void resize(int width, int height) {
 		this.shaderOrthoMatrix.setOrtho(0, (float)width, 0, (float)height, 0.1f, 1000.0f);
 
@@ -77,9 +68,12 @@ public final class TranslucencyChain implements AutoCloseable
 		intermediaryCopyTarget.resize(width, height, Minecraft.ON_OSX);
 	}
 
+	public void prepareBackgroundColor(RenderTarget copyFrom)
+	{ }
+
 	public void prepareLayer(ResourceLocation layer)
 	{
-		// Takes the depth and stencil data in the current layer and copies it to the next layer
+		// Takes the depth data in the current layer and copies it to the next layer
 		var target = getRenderTarget(layer);
 		if (target.getLayer() == 0) return; // if we're layer 0, there's nothing to copy from
 
@@ -95,7 +89,7 @@ public final class TranslucencyChain implements AutoCloseable
 		GL32.glBlitFramebuffer(
 				0, 0, layeredTargets.getWidth(), layeredTargets.getHeight(),
 				0, 0, intermediaryCopyTarget.width, intermediaryCopyTarget.height,
-				GlConst.GL_DEPTH_BUFFER_BIT, // | GL11.GL_STENCIL_BUFFER_BIT,
+				GlConst.GL_DEPTH_BUFFER_BIT,
 				GlConst.GL_NEAREST);
 
 		// And then to the target.
@@ -106,7 +100,7 @@ public final class TranslucencyChain implements AutoCloseable
 		GL32.glBlitFramebuffer(
 				0, 0, intermediaryCopyTarget.width, intermediaryCopyTarget.height,
 				0, 0, layeredTargets.getWidth(), layeredTargets.getHeight(),
-				GlConst.GL_DEPTH_BUFFER_BIT, // | GL11.GL_STENCIL_BUFFER_BIT,
+				GlConst.GL_DEPTH_BUFFER_BIT,
 				GlConst.GL_NEAREST);
 
 		GL32.glBindFramebuffer(GlConst.GL_FRAMEBUFFER, 0);
@@ -114,7 +108,6 @@ public final class TranslucencyChain implements AutoCloseable
 
 	public void clear()
 	{
-		//layeredTargets.bindWrite
 		for (int layer = 0; layer < layeredTargets.getLayerCount(); layer++)
 		{
 			var target = layeredTargets.getLayer(layer);
@@ -126,11 +119,10 @@ public final class TranslucencyChain implements AutoCloseable
 	{
 		screenTarget.unbindWrite();
 		RenderSystem.viewport(0, 0, layeredTargets.getWidth(), layeredTargets.getHeight());
-		this.shader.setSampler("InputLayersColorSampler", layeredTargets::getColorTextureId, GL32.GL_TEXTURE_2D_ARRAY);
-		this.shader.setSampler("InputLayersDepthSampler", layeredTargets::getDepthTextureId, GL32.GL_TEXTURE_2D_ARRAY);
-		this.shader.safeGetUniform("InputLayerCount").set(layeredTargets.getLayerCount());
-		this.shader.safeGetUniform("ProjMat").set(this.shaderOrthoMatrix);
-		this.shader.safeGetUniform("OutSize").set((float)layeredTargets.getWidth(), (float)layeredTargets.getHeight());
+		this.shader.setColorSampler(layeredTargets.getColorTextureId());
+		this.shader.setDepthSampler(layeredTargets.getDepthTextureId());
+		this.shader.setProjectionMatrix(this.shaderOrthoMatrix);
+		this.shader.setOutputSize(layeredTargets.getWidth(), layeredTargets.getHeight());
 
 		final var mc = Minecraft.getInstance();
 		this.shader.apply();
@@ -141,6 +133,7 @@ public final class TranslucencyChain implements AutoCloseable
 		RenderSystem.depthFunc(GlConst.GL_ALWAYS);
 		RenderSystem.enableDepthTest();
 		RenderSystem.depthMask(true);
+		RenderSystem.disableBlend();
 		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
 		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 		bufferbuilder.vertex(0.0, 0.0, 500.0).endVertex();
@@ -149,8 +142,9 @@ public final class TranslucencyChain implements AutoCloseable
 		bufferbuilder.vertex(0.0, layeredTargets.getHeight(), 500.0).endVertex();
 		BufferUploader.draw(bufferbuilder.end());
 		RenderSystem.depthFunc(GlConst.GL_LEQUAL);
-		RenderSystem.depthMask(false);
 		RenderSystem.disableDepthTest();
+		RenderSystem.depthMask(false);
+		RenderSystem.enableBlend();
 		this.shader.clear();
 		this.screenTarget.unbindWrite();
 		this.layeredTargets.unbindRead();

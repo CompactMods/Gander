@@ -1,6 +1,5 @@
 package dev.compactmods.gander.render;
 
-import com.mojang.blaze3d.platform.GlConst;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -15,27 +14,27 @@ import net.minecraft.client.renderer.ShaderInstance;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.lwjgl.opengl.GL11;
 
 import java.util.Map;
+import java.util.function.Function;
 
 public class ScreenBlockRenderer {
 
 	public static void renderSectionBlocks(BakedLevel bakedLevel, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
 										  Vector3f cameraPosition, Matrix4f pProjectionMatrix) {
-		renderSectionLayer(bakedLevel.blockRenderBuffers(), renderTypeStore, renderType, poseStack, cameraPosition, pProjectionMatrix);
+		renderSectionLayer(bakedLevel.blockRenderBuffers(), renderTypeStore::redirectedBlockRenderType, renderType, poseStack, cameraPosition, pProjectionMatrix);
 	}
 
 	public static void renderSectionFluids(BakedLevel bakedLevel, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
 			Vector3f cameraPosition, Matrix4f pProjectionMatrix) {
-		renderSectionLayer(bakedLevel.fluidRenderBuffers(), renderTypeStore, renderType, poseStack, cameraPosition, pProjectionMatrix);
+		renderSectionLayer(bakedLevel.fluidRenderBuffers(), renderTypeStore::redirectedFluidRenderType, renderType, poseStack, cameraPosition, pProjectionMatrix);
 	}
 
-	private static void renderSectionLayer(Map<RenderType, VertexBuffer> renderBuffers, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
+	private static void renderSectionLayer(Map<RenderType, VertexBuffer> renderBuffers, Function<RenderType, RenderType> redirector, RenderType renderType, PoseStack poseStack,
 			Vector3f cameraPosition, Matrix4f pProjectionMatrix) {
 		final var mc = Minecraft.getInstance();
 
-		final var retargetedRenderType = renderTypeStore.redirectedRenderType(renderType);
+		final var retargetedRenderType = redirector.apply(renderType);
 
 		RenderSystem.assertOnRenderThread();
 		retargetedRenderType.setupRenderState();

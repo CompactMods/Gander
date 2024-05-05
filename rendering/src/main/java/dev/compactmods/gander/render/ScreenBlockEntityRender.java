@@ -2,15 +2,9 @@ package dev.compactmods.gander.render;
 
 import javax.annotation.Nullable;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.PostChain;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -33,9 +27,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 public class ScreenBlockEntityRender {
@@ -54,7 +46,7 @@ public class ScreenBlockEntityRender {
 	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, Vector3f cameraPosition,
 							  @Nullable Matrix4f lightTransform, RenderTypeStore renderTypeStore, MultiBufferSource.BufferSource buffer, float pt) {
 
-		final var wrappedBuffer = WrappedBufferSource.from(renderTypeStore, buffer);
+		final var wrappedBuffer = WrappedBufferSource.forBlocks(renderTypeStore, buffer);
 
 		resolver.filter(Objects::nonNull).forEach(ent -> render(world, ent, ms, cameraPosition, lightTransform, wrappedBuffer, pt));
 		wrappedBuffer.endBatch(RenderType.solid());

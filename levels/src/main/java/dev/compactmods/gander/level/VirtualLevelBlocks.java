@@ -32,6 +32,7 @@ public class VirtualLevelBlocks implements BlockAndTintGetter {
 
 	public VirtualLevelBlocks() {
 		this.states = new Long2ObjectOpenHashMap<>();
+		states.defaultReturnValue(Blocks.AIR.defaultBlockState());
 		this.blockEntities = new Long2ObjectOpenHashMap<>();
 
 		this.PLAINS = Minecraft.getInstance().level.registryAccess()
@@ -40,7 +41,10 @@ public class VirtualLevelBlocks implements BlockAndTintGetter {
 	}
 
 	public BlockState setBlockState(BlockPos pos, @NotNull BlockState state) {
-		this.states.put(pos.asLong(), state);
+		if (state.isAir())
+			this.states.remove(pos.asLong());
+		else
+			this.states.put(pos.asLong(), state);
 		this.blockEntities.remove(pos.asLong());
 		return state;
 	}

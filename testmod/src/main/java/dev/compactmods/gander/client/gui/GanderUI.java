@@ -108,6 +108,22 @@ public class GanderUI extends Screen {
 	}
 
 	@Override
+	protected void renderBlurredBackground(final float pPartialTick)
+	{
+
+	}
+
+	@Override
+	public void renderBackground(
+			final GuiGraphics pGuiGraphics,
+			final int pMouseX,
+			final int pMouseY,
+			final float pPartialTick)
+	{
+
+	}
+
+	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		if (this.sceneSource != null) {
 			graphics.pose().pushPose();
