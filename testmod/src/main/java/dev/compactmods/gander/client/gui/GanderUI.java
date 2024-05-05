@@ -2,6 +2,7 @@ package dev.compactmods.gander.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 
+import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.SceneDataRequest;
 import dev.compactmods.gander.client.gui.widget.SpatialRenderer;
 import dev.compactmods.gander.render.baked.BakedLevel;
@@ -94,7 +95,11 @@ public class GanderUI extends Screen {
 	@Override
 	public void tick() {
 		super.tick();
-		// sceneRenderer.tick();
+		if (this.scene != null) {
+			// TODO: :)
+			var level = ((VirtualLevel)scene.originalLevel().get());
+			level.animateTick();
+		}
 
 		if (autoRotate) {
 			this.orthoRenderer.camera().lookLeft((float) Math.toRadians(2.5));
@@ -108,23 +113,9 @@ public class GanderUI extends Screen {
 	}
 
 	@Override
-	protected void renderBlurredBackground(final float pPartialTick)
-	{
-
-	}
-
-	@Override
-	public void renderBackground(
-			final GuiGraphics pGuiGraphics,
-			final int pMouseX,
-			final int pMouseY,
-			final float pPartialTick)
-	{
-
-	}
-
-	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+		super.render(graphics, mouseX, mouseY, partialTicks);
+
 		if (this.sceneSource != null) {
 			graphics.pose().pushPose();
 			// graphics.pose().translate(getRectangle().left(), );
@@ -132,8 +123,6 @@ public class GanderUI extends Screen {
 			graphics.pose().popPose();
 		}
 		var poseStack = graphics.pose();
-
-		super.render(graphics, mouseX, mouseY, partialTicks);
 
 		poseStack.pushPose();
 		{
