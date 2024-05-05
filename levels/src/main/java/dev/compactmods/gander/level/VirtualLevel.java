@@ -14,11 +14,14 @@ import net.minecraft.world.TickRateManager;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -31,7 +34,10 @@ import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.LevelEntityGetter;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.structure.StructureCheck;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -51,13 +57,15 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public class VirtualLevel extends Level implements ServerLevelAccessor {
+public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGenLevel {
 
 	private final TickRateManager tickManager = new TickRateManager();
 	private final RegistryAccess access;
 	private final VirtualChunkSource chunkSource;
 	private final LevelLightEngine lightEngine;
 	private final VirtualLevelBlocks blocks;
+	private final Scoreboard scoreboard;
+	// private final StructureManager structureManager;
 	private BoundingBox bounds;
 
 	private VirtualLevel(WritableLevelData pLevelData, ResourceKey<Level> pDimension,
@@ -70,7 +78,9 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 		this.chunkSource = new VirtualChunkSource(this);
 		this.lightEngine = new VirtualLightEngine(block -> 15, sky -> 15, this);
 		this.blocks = new VirtualLevelBlocks();
+		this.scoreboard = new Scoreboard();
 		this.bounds = BoundingBox.fromCorners(BlockPos.ZERO, BlockPos.ZERO);
+		// this.structureManager = new StructureManager(this, WorldOptions.DEMO_OPTIONS, StructureCheck);
 	}
 
 	public VirtualLevel(RegistryAccess access) {
@@ -282,7 +292,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 
 	@Override
 	public Scoreboard getScoreboard() {
-		return null;
+		return scoreboard;
 	}
 
 	@Override
@@ -307,7 +317,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 
 	@Override
 	public FeatureFlagSet enabledFeatures() {
-		return FeatureFlagSet.of();
+		return FeatureFlags.DEFAULT_FLAGS;
 	}
 
 	@Override
@@ -332,5 +342,10 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 	@Override
 	public int getBrightness(LightLayer pLightType, BlockPos pBlockPos) {
 		return 15;
+	}
+
+	@Override
+	public long getSeed() {
+		return 0;
 	}
 }

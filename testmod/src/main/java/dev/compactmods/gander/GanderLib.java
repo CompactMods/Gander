@@ -4,9 +4,9 @@ import java.util.Random;
 
 import com.mojang.logging.LogUtils;
 
-import dev.compactmods.gander.network.SceneDataRequest;
-import dev.compactmods.gander.network.OpenUIPacket;
-import dev.compactmods.gander.network.SceneDataResponse;
+import dev.compactmods.gander.network.StructureSceneDataRequest;
+import dev.compactmods.gander.network.OpenGanderUiForDeferredStructureRequest;
+import dev.compactmods.gander.network.OpenGanderUiForStructureRequest;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
@@ -42,12 +42,13 @@ public class GanderLib {
 	private static void onPacketRegistration(final RegisterPayloadHandlersEvent payloads) {
 		final var main = payloads.registrar("1");
 
-		main.playToClient(OpenUIPacket.ID, OpenUIPacket.STREAM_CODEC, OpenUIPacket.HANDLER)
+		main.playToClient(OpenGanderUiForDeferredStructureRequest.ID, OpenGanderUiForDeferredStructureRequest.STREAM_CODEC, OpenGanderUiForDeferredStructureRequest.HANDLER)
 				.executesOn(HandlerThread.MAIN);
 
-		main.playToServer(SceneDataRequest.ID, SceneDataRequest.STREAM_CODEC, SceneDataRequest.HANDLER)
+		main.playToServer(StructureSceneDataRequest.ID, StructureSceneDataRequest.STREAM_CODEC, StructureSceneDataRequest.HANDLER)
 				.executesOn(HandlerThread.MAIN);
-		main.playToClient(SceneDataResponse.ID, SceneDataResponse.STREAM_CODEC, SceneDataResponse.HANDLER)
+
+		main.playToClient(OpenGanderUiForStructureRequest.ID, OpenGanderUiForStructureRequest.STREAM_CODEC, OpenGanderUiForStructureRequest.HANDLER)
 				.executesOn(HandlerThread.MAIN);
 	}
 }

@@ -2,19 +2,29 @@ package dev.compactmods.gander.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 
-import dev.compactmods.gander.network.SceneDataRequest;
+import dev.compactmods.gander.level.VirtualLevel;
+import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.client.gui.widget.SpatialRenderer;
 import dev.compactmods.gander.render.baked.BakedLevel;
+import dev.compactmods.gander.render.baked.LevelBakery;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.neoforged.neoforge.network.PacketDistributor;
+
+import org.joml.Vector3f;
 
 import java.io.IOException;
 
@@ -23,7 +33,7 @@ public class GanderUI extends Screen {
 	protected boolean autoRotate = false;
 
 	private BakedLevel scene;
-//	private SpatialRenderer topRenderer;
+	//	private SpatialRenderer topRenderer;
 //	private SpatialRenderer frontRenderer;
 //	private SpatialRenderer leftRenderer;
 	private SpatialRenderer orthoRenderer;
@@ -31,9 +41,38 @@ public class GanderUI extends Screen {
 	private Component sceneSource;
 	private ScreenRectangle renderableArea;
 
-	public GanderUI(ResourceLocation sceneID) {
+	private GanderUI() {
 		super(Component.empty());
-		PacketDistributor.sendToServer(new SceneDataRequest(sceneID));
+	}
+
+	private GanderUI(StructureSceneDataRequest dataRequest) {
+		this();
+		PacketDistributor.sendToServer(dataRequest);
+	}
+
+	public static GanderUI empty() {
+		return new GanderUI();
+	}
+
+	public static GanderUI forStructure(ResourceLocation sceneID) {
+		return new GanderUI(new StructureSceneDataRequest(sceneID));
+	}
+
+	public static GanderUI forStructureData(Component source, StructureTemplate data) {
+		final var mc = Minecraft.getInstance();
+
+		final var ui = new GanderUI();
+
+		var virtualLevel = new VirtualLevel(mc.level.registryAccess());
+		var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
+		virtualLevel.setBounds(bounds);
+		data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings(), RandomSource.create(), Block.UPDATE_CLIENTS);
+
+		var bakedLevel = LevelBakery.bakeVertices(virtualLevel, bounds, new Vector3f());
+		ui.setSceneSource(source);
+		ui.setScene(bakedLevel);
+
+		return ui;
 	}
 
 	@Override
@@ -49,11 +88,11 @@ public class GanderUI extends Screen {
 
 		try {
 //			this.topRenderer = this.addRenderableWidget(new SpatialRenderer(renderableArea.left(), runningY, 120, 100));
-	//		this.topRenderer.camera().lookDirection(Direction.DOWN);
+			//		this.topRenderer.camera().lookDirection(Direction.DOWN);
 			runningY += 110;
 
 //			this.frontRenderer = this.addRenderableWidget(new SpatialRenderer(renderableArea.left(), runningY, 120, 100));
-	//		this.frontRenderer.camera().lookDirection(Direction.NORTH);
+			//		this.frontRenderer.camera().lookDirection(Direction.NORTH);
 			runningY += 110;
 
 //			this.leftRenderer = this.addRenderableWidget(new SpatialRenderer(renderableArea.left(), runningY, 120, 100));
