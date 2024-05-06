@@ -1,4 +1,4 @@
-package dev.compactmods.gander.level;
+package dev.compactmods.gander.level.light;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
@@ -49,46 +49,50 @@ public final class VirtualLightEngine extends LevelLightEngine {
 		return Math.max(j, i);
 	}
 
-	private static class VirtualLayerLightEventListener implements LayerLightEventListener {
-		private final ToIntFunction<BlockPos> lightFunc;
+	private record VirtualLayerLightEventListener(ToIntFunction<BlockPos> lightFunc) implements LayerLightEventListener
+	{
 
-		public VirtualLayerLightEventListener(ToIntFunction<BlockPos> lightFunc) {
-			this.lightFunc = lightFunc;
+		@Override
+		public void checkBlock(BlockPos pos)
+		{
 		}
 
 		@Override
-		public void checkBlock(BlockPos pos) {
-		}
-
-		@Override
-		public boolean hasLightWork() {
+		public boolean hasLightWork()
+		{
 			return false;
 		}
 
 		@Override
-		public int runLightUpdates() {
+		public int runLightUpdates()
+		{
 			return 0;
 		}
 
 		@Override
-		public void updateSectionStatus(SectionPos pos, boolean isSectionEmpty) {
+		public void updateSectionStatus(SectionPos pos, boolean isSectionEmpty)
+		{
 		}
 
 		@Override
-		public void setLightEnabled(ChunkPos pos, boolean lightEnabled) {
+		public void setLightEnabled(ChunkPos pos, boolean lightEnabled)
+		{
 		}
 
 		@Override
-		public void propagateLightSources(ChunkPos pos) {
+		public void propagateLightSources(ChunkPos pos)
+		{
 		}
 
 		@Override
-		public DataLayer getDataLayerData(SectionPos pos) {
+		public DataLayer getDataLayerData(SectionPos pos)
+		{
 			return null;
 		}
 
 		@Override
-		public int getLightValue(BlockPos pos) {
+		public int getLightValue(BlockPos pos)
+		{
 			return lightFunc.applyAsInt(pos);
 		}
 	}

@@ -1,4 +1,4 @@
-package dev.compactmods.gander.level;
+package dev.compactmods.gander.level.chunk;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -9,27 +9,30 @@ import java.util.function.BiPredicate;
 
 import javax.annotation.Nullable;
 
+import dev.compactmods.gander.level.VirtualLevel;
+import dev.compactmods.gander.level.util.VirtualLevelUtils;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.HolderLookup.Provider;
+import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.TickContainerAccess;
 
@@ -58,12 +61,15 @@ public class VirtualChunk extends EmptyLevelChunk {
 	@Override
 	@Nullable
 	public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
-		return virtualLevel.blocks().setBlockState(pos, state);
+		if (virtualLevel.setBlockAndUpdate(pos, state))
+			return state;
+
+		return virtualLevel.getBlockState(pos);
 	}
 
 	@Override
 	public void setBlockEntity(BlockEntity blockEntity) {
-		virtualLevel.blocks().setBlockEntity(blockEntity.getBlockPos(), blockEntity);
+		virtualLevel.setBlockEntity(blockEntity);
 	}
 
 	@Override
@@ -152,7 +158,7 @@ public class VirtualChunk extends EmptyLevelChunk {
 
 	@Override
 	public void removeBlockEntity(BlockPos pos) {
-		virtualLevel.blocks().removeBlockEntity(pos);
+		virtualLevel.removeBlockEntity(pos);
 	}
 
 	@Override
@@ -173,8 +179,14 @@ public class VirtualChunk extends EmptyLevelChunk {
 	}
 
 	@Override
+	@Deprecated(forRemoval = true)
+	@SuppressWarnings("removal") // The superclass has logic we don't desire here
 	public void findBlocks(BiPredicate<BlockState, BlockPos> predicate, BiConsumer<BlockPos, BlockState> consumer) {
-		virtualLevel.blocks().findBlocks(predicate, consumer);
+		BlockPos.betweenClosedStream(
+			chunkPos.getMinBlockX(), virtualLevel.getMinBuildHeight(), chunkPos.getMinBlockZ(),
+			chunkPos.getMaxBlockX(), virtualLevel.getMaxBuildHeight(), chunkPos.getMaxBlockZ())
+			.filter(pos -> predicate.test(getBlockState(pos), pos))
+			.forEach(pos -> consumer.accept(pos, getBlockState(pos)));
 	}
 
 	@Override
@@ -214,22 +226,22 @@ public class VirtualChunk extends EmptyLevelChunk {
 	@Override
 	@Nullable
 	public BlockEntity getBlockEntity(BlockPos pos) {
-		return virtualLevel.blocks().getBlockEntity(pos);
+		return virtualLevel.getBlockEntity(pos);
 	}
 
 	@org.jetbrains.annotations.Nullable
 	@Override
 	public BlockEntity getBlockEntity(BlockPos pos, EntityCreationType pCreationType) {
-		return virtualLevel.blocks().getBlockEntity(pos);
+		return virtualLevel.getBlockEntity(pos);
 	}
 
 	@Override
 	public BlockState getBlockState(BlockPos pos) {
-		return virtualLevel.blocks().getBlockState(pos);
+		return virtualLevel.getBlockState(pos);
 	}
 
 	@Override
 	public FluidState getFluidState(BlockPos pos) {
-		return virtualLevel.blocks().getFluidState(pos);
+		return virtualLevel.getFluidState(pos);
 	}
 }

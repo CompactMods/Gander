@@ -1,5 +1,8 @@
 package dev.compactmods.gander.level;
 
+import dev.compactmods.gander.level.gen.VirtualChunkSource;
+import dev.compactmods.gander.level.light.VirtualLightEngine;
+import dev.compactmods.gander.level.util.VirtualLevelUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -51,7 +54,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class VirtualLevel extends Level implements ServerLevelAccessor {
+public class VirtualLevel extends Level implements ServerLevelAccessor, TickingLevel {
 
 	private final TickRateManager tickManager = new TickRateManager();
 	private final RegistryAccess access;
@@ -74,7 +77,8 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 	}
 
 	public VirtualLevel(RegistryAccess access) {
-		this(VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
+		this(
+				VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
 				access.registryOrThrow(Registries.DIMENSION_TYPE).getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
 				Minecraft.getInstance()::getProfiler, true, false,
 				0, 0);
@@ -144,6 +148,12 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 		}
 	}
 
+	@Override
+	public void removeBlockEntity(final BlockPos pPos)
+	{
+		this.blocks().removeBlockEntity(pPos);
+	}
+
 	@Nullable
 	@Override
 	public BlockEntity getBlockEntity(BlockPos pPos) {
@@ -155,7 +165,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 
 	@Override
 	public BlockState getBlockState(BlockPos pPos) {
-		if(!bounds.isInside(pPos))
+		if (!bounds.isInside(pPos))
 			return Blocks.AIR.defaultBlockState();
 
 		return blocks.getBlockState(pPos);
@@ -174,7 +184,11 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 		BlockPos.betweenClosedStream(bounds)
 			.filter(p -> random.nextIntBetweenInclusive(1, 10) <= 3)
 			.forEach(this::animateBlockTick);
+	}
 
+	@Override
+	public void tick(final float deltaTime)
+	{
 		tickBlockEntities();
 	}
 
