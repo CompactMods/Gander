@@ -22,6 +22,10 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
+
+import static net.minecraft.world.level.chunk.ProtoChunk.packOffsetCoordinates;
+
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -59,6 +63,13 @@ public class VirtualChunk extends EmptyLevelChunk {
 	@Nullable
 	public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
 		return virtualLevel.blocks().setBlockState(pos, state);
+	}
+
+	@Override
+	public void markPosForPostprocessing(BlockPos pPos) {
+		if (!this.isOutsideBuildHeight(pPos)) {
+			ChunkAccess.getOrCreateOffsetList(this.postProcessing, this.getSectionIndex(pPos.getY())).add(packOffsetCoordinates(pPos));
+		}
 	}
 
 	@Override
@@ -157,7 +168,7 @@ public class VirtualChunk extends EmptyLevelChunk {
 
 	@Override
 	public ShortList[] getPostProcessing() {
-		return new ShortList[0];
+		return postProcessing;
 	}
 
 	@Override

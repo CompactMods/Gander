@@ -8,20 +8,20 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
-public record SceneDataRequest(ResourceLocation templateID) implements CustomPacketPayload {
-	public static final Type<SceneDataRequest> ID = new Type<>(new ResourceLocation("gander", "scene_data"));
+public record StructureSceneDataRequest(ResourceLocation templateID) implements CustomPacketPayload {
+	public static final Type<StructureSceneDataRequest> ID = new Type<>(new ResourceLocation("gander", "scene_data"));
 
-	public static final StreamCodec<RegistryFriendlyByteBuf, SceneDataRequest> STREAM_CODEC = StreamCodec.composite(
-			ResourceLocation.STREAM_CODEC, SceneDataRequest::templateID,
-			SceneDataRequest::new
+	public static final StreamCodec<RegistryFriendlyByteBuf, StructureSceneDataRequest> STREAM_CODEC = StreamCodec.composite(
+			ResourceLocation.STREAM_CODEC, StructureSceneDataRequest::templateID,
+			StructureSceneDataRequest::new
 	);
 
 
-	public static final IPayloadHandler<SceneDataRequest> HANDLER = (req, ctx) -> {
+	public static final IPayloadHandler<StructureSceneDataRequest> HANDLER = (req, ctx) -> {
 		ctx.enqueueWork(() -> {
 			final var templateManager = ServerLifecycleHooks.getCurrentServer().getStructureManager();
 			templateManager.get(req.templateID).ifPresent(t -> {
-				ctx.reply(new SceneDataResponse(Component.literal(req.templateID.toString()), t));
+				ctx.reply(new OpenGanderUiForStructureRequest(Component.literal(req.templateID.toString()), t));
 			});
 		});
 	};

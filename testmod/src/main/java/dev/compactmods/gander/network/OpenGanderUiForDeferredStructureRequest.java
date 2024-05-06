@@ -12,13 +12,13 @@ import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
 import org.jetbrains.annotations.NotNull;
 
-public record OpenUIPacket(ResourceLocation scene) implements CustomPacketPayload {
+public record OpenGanderUiForDeferredStructureRequest(ResourceLocation structureId) implements CustomPacketPayload {
 
-	public static final Type<OpenUIPacket> ID = new Type<>(GanderLib.asResource("open_scene"));
+	public static final Type<OpenGanderUiForDeferredStructureRequest> ID = new Type<>(GanderLib.asResource("open_scene"));
 
-	public static final StreamCodec<RegistryFriendlyByteBuf, OpenUIPacket> STREAM_CODEC = StreamCodec.composite(
-			ResourceLocation.STREAM_CODEC, OpenUIPacket::scene,
-			OpenUIPacket::new
+	public static final StreamCodec<RegistryFriendlyByteBuf, OpenGanderUiForDeferredStructureRequest> STREAM_CODEC = StreamCodec.composite(
+			ResourceLocation.STREAM_CODEC, OpenGanderUiForDeferredStructureRequest::structureId,
+			OpenGanderUiForDeferredStructureRequest::new
 	);
 
 	@Override
@@ -27,14 +27,14 @@ public record OpenUIPacket(ResourceLocation scene) implements CustomPacketPayloa
 		return ID;
 	}
 
-	public static final IPayloadHandler<OpenUIPacket> HANDLER = (pkt, ctx) -> {
+	public static final IPayloadHandler<OpenGanderUiForDeferredStructureRequest> HANDLER = (pkt, ctx) -> {
 		ctx.enqueueWork(() -> {
 			if (FMLEnvironment.dist.isClient())
-				handleOnClient(pkt.scene);
+				handleOnClient(pkt.structureId);
 		});
 	};
 
 	private static void handleOnClient(ResourceLocation scene) {
-		ScreenOpener.open(new GanderUI(scene));
+		ScreenOpener.open(GanderUI.forStructure(scene));
 	}
 }

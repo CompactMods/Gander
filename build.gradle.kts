@@ -34,7 +34,7 @@ subprojects {
 subprojects {
     afterEvaluate {
         extensions.configure<JavaPluginExtension> {
-            toolchain.vendor.set(JvmVendorSpec.JETBRAINS)
+            // toolchain.vendor.set(JvmVendorSpec)
             toolchain.languageVersion.set(JavaLanguageVersion.of(21))
         }
 

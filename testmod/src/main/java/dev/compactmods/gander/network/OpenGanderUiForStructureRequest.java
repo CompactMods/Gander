@@ -1,6 +1,7 @@
 package dev.compactmods.gander.network;
 
-import dev.compactmods.gander.client.network.SceneDataClientHandler;
+import dev.compactmods.gander.client.gui.GanderUI;
+import dev.compactmods.gander.client.gui.ScreenOpener;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
@@ -13,9 +14,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
-public record SceneDataResponse(Component sceneSource, StructureTemplate data) implements CustomPacketPayload
+public record OpenGanderUiForStructureRequest(Component sceneSource, StructureTemplate data) implements CustomPacketPayload
 {
-	public static final Type<SceneDataResponse> ID = new Type<>(new ResourceLocation("gander", "scene_data_response"));
+	public static final Type<OpenGanderUiForStructureRequest> ID = new Type<>(new ResourceLocation("gander", "scene_data_response"));
 
 	private static final StreamCodec<RegistryFriendlyByteBuf, StructureTemplate> STRUCTURE_TEMPLATE_STREAM_CODEC = StreamCodec.of(
 			(RegistryFriendlyByteBuf buf, StructureTemplate val) -> {
@@ -28,18 +29,17 @@ public record SceneDataResponse(Component sceneSource, StructureTemplate data) i
 			}
 	);
 
-	public static final StreamCodec<RegistryFriendlyByteBuf, SceneDataResponse> STREAM_CODEC = StreamCodec.composite(
-			ComponentSerialization.STREAM_CODEC, SceneDataResponse::sceneSource,
-			STRUCTURE_TEMPLATE_STREAM_CODEC, SceneDataResponse::data,
-			SceneDataResponse::new
+	public static final StreamCodec<RegistryFriendlyByteBuf, OpenGanderUiForStructureRequest> STREAM_CODEC = StreamCodec.composite(
+			ComponentSerialization.STREAM_CODEC, OpenGanderUiForStructureRequest::sceneSource,
+			STRUCTURE_TEMPLATE_STREAM_CODEC, OpenGanderUiForStructureRequest::data,
+			OpenGanderUiForStructureRequest::new
 	);
 
-	public static final IPayloadHandler<SceneDataResponse> HANDLER = (pkt, ctx) -> {
+	public static final IPayloadHandler<OpenGanderUiForStructureRequest> HANDLER = (pkt, ctx) -> {
 		ctx.enqueueWork(() -> {
-			SceneDataClientHandler.loadScene(pkt.sceneSource, pkt.data);
+			ScreenOpener.open(() -> GanderUI.forStructureData(pkt.sceneSource, pkt.data));
 		});
 	};
-
 
 	@Override
 	public Type<? extends CustomPacketPayload> type()

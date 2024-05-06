@@ -32,7 +32,7 @@ public class VirtualLevelBlocks implements BlockAndTintGetter {
 
 	public VirtualLevelBlocks() {
 		this.states = new Long2ObjectOpenHashMap<>();
-		states.defaultReturnValue(Blocks.AIR.defaultBlockState());
+		this.states.defaultReturnValue(Blocks.AIR.defaultBlockState());
 		this.blockEntities = new Long2ObjectOpenHashMap<>();
 
 		this.PLAINS = Minecraft.getInstance().level.registryAccess()
