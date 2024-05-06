@@ -3,11 +3,13 @@ package dev.compactmods.gander.render;
 import javax.annotation.Nullable;
 
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
+import net.minecraft.Util;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.loading.FMLEnvironment;
 
 import org.apache.logging.log4j.LogManager;
@@ -69,6 +71,9 @@ public class ScreenBlockEntityRender {
 		if (renderer == null)
 			return;
 
+		if (!renderer.shouldRender(blockEntity, new Vec3(cameraPosition)))
+			return;
+
 		BlockPos pos = blockEntity.getBlockPos();
 		ms.pushPose();
 		ms.translate(pos.getX() - cameraPosition.x, pos.getY() - cameraPosition.y, pos.getZ() - cameraPosition.z);
@@ -80,11 +85,9 @@ public class ScreenBlockEntityRender {
 			renderer.render(blockEntity, pt, ms, buffer, worldLight, OverlayTexture.NO_OVERLAY);
 
 		} catch (Exception e) {
-			String message = "BlockEntity " + BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(blockEntity.getType()) + " could not be rendered virtually.";
-			if (FMLEnvironment.production)
-				LOGS.error(message, e);
-			else
-				LOGS.error(message);
+			LOGS.error("BlockEntity {} could not be rendered virtually.",
+				Util.getRegisteredName(BuiltInRegistries.BLOCK_ENTITY_TYPE, blockEntity.getType()),
+				e);
 		}
 
 		ms.popPose();

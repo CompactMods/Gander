@@ -7,8 +7,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import dev.compactmods.gander.level.block.VirtualBlockSystem;
-import dev.compactmods.gander.level.chunk.VirtualChunkSource;
 import dev.compactmods.gander.level.entity.VirtualEntitySystem;
+import dev.compactmods.gander.level.gen.VirtualChunkSource;
 import dev.compactmods.gander.level.util.VirtualLevelUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -55,7 +55,7 @@ import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.LevelTickAccess;
 
-public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
+public class VirtualLevel extends Level implements WorldGenLevel, LevelTicker {
 
 	private final TickRateManager tickManager = new TickRateManager();
 	private final RegistryAccess access;
@@ -169,9 +169,9 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	public void animateTick() {
 		animateBlockTick(new BlockPos(
-				random.nextIntBetweenInclusive(bounds.minX(), bounds.maxX()),
-				random.nextIntBetweenInclusive(bounds.minY(), bounds.maxY()),
-				random.nextIntBetweenInclusive(bounds.minZ(), bounds.maxZ())));
+			random.nextIntBetweenInclusive(bounds.minX(), bounds.maxX()),
+			random.nextIntBetweenInclusive(bounds.minY(), bounds.maxY()),
+			random.nextIntBetweenInclusive(bounds.minZ(), bounds.maxZ())));
 	}
 
 	@Override

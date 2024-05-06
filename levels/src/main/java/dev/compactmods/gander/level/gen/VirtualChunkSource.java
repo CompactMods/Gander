@@ -1,8 +1,9 @@
-package dev.compactmods.gander.level.chunk;
+package dev.compactmods.gander.level.gen;
 
 import java.util.function.BooleanSupplier;
 
 import dev.compactmods.gander.level.VirtualLevel;
+import dev.compactmods.gander.level.chunk.VirtualChunk;
 
 import org.jetbrains.annotations.Nullable;
 

@@ -3,7 +3,8 @@ package dev.compactmods.gander.level;
 /**
  * Defines an interface for a level which can tick.
  */
-public interface TickingLevel
+@FunctionalInterface
+public interface LevelTicker
 {
 	/**
 	 * Ticks the level, performing update operations such as:

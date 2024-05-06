@@ -5,7 +5,7 @@ dependencyResolutionManagement {
 
     versionCatalogs.create("neoforged") {
         version("neogradle", "7.0.119")
-        version("neoforge", "20.6.18-beta")
+        version("neoforge", "20.6.42-beta")
 
         library("neoforge", "net.neoforged", "neoforge")
             .versionRef("neoforge")

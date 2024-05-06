@@ -2,6 +2,7 @@ package dev.compactmods.gander.level.block;
 
 import com.google.common.collect.Collections2;
 
+import dev.compactmods.gander.level.light.VirtualLightEngine;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -103,5 +104,9 @@ public class VirtualBlockAndFluidStorage {
 		return blockEntities.keySet()
 				.longStream()
 				.mapToObj(BlockPos::of);
+	}
+
+	public Stream<BlockEntity> getBlockEntities() {
+		return blockEntities.values().stream();
 	}
 }

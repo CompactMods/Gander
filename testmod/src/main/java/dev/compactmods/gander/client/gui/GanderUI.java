@@ -40,6 +40,7 @@ public class GanderUI extends Screen {
 
 	private Component sceneSource;
 	private ScreenRectangle renderableArea;
+	private Runnable onCloseCallback;
 
 	GanderUI() {
 		super(Component.empty());
@@ -48,6 +49,10 @@ public class GanderUI extends Screen {
 	GanderUI(StructureSceneDataRequest dataRequest) {
 		this();
 		PacketDistributor.sendToServer(dataRequest);
+	}
+
+	public void onClosed(Runnable runnable) {
+		onCloseCallback = runnable;
 	}
 
 	@Override
@@ -108,6 +113,7 @@ public class GanderUI extends Screen {
 	@Override
 	public void tick() {
 		super.tick();
+
 		if (this.scene != null) {
 			// TODO: :)
 			var level = ((VirtualLevel)scene.originalLevel().get());
@@ -207,6 +213,7 @@ public class GanderUI extends Screen {
 	@Override
 	public void removed() {
 		this.disposeSceneRenderers();
+		onCloseCallback.run();
 	}
 
 	public void setSceneSource(Component src) {
