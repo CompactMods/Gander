@@ -1,4 +1,4 @@
-package dev.compactmods.gander.level;
+package dev.compactmods.gander.level.util;
 
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;

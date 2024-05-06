@@ -1,5 +1,9 @@
 package dev.compactmods.gander.level;
 
+import dev.compactmods.gander.level.gen.VirtualChunkSource;
+import dev.compactmods.gander.level.light.VirtualLightEngine;
+import dev.compactmods.gander.level.util.VirtualLevelUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -14,24 +18,30 @@ import net.minecraft.world.TickRateManager;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkSource;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.LevelEntityGetter;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
+import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.levelgen.structure.StructureCheck;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -49,15 +59,16 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
-public class VirtualLevel extends Level implements ServerLevelAccessor {
+public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGenLevel, TickingLevel {
 
 	private final TickRateManager tickManager = new TickRateManager();
 	private final RegistryAccess access;
 	private final VirtualChunkSource chunkSource;
 	private final LevelLightEngine lightEngine;
 	private final VirtualLevelBlocks blocks;
+	private final Scoreboard scoreboard;
+	// private final StructureManager structureManager;
 	private BoundingBox bounds;
 
 	private VirtualLevel(WritableLevelData pLevelData, ResourceKey<Level> pDimension,
@@ -70,13 +81,16 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 		this.chunkSource = new VirtualChunkSource(this);
 		this.lightEngine = new VirtualLightEngine(block -> 15, sky -> 15, this);
 		this.blocks = new VirtualLevelBlocks();
+		this.scoreboard = new Scoreboard();
 		this.bounds = BoundingBox.fromCorners(BlockPos.ZERO, BlockPos.ZERO);
+		// this.structureManager = new StructureManager(this, WorldOptions.DEMO_OPTIONS, StructureCheck);
 	}
 
 	public VirtualLevel(RegistryAccess access) {
-		this(VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
+		this(
+				VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
 				access.registryOrThrow(Registries.DIMENSION_TYPE).getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
-				null, true, false,
+				Minecraft.getInstance()::getProfiler, true, false,
 				0, 0);
 	}
 
@@ -144,6 +158,12 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 		}
 	}
 
+	@Override
+	public void removeBlockEntity(final BlockPos pPos)
+	{
+		this.blocks().removeBlockEntity(pPos);
+	}
+
 	@Nullable
 	@Override
 	public BlockEntity getBlockEntity(BlockPos pPos) {
@@ -155,7 +175,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 
 	@Override
 	public BlockState getBlockState(BlockPos pPos) {
-		if(!bounds.isInside(pPos))
+		if (!bounds.isInside(pPos))
 			return Blocks.AIR.defaultBlockState();
 
 		return blocks.getBlockState(pPos);
@@ -170,11 +190,16 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 	}
 
 	public void animateTick() {
-		// TODO
-//		blocks.keySet()
-//				.stream()
-//				.filter(p -> random.nextIntBetweenInclusive(1, 10) <= 3)
-//				.forEach(this::animateBlockTick);
+		animateBlockTick(new BlockPos(
+			random.nextIntBetweenInclusive(bounds.minX(), bounds.maxX()),
+			random.nextIntBetweenInclusive(bounds.minY(), bounds.maxY()),
+			random.nextIntBetweenInclusive(bounds.minZ(), bounds.maxZ())));
+	}
+
+	@Override
+	public void tick(final float deltaTime)
+	{
+		tickBlockEntities();
 	}
 
 	protected void animateBlockTick(BlockPos pBlockPos) {
@@ -197,6 +222,27 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 	}
 
 	@Override
+	protected void tickBlockEntities()
+	{
+		if (tickRateManager().runsNormally())
+		{
+			blocks().getBlockEntities()
+				.filter(be -> shouldTickBlocksAt(be.getBlockPos()))
+				.forEach(entity -> {
+					var ticker = entity.getBlockState().getTicker(this, entity.getType());
+
+					if (ticker != null)
+						tickBlockEntity(entity, (BlockEntityTicker<BlockEntity>)ticker);
+				});
+		}
+	}
+
+	private <T extends BlockEntity> void tickBlockEntity(T blockEntity, BlockEntityTicker<T> ticker)
+	{
+		ticker.tick(this, blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity);
+	}
+
+	@Override
 	public void levelEvent(Player pPlayer, int pType, BlockPos pPos, int pData) {
 	}
 
@@ -215,7 +261,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 
 	@Override
 	public List<? extends Player> players() {
-		return null;
+		return List.of();
 	}
 
 	@Override
@@ -282,7 +328,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 
 	@Override
 	public Scoreboard getScoreboard() {
-		return null;
+		return scoreboard;
 	}
 
 	@Override
@@ -307,7 +353,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 
 	@Override
 	public FeatureFlagSet enabledFeatures() {
-		return FeatureFlagSet.of();
+		return FeatureFlags.DEFAULT_FLAGS;
 	}
 
 	@Override
@@ -332,5 +378,10 @@ public class VirtualLevel extends Level implements ServerLevelAccessor {
 	@Override
 	public int getBrightness(LightLayer pLightType, BlockPos pBlockPos) {
 		return 15;
+	}
+
+	@Override
+	public long getSeed() {
+		return 0;
 	}
 }

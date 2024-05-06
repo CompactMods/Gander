@@ -47,7 +47,7 @@ runs {
         systemProperty("forge.logging.console.level", "debug")
         if (!System.getenv().containsKey("CI")) {
             // JetBrains Runtime Hotswap
-            jvmArgument("-XX:+AllowEnhancedClassRedefinition")
+            // jvmArgument("-XX:+AllowEnhancedClassRedefinition")
         }
 
         modSource(sourceSets.main.get())

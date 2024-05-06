@@ -1,5 +1,6 @@
 package dev.compactmods.gander.level;
 
+import dev.compactmods.gander.level.light.VirtualLightEngine;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.client.Minecraft;
@@ -21,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
+import java.util.stream.Stream;
 
 public class VirtualLevelBlocks implements BlockAndTintGetter {
 
@@ -32,7 +34,7 @@ public class VirtualLevelBlocks implements BlockAndTintGetter {
 
 	public VirtualLevelBlocks() {
 		this.states = new Long2ObjectOpenHashMap<>();
-		states.defaultReturnValue(Blocks.AIR.defaultBlockState());
+		this.states.defaultReturnValue(Blocks.AIR.defaultBlockState());
 		this.blockEntities = new Long2ObjectOpenHashMap<>();
 
 		this.PLAINS = Minecraft.getInstance().level.registryAccess()
@@ -105,5 +107,9 @@ public class VirtualLevelBlocks implements BlockAndTintGetter {
 			if (o.test(state, BlockPos.of(pos)))
 				consumer.accept(BlockPos.of(pos), state);
 		});
+	}
+
+	public Stream<BlockEntity> getBlockEntities() {
+		return blockEntities.values().stream();
 	}
 }
