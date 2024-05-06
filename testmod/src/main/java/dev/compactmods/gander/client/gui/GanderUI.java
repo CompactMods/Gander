@@ -3,8 +3,8 @@ package dev.compactmods.gander.client.gui;
 import com.mojang.blaze3d.platform.InputConstants;
 
 import dev.compactmods.gander.level.VirtualLevel;
-import dev.compactmods.gander.network.SceneDataRequest;
 import dev.compactmods.gander.client.gui.widget.SpatialRenderer;
+import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.baked.BakedLevel;
 import dev.compactmods.gander.render.baked.LevelBakery;
 import net.minecraft.client.Minecraft;
