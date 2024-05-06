@@ -181,7 +181,7 @@ public class SpatialRenderer extends AbstractWidget {
 			UGH(renderTarget);
 
 			RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
-			renderCompass(graphics, partialTicks, poseStack);
+			//renderCompass(graphics, partialTicks, poseStack);
 
 			poseStack2.popMatrix();
 			RenderSystem.applyModelViewMatrix();

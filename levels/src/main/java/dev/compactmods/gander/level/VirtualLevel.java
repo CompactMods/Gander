@@ -1,5 +1,9 @@
 package dev.compactmods.gander.level;
 
+import dev.compactmods.gander.level.gen.VirtualChunkSource;
+import dev.compactmods.gander.level.light.VirtualLightEngine;
+import dev.compactmods.gander.level.util.VirtualLevelUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -27,9 +31,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkSource;
-import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.LevelEntityGetter;
@@ -55,9 +59,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
-public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGenLevel {
+public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGenLevel, TickingLevel {
 
 	private final TickRateManager tickManager = new TickRateManager();
 	private final RegistryAccess access;
@@ -84,9 +87,10 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 	}
 
 	public VirtualLevel(RegistryAccess access) {
-		this(VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
+		this(
+				VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
 				access.registryOrThrow(Registries.DIMENSION_TYPE).getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
-				null, true, false,
+				Minecraft.getInstance()::getProfiler, true, false,
 				0, 0);
 	}
 
@@ -154,6 +158,12 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 		}
 	}
 
+	@Override
+	public void removeBlockEntity(final BlockPos pPos)
+	{
+		this.blocks().removeBlockEntity(pPos);
+	}
+
 	@Nullable
 	@Override
 	public BlockEntity getBlockEntity(BlockPos pPos) {
@@ -165,7 +175,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 
 	@Override
 	public BlockState getBlockState(BlockPos pPos) {
-		if(!bounds.isInside(pPos))
+		if (!bounds.isInside(pPos))
 			return Blocks.AIR.defaultBlockState();
 
 		return blocks.getBlockState(pPos);
@@ -181,10 +191,15 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 
 	public void animateTick() {
 		// TODO
-//		blocks.keySet()
-//				.stream()
-//				.filter(p -> random.nextIntBetweenInclusive(1, 10) <= 3)
-//				.forEach(this::animateBlockTick);
+		BlockPos.betweenClosedStream(bounds)
+			.filter(p -> random.nextIntBetweenInclusive(1, 10) <= 3)
+			.forEach(this::animateBlockTick);
+	}
+
+	@Override
+	public void tick(final float deltaTime)
+	{
+		tickBlockEntities();
 	}
 
 	protected void animateBlockTick(BlockPos pBlockPos) {
@@ -207,6 +222,31 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 	}
 
 	@Override
+	protected void tickBlockEntities()
+	{
+		if (tickRateManager().runsNormally())
+		{
+			BlockPos.betweenClosedStream(bounds)
+				.filter(this::shouldTickBlocksAt)
+				.forEach(pos -> {
+					var entity = getBlockEntity(pos);
+					if (entity == null) return;
+
+					var state = getBlockState(pos);
+					var ticker = state.getTicker(this, entity.getType());
+
+					if (ticker != null)
+						tickBlockEntity(entity, (BlockEntityTicker<BlockEntity>)ticker);
+				});
+		}
+	}
+
+	private <T extends BlockEntity> void tickBlockEntity(T blockEntity, BlockEntityTicker<T> ticker)
+	{
+		ticker.tick(this, blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity);
+	}
+
+	@Override
 	public void levelEvent(Player pPlayer, int pType, BlockPos pPos, int pData) {
 	}
 
@@ -225,7 +265,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 
 	@Override
 	public List<? extends Player> players() {
-		return null;
+		return List.of();
 	}
 
 	@Override

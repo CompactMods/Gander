@@ -1,4 +1,4 @@
-package dev.compactmods.gander.level;
+package dev.compactmods.gander.level.chunk;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
