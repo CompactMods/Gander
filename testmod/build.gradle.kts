@@ -61,6 +61,17 @@ runs {
         programArguments("--height", "1080")
     }
 
+    create("clientAuthed") {
+        this.configure("client")
+        this.workingDirectory(file("runs/client"))
+        programArguments("--width", "1920")
+        programArguments("--height", "1080")
+
+        // https://github.com/covers1624/DevLogin/wiki/NeoGradle
+        mainClass.set("net.covers1624.devlogin.DevLogin")
+        programArguments("--launch_target", "cpw.mods.bootstraplauncher.BootstrapLauncher")
+    }
+
     create("remoteClient") {
         this.configure("client")
         this.workingDirectory(file("runs/client"))
@@ -93,6 +104,11 @@ repositories {
         // location of a maven mirror for JEI files, as a fallback
         name = "ModMaven"
     }
+
+    maven("https://maven.covers1624.net") {
+        // location for DevLogin
+        name = "Covers's Maven"
+    }
 }
 
 dependencies {
@@ -101,6 +117,10 @@ dependencies {
 
     implementation(project(":levels", "default"))
     implementation(project(":rendering", "default"))
+
+    // DevLogin for fully authed clients in dev
+    // https://github.com/covers1624/DevLogin
+    runtimeOnly(libraries.devlogin)
 
     // Mods
     //mod(mods.bundles.jei)

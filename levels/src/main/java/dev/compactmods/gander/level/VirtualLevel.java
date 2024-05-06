@@ -27,6 +27,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
@@ -70,6 +71,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 	private final Scoreboard scoreboard;
 	// private final StructureManager structureManager;
 	private BoundingBox bounds;
+	private final Holder<Biome> biome;
 
 	private VirtualLevel(WritableLevelData pLevelData, ResourceKey<Level> pDimension,
 						 RegistryAccess pRegistryAccess, Holder<DimensionType> pDimensionTypeRegistration,
@@ -80,18 +82,24 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 		this.access = pRegistryAccess;
 		this.chunkSource = new VirtualChunkSource(this);
 		this.lightEngine = new VirtualLightEngine(block -> 15, sky -> 15, this);
-		this.blocks = new VirtualLevelBlocks();
+		this.blocks = new VirtualLevelBlocks(this::getBiome);
 		this.scoreboard = new Scoreboard();
 		this.bounds = BoundingBox.fromCorners(BlockPos.ZERO, BlockPos.ZERO);
 		// this.structureManager = new StructureManager(this, WorldOptions.DEMO_OPTIONS, StructureCheck);
+
+		biome = pRegistryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
 	}
 
 	public VirtualLevel(RegistryAccess access) {
 		this(
 				VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
 				access.registryOrThrow(Registries.DIMENSION_TYPE).getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
-				Minecraft.getInstance()::getProfiler, true, false,
+				VirtualLevelUtils.PROFILER, true, false,
 				0, 0);
+	}
+
+	public Holder<Biome> getBiome() {
+		return biome;
 	}
 
 	@Override
@@ -266,7 +274,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 
 	@Override
 	public Holder<Biome> getUncachedNoiseBiome(int pX, int pY, int pZ) {
-		return null;
+		return biome;
 	}
 
 	@Override

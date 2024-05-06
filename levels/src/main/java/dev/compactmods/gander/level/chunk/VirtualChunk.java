@@ -48,7 +48,7 @@ public class VirtualChunk extends EmptyLevelChunk {
 	private boolean needsLight;
 
 	public VirtualChunk(VirtualLevel world, int x, int z) {
-		super(world, new ChunkPos(x, z), VirtualLevelUtils.PLAINS.get());
+		super(world, new ChunkPos(x, z), world.getBiome());
 
 		this.virtualLevel = world;
 

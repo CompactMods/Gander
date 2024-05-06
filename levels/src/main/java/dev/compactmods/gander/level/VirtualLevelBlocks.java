@@ -3,9 +3,14 @@ package dev.compactmods.gander.level;
 import dev.compactmods.gander.level.light.VirtualLightEngine;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+
+import java.util.function.Supplier;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.ColorResolver;
@@ -30,16 +35,13 @@ public class VirtualLevelBlocks implements BlockAndTintGetter {
 	private final Long2ObjectMap<BlockEntity> blockEntities;
 
 	private final VirtualLightEngine lightEngine = new VirtualLightEngine(pos -> 0, pos -> 15, this);
-	private final Biome PLAINS;
+	private final Supplier<Holder<Biome>> biomeGetter;
 
-	public VirtualLevelBlocks() {
+	public VirtualLevelBlocks(Supplier<Holder<Biome>> biomeGetter) {
 		this.states = new Long2ObjectOpenHashMap<>();
 		this.states.defaultReturnValue(Blocks.AIR.defaultBlockState());
 		this.blockEntities = new Long2ObjectOpenHashMap<>();
-
-		this.PLAINS = Minecraft.getInstance().level.registryAccess()
-				.registryOrThrow(Registries.BIOME)
-				.get(Biomes.PLAINS);
+		this.biomeGetter = biomeGetter;
 	}
 
 	public BlockState setBlockState(BlockPos pos, @NotNull BlockState state) {
@@ -68,7 +70,7 @@ public class VirtualLevelBlocks implements BlockAndTintGetter {
 
 	@Override
 	public int getBlockTint(BlockPos pos, ColorResolver colors) {
-		return colors.getColor(PLAINS, pos.getX(), pos.getZ());
+		return colors.getColor(biomeGetter.get().value(), pos.getX(), pos.getZ());
 	}
 
 	@Nullable

@@ -28,13 +28,7 @@ public record OpenGanderUiForDeferredStructureRequest(ResourceLocation structure
 	}
 
 	public static final IPayloadHandler<OpenGanderUiForDeferredStructureRequest> HANDLER = (pkt, ctx) -> {
-		ctx.enqueueWork(() -> {
-			if (FMLEnvironment.dist.isClient())
-				handleOnClient(pkt.structureId);
-		});
+		if(FMLEnvironment.dist.isClient())
+			ctx.enqueueWork(() -> ScreenOpener.forStructure(pkt.structureId));
 	};
-
-	private static void handleOnClient(ResourceLocation scene) {
-		ScreenOpener.open(GanderUI.forStructure(scene));
-	}
 }

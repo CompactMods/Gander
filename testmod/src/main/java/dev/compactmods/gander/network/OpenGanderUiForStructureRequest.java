@@ -12,6 +12,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
 public record OpenGanderUiForStructureRequest(Component sceneSource, StructureTemplate data) implements CustomPacketPayload
@@ -36,9 +38,8 @@ public record OpenGanderUiForStructureRequest(Component sceneSource, StructureTe
 	);
 
 	public static final IPayloadHandler<OpenGanderUiForStructureRequest> HANDLER = (pkt, ctx) -> {
-		ctx.enqueueWork(() -> {
-			ScreenOpener.open(() -> GanderUI.forStructureData(pkt.sceneSource, pkt.data));
-		});
+		if(FMLEnvironment.dist.isClient())
+			ctx.enqueueWork(() -> ScreenOpener.forStructureData(pkt.sceneSource, pkt.data));
 	};
 
 	@Override
