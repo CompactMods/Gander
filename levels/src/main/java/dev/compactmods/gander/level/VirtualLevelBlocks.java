@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
+import java.util.stream.Stream;
 
 public class VirtualLevelBlocks implements BlockAndTintGetter {
 
@@ -106,5 +107,9 @@ public class VirtualLevelBlocks implements BlockAndTintGetter {
 			if (o.test(state, BlockPos.of(pos)))
 				consumer.accept(BlockPos.of(pos), state);
 		});
+	}
+
+	public Stream<BlockEntity> getBlockEntities() {
+		return blockEntities.values().stream();
 	}
 }

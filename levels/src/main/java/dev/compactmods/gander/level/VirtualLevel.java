@@ -190,10 +190,10 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 	}
 
 	public void animateTick() {
-		// TODO
-		BlockPos.betweenClosedStream(bounds)
-			.filter(p -> random.nextIntBetweenInclusive(1, 10) <= 3)
-			.forEach(this::animateBlockTick);
+		animateBlockTick(new BlockPos(
+			random.nextIntBetweenInclusive(bounds.minX(), bounds.maxX()),
+			random.nextIntBetweenInclusive(bounds.minY(), bounds.maxY()),
+			random.nextIntBetweenInclusive(bounds.minZ(), bounds.maxZ())));
 	}
 
 	@Override
@@ -226,14 +226,10 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 	{
 		if (tickRateManager().runsNormally())
 		{
-			BlockPos.betweenClosedStream(bounds)
-				.filter(this::shouldTickBlocksAt)
-				.forEach(pos -> {
-					var entity = getBlockEntity(pos);
-					if (entity == null) return;
-
-					var state = getBlockState(pos);
-					var ticker = state.getTicker(this, entity.getType());
+			blocks().getBlockEntities()
+				.filter(be -> shouldTickBlocksAt(be.getBlockPos()))
+				.forEach(entity -> {
+					var ticker = entity.getBlockState().getTicker(this, entity.getType());
 
 					if (ticker != null)
 						tickBlockEntity(entity, (BlockEntityTicker<BlockEntity>)ticker);
