@@ -113,7 +113,7 @@ repositories {
 
 dependencies {
     // Core Projects and Libraries
-    minecraft(neoforged.neoforge)
+    implementation(neoforged.neoforge)
 
     implementation(project(":levels", "default"))
     implementation(project(":rendering", "default"))

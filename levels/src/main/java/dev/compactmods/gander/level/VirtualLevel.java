@@ -1,9 +1,14 @@
 package dev.compactmods.gander.level;
 
+import java.util.List;
+import java.util.function.Supplier;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import dev.compactmods.gander.level.gen.VirtualChunkSource;
 import dev.compactmods.gander.level.light.VirtualLightEngine;
 import dev.compactmods.gander.level.util.VirtualLevelUtils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -24,7 +29,6 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.Biomes;
@@ -39,10 +43,7 @@ import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.LevelEntityGetter;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.level.levelgen.WorldGenSettings;
-import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
-import net.minecraft.world.level.levelgen.structure.StructureCheck;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -54,12 +55,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.LevelTickAccess;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
-import java.util.function.Supplier;
 
 public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGenLevel, TickingLevel {
 
@@ -94,7 +89,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 		this(
 				VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
 				access.registryOrThrow(Registries.DIMENSION_TYPE).getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
-				VirtualLevelUtils.PROFILER, true, false,
+				VirtualLevelUtils.PROFILER, true, true,
 				0, 0);
 	}
 
@@ -361,7 +356,12 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 
 	@Override
 	public FeatureFlagSet enabledFeatures() {
-		return FeatureFlags.DEFAULT_FLAGS;
+		return FeatureFlagSet.of(
+				FeatureFlags.VANILLA,
+				FeatureFlags.UPDATE_1_21,
+				FeatureFlags.TRADE_REBALANCE,
+				FeatureFlags.BUNDLE
+		);
 	}
 
 	@Override
@@ -391,5 +391,10 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 	@Override
 	public long getSeed() {
 		return 0;
+	}
+
+	@Override
+	public void blockUpdated(BlockPos pPos, Block pBlock) {
+		super.blockUpdated(pPos, pBlock);
 	}
 }

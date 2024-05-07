@@ -1,6 +1,8 @@
 package dev.compactmods.gander.core;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.concurrent.CompletableFuture;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.Command;
@@ -11,11 +13,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import dev.compactmods.gander.level.VirtualChunkGenerator;
 import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.OpenGanderUiForDeferredStructureRequest;
-
 import dev.compactmods.gander.network.OpenGanderUiForStructureRequest;
-
-import java.util.concurrent.CompletableFuture;
-
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -26,6 +24,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.SectionPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -35,7 +34,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.FixedBiomeSource;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.levelgen.DebugLevelSource;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.WorldOptions;
@@ -73,8 +75,16 @@ public class GanderCommand {
 						)
 				);
 
+		var debug = Commands.literal("debug")
+				.executes(ctx -> generateDebug(ctx, ctx.getSource().getPlayerOrException()))
+				.then(Commands.argument("targets", EntityArgument.players())
+						.requires(cs -> cs.hasPermission(2))
+						.executes(ctx -> generateDebug(ctx, EntityArgument.getPlayers(ctx, "targets")))
+				);
+
 		root.then(scene);
 		root.then(structure);
+		root.then(debug);
 		return root;
 	}
 
@@ -184,6 +194,43 @@ public class GanderCommand {
 			PacketDistributor.sendToPlayer(player, new OpenGanderUiForStructureRequest(Component.literal("Generated: " + key.key().location()), finalStructure));
 		}
 
+		return Command.SINGLE_SUCCESS;
+	}
+
+	private static int generateDebug(CommandContext<CommandSourceStack> ctx, ServerPlayer player) {
+		return generateDebug(ctx, Collections.singleton(player));
+	}
+
+	private static int generateDebug(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> players) {
+		var source = ctx.getSource();
+		var registryAccess = source.registryAccess();
+		var level = new VirtualLevel(registryAccess);
+
+		var blocks = registryAccess.registryOrThrow(Registries.BLOCK);
+		var blockStates = blocks.stream().map(Block::getStateDefinition).map(StateDefinition::getPossibleStates).flatMap(Collection::stream).toList();
+		var stateCount = blockStates.size();
+		var xCount = Math.ceil(Math.sqrt(stateCount));
+		var zCount = Math.ceil(stateCount / xCount);
+		var xChunks = xCount / 16;
+		var zChunks = zCount / 16;
+
+		var generator = new DebugLevelSource(registryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.THE_VOID));
+		var maxBounds = new Vec3i((int) xCount, 1, (int) zCount);
+		level.setBounds(BoundingBox.fromCorners(Vec3i.ZERO, maxBounds));
+
+		for(var chunkX = 0; chunkX < xChunks; chunkX++) {
+			for(var chunkZ = 0; chunkZ < zChunks; chunkZ++) {
+				var chunk = level.getChunk(chunkX, chunkZ);
+				generator.applyBiomeDecoration(level, chunk, null);
+			}
+		}
+
+		var structure = new StructureTemplate();
+		structure.fillFromWorld(source.getLevel(), new BlockPos(0, 70, 0), new Vec3i(323, 3, 327), false, Blocks.AIR);
+
+		var payload = new OpenGanderUiForStructureRequest(Component.literal("Generated: minecraft:debug"), structure);
+
+		players.forEach(player -> PacketDistributor.sendToPlayer(player, payload));
 		return Command.SINGLE_SUCCESS;
 	}
 }
