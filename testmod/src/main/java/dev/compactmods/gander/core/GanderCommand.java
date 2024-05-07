@@ -34,9 +34,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.FixedBiomeSource;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.levelgen.DebugLevelSource;
 import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.RandomState;
@@ -206,30 +204,28 @@ public class GanderCommand {
 		var registryAccess = source.registryAccess();
 		var level = new VirtualLevel(registryAccess);
 
-		var blocks = registryAccess.registryOrThrow(Registries.BLOCK);
-		var blockStates = blocks.stream().map(Block::getStateDefinition).map(StateDefinition::getPossibleStates).flatMap(Collection::stream).toList();
-		var stateCount = blockStates.size();
-		var xCount = Math.ceil(Math.sqrt(stateCount));
-		var zCount = Math.ceil(stateCount / xCount);
-		var xChunks = xCount / 16;
-		var zChunks = zCount / 16;
+		var maxX = 323;
+		var maxZ = 327;
 
+		// DebugLevelSource.initValidStates();
+		var bounds = new BoundingBox(0, 60, 0, maxX, 70, maxZ);
+		level.setBounds(bounds);
 		var generator = new DebugLevelSource(registryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.THE_VOID));
-		var maxBounds = new Vec3i((int) xCount, 1, (int) zCount);
-		level.setBounds(BoundingBox.fromCorners(Vec3i.ZERO, maxBounds));
 
-		for(var chunkX = 0; chunkX < xChunks; chunkX++) {
-			for(var chunkZ = 0; chunkZ < zChunks; chunkZ++) {
-				var chunk = level.getChunk(chunkX, chunkZ);
+		var maxChunkX = maxX / 16;
+		var maxChunkZ = maxZ / 16;
+
+		for(var x = 0; x < maxChunkX; x++) {
+			for(var z = 0; z < maxChunkZ; z++) {
+				var chunk = level.getChunk(x, z);
 				generator.applyBiomeDecoration(level, chunk, null);
 			}
 		}
 
 		var structure = new StructureTemplate();
-		structure.fillFromWorld(source.getLevel(), new BlockPos(0, 70, 0), new Vec3i(323, 3, 327), false, Blocks.AIR);
+		structure.fillFromWorld(level, new BlockPos(0, 60, 0), new Vec3i(maxX, 70, maxZ), false, Blocks.AIR);
 
 		var payload = new OpenGanderUiForStructureRequest(Component.literal("Generated: minecraft:debug"), structure);
-
 		players.forEach(player -> PacketDistributor.sendToPlayer(player, payload));
 		return Command.SINGLE_SUCCESS;
 	}

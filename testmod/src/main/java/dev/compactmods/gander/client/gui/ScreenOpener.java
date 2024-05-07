@@ -48,6 +48,8 @@ public class ScreenOpener {
 			var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess());
 			var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
 			virtualLevel.setBounds(bounds);
+			// /'/gander debug' wants offsetting by 25 blocks be centered correctly
+			// StructureTemplateUtils.place(data, virtualLevel, new BlockPos(0, 25, 0), Block.UPDATE_CLIENTS);
 			StructureTemplateUtils.place(data, virtualLevel, BlockPos.ZERO, Block.UPDATE_CLIENTS);
 
 			var bakedLevel = LevelBakery.bakeVertices(virtualLevel, bounds, new Vector3f());
