@@ -1,12 +1,12 @@
 package dev.compactmods.gander.level.base;
 
+import org.jetbrains.annotations.Nullable;
+
 import dev.compactmods.gander.level.block.VirtualBlockAndFluidStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.LevelWriter;
 import net.minecraft.world.level.block.state.BlockState;
-
-import org.jetbrains.annotations.Nullable;
 
 public class VirtualLevelWriter implements LevelWriter {
 
@@ -18,7 +18,8 @@ public class VirtualLevelWriter implements LevelWriter {
 
 	@Override
 	public boolean setBlock(BlockPos pPos, BlockState pState, int pFlags, int pRecursionLeft) {
-		return storage.setBlockState();
+		storage.setBlockState(pPos, pState);
+		return true;
 	}
 
 	@Override

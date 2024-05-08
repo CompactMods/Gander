@@ -1,8 +1,13 @@
 package dev.compactmods.gander.level;
 
+import java.util.List;
+import java.util.function.Supplier;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import dev.compactmods.gander.level.block.VirtualBlockSystem;
 import dev.compactmods.gander.level.chunk.VirtualChunkSource;
-import dev.compactmods.gander.level.entity.VirtualEntityGetter;
 import dev.compactmods.gander.level.entity.VirtualEntitySystem;
 import dev.compactmods.gander.level.util.VirtualLevelUtils;
 import net.minecraft.client.Minecraft;
@@ -25,12 +30,10 @@ import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.state.BlockState;
@@ -51,12 +54,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.LevelTickAccess;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.List;
-import java.util.function.Supplier;
 
 public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
@@ -84,7 +81,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 				pBiomeZoomSeed, pMaxChainedNeighborUpdates);
 		this.access = pRegistryAccess;
 		this.chunkSource = new VirtualChunkSource(this);
-		this.blocks = new VirtualBlockSystem();
+		this.blocks = new VirtualBlockSystem(this);
 		this.scoreboard = new Scoreboard();
 		this.bounds = BoundingBox.fromCorners(BlockPos.ZERO, BlockPos.ZERO);
 		this.entities = new VirtualEntitySystem();

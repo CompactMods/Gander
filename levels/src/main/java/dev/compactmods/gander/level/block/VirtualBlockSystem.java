@@ -1,9 +1,10 @@
 package dev.compactmods.gander.level.block;
 
-import dev.compactmods.gander.level.light.VirtualLightEngine;
-import net.minecraft.world.level.lighting.LevelLightEngine;
-
 import org.jetbrains.annotations.Nullable;
+
+import dev.compactmods.gander.level.light.VirtualLightEngine;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.lighting.LevelLightEngine;
 
 public class VirtualBlockSystem {
 
@@ -14,9 +15,9 @@ public class VirtualBlockSystem {
 	private @Nullable VirtualBlockAndTintGetter blockAndTintGetter;
 	private @Nullable VirtualLightEngine lightEngine;
 
-	public VirtualBlockSystem() {
+	public VirtualBlockSystem(Level owningLevel) {
 		this.heightAccessor = new VirtualLevelHeightAccessor();
-		this.blockAndFluidStorage = new VirtualBlockAndFluidStorage();
+		this.blockAndFluidStorage = new VirtualBlockAndFluidStorage(owningLevel);
 	}
 
 	public VirtualLevelHeightAccessor heightAccessor() {
