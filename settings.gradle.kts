@@ -22,6 +22,10 @@ dependencyResolutionManagement {
 
         this.library("jade", "curse.maven", "jade-324717").version("5109393")
     }
+
+    versionCatalogs.create("libraries") {
+        this.library("devlogin", "net.covers1624", "DevLogin").version("0.1.+")
+    }
 }
 
 pluginManagement {

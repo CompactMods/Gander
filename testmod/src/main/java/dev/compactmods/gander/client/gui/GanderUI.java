@@ -41,40 +41,13 @@ public class GanderUI extends Screen {
 	private Component sceneSource;
 	private ScreenRectangle renderableArea;
 
-	private GanderUI() {
+	GanderUI() {
 		super(Component.empty());
 	}
 
-	private GanderUI(StructureSceneDataRequest dataRequest) {
+	GanderUI(StructureSceneDataRequest dataRequest) {
 		this();
 		PacketDistributor.sendToServer(dataRequest);
-	}
-
-	public static GanderUI empty() {
-		return new GanderUI();
-	}
-
-	public static GanderUI forStructure(ResourceLocation sceneID) {
-		return new GanderUI(new StructureSceneDataRequest(sceneID));
-	}
-
-	public static GanderUI forStructureData(Component source, StructureTemplate data) {
-		final var mc = Minecraft.getInstance();
-
-		final var ui = new GanderUI();
-
-		mc.tell(() -> {
-			var virtualLevel = new VirtualLevel(mc.level.registryAccess());
-			var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
-			virtualLevel.setBounds(bounds);
-			data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings(), RandomSource.create(), Block.UPDATE_CLIENTS);
-
-			var bakedLevel = LevelBakery.bakeVertices(virtualLevel, bounds, new Vector3f());
-			ui.setSceneSource(source);
-			ui.setScene(bakedLevel);
-		});
-
-		return ui;
 	}
 
 	@Override

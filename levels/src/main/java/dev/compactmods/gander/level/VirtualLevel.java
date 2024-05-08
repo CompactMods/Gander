@@ -32,6 +32,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -64,6 +65,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	private final Scoreboard scoreboard;
 	private BoundingBox bounds;
 	private VirtualEntitySystem entities;
+	private final Holder<Biome> biome;
 
 	public VirtualLevel(RegistryAccess access) {
 		this(
@@ -85,6 +87,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		this.scoreboard = new Scoreboard();
 		this.bounds = BoundingBox.fromCorners(BlockPos.ZERO, BlockPos.ZERO);
 		this.entities = new VirtualEntitySystem();
+		this.biome = pRegistryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
 	}
 
 	@Override
@@ -237,7 +240,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	@Override
 	public Holder<Biome> getUncachedNoiseBiome(int pX, int pY, int pZ) {
-		return null;
+		return biome;
 	}
 
 	@Override
