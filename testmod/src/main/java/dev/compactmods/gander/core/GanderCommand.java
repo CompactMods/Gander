@@ -8,7 +8,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
-import dev.compactmods.gander.level.VirtualChunkGenerator;
+import dev.compactmods.gander.level.chunk.VirtualChunkGenerator;
 import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.OpenGanderUiForDeferredStructureRequest;
 

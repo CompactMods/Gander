@@ -1,7 +1,9 @@
 package dev.compactmods.gander.level;
 
-import dev.compactmods.gander.level.gen.VirtualChunkSource;
-import dev.compactmods.gander.level.light.VirtualLightEngine;
+import dev.compactmods.gander.level.block.VirtualBlockSystem;
+import dev.compactmods.gander.level.chunk.VirtualChunkSource;
+import dev.compactmods.gander.level.entity.VirtualEntityGetter;
+import dev.compactmods.gander.level.entity.VirtualEntitySystem;
 import dev.compactmods.gander.level.util.VirtualLevelUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -24,7 +26,6 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.Block;
@@ -38,10 +39,7 @@ import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.LevelEntityGetter;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.level.levelgen.WorldGenSettings;
-import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
-import net.minecraft.world.level.levelgen.structure.StructureCheck;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -60,31 +58,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGenLevel, TickingLevel {
+public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	private final TickRateManager tickManager = new TickRateManager();
 	private final RegistryAccess access;
 	private final VirtualChunkSource chunkSource;
-	private final LevelLightEngine lightEngine;
-	private final VirtualLevelBlocks blocks;
+	private final VirtualBlockSystem blocks;
 	private final Scoreboard scoreboard;
-	// private final StructureManager structureManager;
 	private BoundingBox bounds;
-
-	private VirtualLevel(WritableLevelData pLevelData, ResourceKey<Level> pDimension,
-						 RegistryAccess pRegistryAccess, Holder<DimensionType> pDimensionTypeRegistration,
-						 Supplier<ProfilerFiller> pProfiler, boolean pIsClientSide, boolean pIsDebug, long pBiomeZoomSeed,
-						 int pMaxChainedNeighborUpdates) {
-		super(pLevelData, pDimension, pRegistryAccess, pDimensionTypeRegistration, pProfiler, pIsClientSide, pIsDebug,
-				pBiomeZoomSeed, pMaxChainedNeighborUpdates);
-		this.access = pRegistryAccess;
-		this.chunkSource = new VirtualChunkSource(this);
-		this.lightEngine = new VirtualLightEngine(block -> 15, sky -> 15, this);
-		this.blocks = new VirtualLevelBlocks();
-		this.scoreboard = new Scoreboard();
-		this.bounds = BoundingBox.fromCorners(BlockPos.ZERO, BlockPos.ZERO);
-		// this.structureManager = new StructureManager(this, WorldOptions.DEMO_OPTIONS, StructureCheck);
-	}
+	private VirtualEntitySystem entities;
 
 	public VirtualLevel(RegistryAccess access) {
 		this(
@@ -94,16 +76,28 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 				0, 0);
 	}
 
+	private VirtualLevel(WritableLevelData pLevelData, ResourceKey<Level> pDimension,
+						 RegistryAccess pRegistryAccess, Holder<DimensionType> pDimensionTypeRegistration,
+						 Supplier<ProfilerFiller> pProfiler, boolean pIsClientSide, boolean pIsDebug, long pBiomeZoomSeed,
+						 int pMaxChainedNeighborUpdates) {
+		super(pLevelData, pDimension, pRegistryAccess, pDimensionTypeRegistration, pProfiler, pIsClientSide, pIsDebug,
+				pBiomeZoomSeed, pMaxChainedNeighborUpdates);
+		this.access = pRegistryAccess;
+		this.chunkSource = new VirtualChunkSource(this);
+		this.blocks = new VirtualBlockSystem();
+		this.scoreboard = new Scoreboard();
+		this.bounds = BoundingBox.fromCorners(BlockPos.ZERO, BlockPos.ZERO);
+		this.entities = new VirtualEntitySystem();
+	}
+
 	@Override
-	public PotionBrewing potionBrewing()
-	{
+	public PotionBrewing potionBrewing() {
 		// Minecraft, why?
 		return PotionBrewing.EMPTY;
 	}
 
 	@Override
-	public MapId getFreeMapId()
-	{
+	public MapId getFreeMapId() {
 		return new MapId(0);
 	}
 
@@ -112,7 +106,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 		return chunkSource;
 	}
 
-	VirtualLevelBlocks blocks() {
+	VirtualBlockSystem blockSystem() {
 		return this.blocks;
 	}
 
@@ -125,19 +119,9 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 	public boolean setBlock(BlockPos pos, BlockState state, int pFlags, int pRecursionLeft) {
 		if (this.isOutsideBuildHeight(pos)) {
 			return false;
-		} else {
-			blocks.setBlockState(pos, state);
-			if(state.hasBlockEntity()) {
-				var be = ((EntityBlock) state.getBlock()).newBlockEntity(pos, state);
-				if(be != null) {
-					blocks.setBlockEntity(pos, be);
-					setBlockEntity(be);
-					be.setLevel(this);
-				}
-			}
-
-			return true;
 		}
+
+		return blocks.blockAndFluidStorage().setBlock(pos, state, pFlags, pRecursionLeft);
 	}
 
 	@Override
@@ -147,30 +131,21 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 
 	@Override
 	public void setBlockEntity(BlockEntity blockEntity) {
-		BlockPos blockpos = blockEntity.getBlockPos();
-		if (this.getBlockState(blockpos).hasBlockEntity()) {
-			blockEntity.setLevel(this);
-			blockEntity.clearRemoved();
-			BlockEntity blockentity = blocks.setBlockEntity(blockpos.immutable(), blockEntity);
-			if (blockentity != null && blockentity != blockEntity) {
-				blockentity.setRemoved();
-			}
-		}
+		blocks.blockAndFluidStorage().setBlockEntity(blockEntity);
 	}
 
 	@Override
-	public void removeBlockEntity(final BlockPos pPos)
-	{
-		this.blocks().removeBlockEntity(pPos);
+	public void removeBlockEntity(final BlockPos pPos) {
+		blocks.blockAndFluidStorage().removeBlockEntity(pPos);
 	}
 
 	@Nullable
 	@Override
 	public BlockEntity getBlockEntity(BlockPos pPos) {
-		if(!bounds.isInside(pPos))
+		if (!bounds.isInside(pPos))
 			return null;
 
-		return blocks.getBlockEntity(pPos);
+		return blocks.blockAndFluidStorage().getBlockEntity(pPos);
 	}
 
 	@Override
@@ -178,27 +153,26 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 		if (!bounds.isInside(pPos))
 			return Blocks.AIR.defaultBlockState();
 
-		return blocks.getBlockState(pPos);
+		return blocks.blockAndFluidStorage().getBlockState(pPos);
 	}
 
 	@Override
 	public @NotNull FluidState getFluidState(BlockPos pos) {
-		if(!bounds.isInside(pos))
+		if (!bounds.isInside(pos))
 			return Fluids.EMPTY.defaultFluidState();
 
-		return blocks.getFluidState(pos);
+		return blocks.blockAndFluidStorage().getFluidState(pos);
 	}
 
 	public void animateTick() {
 		animateBlockTick(new BlockPos(
-			random.nextIntBetweenInclusive(bounds.minX(), bounds.maxX()),
-			random.nextIntBetweenInclusive(bounds.minY(), bounds.maxY()),
-			random.nextIntBetweenInclusive(bounds.minZ(), bounds.maxZ())));
+				random.nextIntBetweenInclusive(bounds.minX(), bounds.maxX()),
+				random.nextIntBetweenInclusive(bounds.minY(), bounds.maxY()),
+				random.nextIntBetweenInclusive(bounds.minZ(), bounds.maxZ())));
 	}
 
 	@Override
-	public void tick(final float deltaTime)
-	{
+	public void tick(final float deltaTime) {
 		tickBlockEntities();
 	}
 
@@ -222,23 +196,23 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 	}
 
 	@Override
-	protected void tickBlockEntities()
-	{
-		if (tickRateManager().runsNormally())
-		{
-			blocks().getBlockEntities()
-				.filter(be -> shouldTickBlocksAt(be.getBlockPos()))
-				.forEach(entity -> {
-					var ticker = entity.getBlockState().getTicker(this, entity.getType());
+	protected void tickBlockEntities() {
+		if (tickRateManager().runsNormally()) {
+			blocks.blockAndFluidStorage().streamBlockEntities()
+					.filter(this::shouldTickBlocksAt)
+					.forEach(entityPos -> {
+						var blockEntity = blocks.blockAndFluidStorage().getBlockEntity(entityPos);
+						if (blockEntity != null) {
+							var ticker = blocks.blockAndFluidStorage().getBlockState(entityPos).getTicker(this, blockEntity.getType());
 
-					if (ticker != null)
-						tickBlockEntity(entity, (BlockEntityTicker<BlockEntity>)ticker);
-				});
+							if (ticker != null)
+								tickBlockEntity(blockEntity, (BlockEntityTicker<BlockEntity>) ticker);
+						}
+					});
 		}
 	}
 
-	private <T extends BlockEntity> void tickBlockEntity(T blockEntity, BlockEntityTicker<T> ticker)
-	{
+	private <T extends BlockEntity> void tickBlockEntity(T blockEntity, BlockEntityTicker<T> ticker) {
 		ticker.tick(this, blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity);
 	}
 
@@ -251,7 +225,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 	}
 
 	@Override
-	public void gameEvent(Holder<GameEvent> p_220404_, Vec3 p_220405_, GameEvent.Context p_220406_) {
+	public void gameEvent(Holder<GameEvent> evt, Vec3 origin, GameEvent.Context ctx) {
 	}
 
 	@Override
@@ -305,7 +279,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 
 	@Override
 	public Entity getEntity(int pId) {
-		return null;
+		return entities.getEntity(pId);
 	}
 
 	@Override
@@ -363,6 +337,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 
 	@Override
 	public ServerLevel getLevel() {
+		// TODO
 		return null;
 	}
 
@@ -372,7 +347,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 
 	@Override
 	public @NotNull LevelLightEngine getLightEngine() {
-		return lightEngine;
+		return blocks.lightEngine();
 	}
 
 	@Override

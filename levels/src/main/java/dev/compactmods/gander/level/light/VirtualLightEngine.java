@@ -11,15 +11,18 @@ import net.minecraft.world.level.chunk.LightChunkGetter;
 import net.minecraft.world.level.lighting.LayerLightEventListener;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
 
 public final class VirtualLightEngine extends LevelLightEngine {
 	private final LayerLightEventListener blockListener;
 	private final LayerLightEventListener skyListener;
 
-	public VirtualLightEngine(ToIntFunction<BlockPos> blockLightFunc, ToIntFunction<BlockPos> skyLightFunc, BlockGetter level) {
+	public VirtualLightEngine(ToIntFunction<BlockPos> blockLightFunc, ToIntFunction<BlockPos> skyLightFunc, Supplier<BlockGetter> level) {
+		// TODO - VirtualLightChunkGetter?
 		super(new LightChunkGetter() {
 			@Override
 			@Nullable
@@ -28,8 +31,8 @@ public final class VirtualLightEngine extends LevelLightEngine {
 			}
 
 			@Override
-			public BlockGetter getLevel() {
-				return level;
+			public @NotNull BlockGetter getLevel() {
+				return level.get();
 			}
 		}, false, false);
 

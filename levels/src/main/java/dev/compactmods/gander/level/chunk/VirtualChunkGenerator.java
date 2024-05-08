@@ -1,4 +1,4 @@
-package dev.compactmods.gander.level;
+package dev.compactmods.gander.level.chunk;
 
 import com.mojang.serialization.MapCodec;
 
