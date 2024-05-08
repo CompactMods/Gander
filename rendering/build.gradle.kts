@@ -43,7 +43,7 @@ repositories {
 }
 
 dependencies {
-    minecraft(neoforged.neoforge)
+    compileOnly(neoforged.neoforge)
 }
 
 tasks.withType<ProcessResources> {

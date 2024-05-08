@@ -10,7 +10,6 @@ import dev.compactmods.gander.level.block.VirtualBlockSystem;
 import dev.compactmods.gander.level.chunk.VirtualChunkSource;
 import dev.compactmods.gander.level.entity.VirtualEntitySystem;
 import dev.compactmods.gander.level.util.VirtualLevelUtils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
@@ -56,7 +55,7 @@ import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.LevelTickAccess;
 
-public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
+public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGenLevel, TickingLevel {
 
 	private final TickRateManager tickManager = new TickRateManager();
 	private final RegistryAccess access;
@@ -327,7 +326,12 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	@Override
 	public FeatureFlagSet enabledFeatures() {
-		return FeatureFlags.DEFAULT_FLAGS;
+		return FeatureFlagSet.of(
+				FeatureFlags.VANILLA,
+				FeatureFlags.UPDATE_1_21,
+				FeatureFlags.TRADE_REBALANCE,
+				FeatureFlags.BUNDLE
+		);
 	}
 
 	@Override
@@ -358,5 +362,10 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	@Override
 	public long getSeed() {
 		return 0;
+	}
+
+	@Override
+	public void blockUpdated(BlockPos pPos, Block pBlock) {
+		super.blockUpdated(pPos, pBlock);
 	}
 }

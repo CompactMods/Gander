@@ -7,6 +7,13 @@ import dev.compactmods.gander.render.baked.LevelBakery;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang3.function.Consumers;
+import org.joml.Vector3f;
+
+import dev.compactmods.gander.level.VirtualLevel;
+import dev.compactmods.gander.level.util.StructureTemplateUtils;
+import dev.compactmods.gander.network.StructureSceneDataRequest;
+import dev.compactmods.gander.render.baked.LevelBakery;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
