@@ -1,9 +1,5 @@
 package dev.compactmods.gander.client.gui;
 
-import dev.compactmods.gander.level.VirtualLevel;
-import dev.compactmods.gander.network.StructureSceneDataRequest;
-import dev.compactmods.gander.render.baked.LevelBakery;
-
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -11,7 +7,6 @@ import org.apache.commons.lang3.function.Consumers;
 import org.joml.Vector3f;
 
 import dev.compactmods.gander.level.VirtualLevel;
-import dev.compactmods.gander.level.util.StructureTemplateUtils;
 import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.baked.LevelBakery;
 import net.minecraft.client.Minecraft;
@@ -23,9 +18,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-
-import org.apache.commons.lang3.function.Consumers;
-import org.joml.Vector3f;
 
 public class ScreenOpener {
 	public static void open(Supplier<Screen> screen) {
@@ -56,7 +48,7 @@ public class ScreenOpener {
 			var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess());
 			var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
 			virtualLevel.setBounds(bounds);
-			data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings(), RandomSource.create(), Block.UPDATE_CLIENTS);
+			data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings().setKnownShape(true), RandomSource.create(), Block.UPDATE_CLIENTS);
 
 			var bakedLevel = LevelBakery.bakeVertices(virtualLevel, bounds, new Vector3f());
 			ui.setSceneSource(source);

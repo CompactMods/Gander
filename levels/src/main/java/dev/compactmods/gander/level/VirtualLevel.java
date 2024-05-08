@@ -55,7 +55,7 @@ import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.LevelTickAccess;
 
-public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGenLevel, TickingLevel {
+public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	private final TickRateManager tickManager = new TickRateManager();
 	private final RegistryAccess access;
@@ -70,7 +70,7 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 		this(
 				VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
 				access.registryOrThrow(Registries.DIMENSION_TYPE).getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
-				Minecraft.getInstance()::getProfiler, true, false,
+				VirtualLevelUtils.PROFILER, true, false,
 				0, 0);
 	}
 
@@ -87,6 +87,10 @@ public class VirtualLevel extends Level implements ServerLevelAccessor, WorldGen
 		this.bounds = BoundingBox.fromCorners(BlockPos.ZERO, BlockPos.ZERO);
 		this.entities = new VirtualEntitySystem();
 		this.biome = pRegistryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
+	}
+
+	public Holder<Biome> getBiome() {
+		return biome;
 	}
 
 	@Override
