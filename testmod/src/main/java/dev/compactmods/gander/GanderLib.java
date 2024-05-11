@@ -7,12 +7,14 @@ import com.mojang.logging.LogUtils;
 import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.network.OpenGanderUiForDeferredStructureRequest;
 import dev.compactmods.gander.network.OpenGanderUiForStructureRequest;
+import dev.compactmods.gander.tick.TickHandler;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.HandlerThread;
 
@@ -33,6 +35,7 @@ public class GanderLib {
 
 	public GanderLib(IEventBus modEventBus) {
 		modEventBus.addListener(GanderLib::onPacketRegistration);
+		TickHandler.register(NeoForge.EVENT_BUS);
 	}
 
 	public static ResourceLocation asResource(String path) {

@@ -114,13 +114,6 @@ public class GanderUI extends Screen {
 	public void tick() {
 		super.tick();
 
-		if (this.scene != null) {
-			// TODO: :)
-			var level = ((VirtualLevel)scene.originalLevel().get());
-			level.tick(minecraft.getPartialTick());
-			// level.animateTick();
-		}
-
 		if (autoRotate) {
 			this.orthoRenderer.camera().lookLeft((float) Math.toRadians(2.5));
 			this.orthoRenderer.recalculateTranslucency();
@@ -134,6 +127,10 @@ public class GanderUI extends Screen {
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+		if (this.scene != null) {
+			var level = ((VirtualLevel)scene.originalLevel().get());
+			level.animateTick();
+		}
 		super.render(graphics, mouseX, mouseY, partialTicks);
 
 		if (this.sceneSource != null) {
@@ -213,7 +210,9 @@ public class GanderUI extends Screen {
 	@Override
 	public void removed() {
 		this.disposeSceneRenderers();
-		onCloseCallback.run();
+		if (onCloseCallback != null) {
+			onCloseCallback.run();
+		}
 	}
 
 	public void setSceneSource(Component src) {
