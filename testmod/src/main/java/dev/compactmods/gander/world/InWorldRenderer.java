@@ -1,7 +1,9 @@
 package dev.compactmods.gander.world;
 
+import org.joml.Vector3f;
+
+import dev.compactmods.gander.CommonEvents;
 import dev.compactmods.gander.VirtualLevelRenderers;
-import dev.compactmods.gander.client.gui.GanderUI;
 import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.baked.LevelBakery;
@@ -13,10 +15,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-
 import net.neoforged.neoforge.network.PacketDistributor;
-
-import org.joml.Vector3f;
 
 public class InWorldRenderer
 {
@@ -25,7 +24,11 @@ public class InWorldRenderer
 	}
 
 	public static void forStructureData(Component source, StructureTemplate data) {
-		var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess());
+		CommonEvents.setTitle(source);
+
+		VirtualLevelRenderers.clearAll();
+
+		var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess(), true);
 		var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
 		virtualLevel.setBounds(bounds);
 		data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings().setKnownShape(true), RandomSource.create(), Block.UPDATE_CLIENTS);

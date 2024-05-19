@@ -35,6 +35,7 @@ base {
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    // toolchain.vendor.set(JvmVendorSpec.JETBRAINS)
 }
 
 evaluationDependsOn(":rendering")

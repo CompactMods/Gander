@@ -66,11 +66,11 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	private VirtualEntitySystem entities;
 	private final Holder<Biome> biome;
 
-	public VirtualLevel(RegistryAccess access) {
+	public VirtualLevel(RegistryAccess access, boolean isClientside) {
 		this(
 				VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
 				access.registryOrThrow(Registries.DIMENSION_TYPE).getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
-				VirtualLevelUtils.PROFILER, true, false,
+				VirtualLevelUtils.PROFILER, isClientside, false,
 				0, 0);
 	}
 
@@ -372,4 +372,18 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	public void blockUpdated(BlockPos pPos, Block pBlock) {
 		super.blockUpdated(pPos, pBlock);
 	}
+
+    @Override
+    public int getMaxBuildHeight() {
+        return bounds.maxY();
+    }
+
+    @Override
+    public int getMinBuildHeight() {
+        return bounds.minY();
+    }
+
+    public BoundingBox getBounds() {
+        return bounds;
+    }
 }

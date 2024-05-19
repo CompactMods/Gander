@@ -1,6 +1,11 @@
 package dev.compactmods.gander;
 
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+
+import org.joml.Matrix4f;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import dev.compactmods.gander.level.VirtualLevel;
@@ -11,14 +16,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.culling.Frustum;
-import net.minecraft.util.Unit;
-
 import net.neoforged.neoforge.client.ClientHooks;
-
-import org.joml.Matrix4f;
-
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 // TODO: put this in rendering
 public final class VirtualLevelRenderers
@@ -26,6 +24,10 @@ public final class VirtualLevelRenderers
 	private static final ConcurrentHashMap<BakedLevel, VirtualLevel> REGISTERED_LEVELS = new ConcurrentHashMap<>();
 
 	private VirtualLevelRenderers() { }
+
+	public static void clearAll() {
+		REGISTERED_LEVELS.clear();
+	}
 
 	public static void registerLevelToRender(BakedLevel level, VirtualLevel originalLevel) {
 		if (REGISTERED_LEVELS.putIfAbsent(level, originalLevel) != null) {

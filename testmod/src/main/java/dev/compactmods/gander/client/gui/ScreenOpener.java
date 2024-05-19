@@ -45,7 +45,7 @@ public class ScreenOpener {
 
 	public static void forStructureData(Component source, StructureTemplate data) {
 		openGanderUI(ui -> {
-			var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess());
+			var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess(), true);
 			var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
 			virtualLevel.setBounds(bounds);
 			data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings().setKnownShape(true), RandomSource.create(), Block.UPDATE_CLIENTS);
