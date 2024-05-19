@@ -32,12 +32,16 @@ base {
     version = envVersion
 }
 
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+}
+
 repositories {
     mavenLocal()
 }
 
 dependencies {
-    compileOnly(neoforged.neoforge)
+    this.api(neoforged.neoforge)
 }
 
 tasks.withType<ProcessResources> {

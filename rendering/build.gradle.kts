@@ -32,6 +32,10 @@ base {
     version = envVersion
 }
 
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+}
+
 minecraft {
     accessTransformers {
         file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
@@ -43,7 +47,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly(neoforged.neoforge)
+    this.api(neoforged.neoforge)
 }
 
 tasks.withType<ProcessResources> {

@@ -4,8 +4,8 @@ dependencyResolutionManagement {
     }
 
     versionCatalogs.create("neoforged") {
-        version("neogradle", "7.0.119")
-        version("neoforge", "20.6.18-beta")
+        version("neogradle", "7.0.133")
+        version("neoforge", "20.6.72-beta")
 
         library("neoforge", "net.neoforged", "neoforge")
             .versionRef("neoforge")
@@ -41,8 +41,6 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
 
-        // maven("https://maven.architectury.dev/")
-
         maven("https://maven.parchmentmc.org") {
             name = "ParchmentMC"
         }
@@ -65,5 +63,4 @@ rootProject.name = "Gander"
 
 include("levels")
 include("rendering")
-
 include("testmod")

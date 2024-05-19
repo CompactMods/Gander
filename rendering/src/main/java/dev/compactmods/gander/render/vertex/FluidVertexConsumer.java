@@ -2,7 +2,7 @@
  * Credit: Patchouli
  */
 
-package dev.compactmods.gander.render;
+package dev.compactmods.gander.render.vertex;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;

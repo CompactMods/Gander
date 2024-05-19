@@ -33,10 +33,16 @@ base {
     version = envVersion
 }
 
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+}
+
+evaluationDependsOn(":rendering")
+
 minecraft {
     modIdentifier.set(modId)
     accessTransformers {
-        file(project(":rendering").file("src/main/resources/META-INF/accesstransformer.cfg"))
+        file(project.project(":rendering").file("src/main/resources/META-INF/accesstransformer.cfg"))
         file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
     }
 }
