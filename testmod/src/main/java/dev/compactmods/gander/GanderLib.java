@@ -5,6 +5,8 @@ import java.util.Random;
 import com.mojang.logging.LogUtils;
 
 import dev.compactmods.gander.client.event.LevelRenderEventHandler;
+import dev.compactmods.gander.network.RenderInWorldForDeferredStructureRequest;
+import dev.compactmods.gander.network.RenderInWorldForStructureRequest;
 import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.network.OpenGanderUiForDeferredStructureRequest;
 import dev.compactmods.gander.network.OpenGanderUiForStructureRequest;
@@ -48,13 +50,17 @@ public class GanderLib {
 	private static void onPacketRegistration(final RegisterPayloadHandlersEvent payloads) {
 		final var main = payloads.registrar("1");
 
-		main.playToClient(OpenGanderUiForDeferredStructureRequest.ID, OpenGanderUiForDeferredStructureRequest.STREAM_CODEC, OpenGanderUiForDeferredStructureRequest.HANDLER)
-				.executesOn(HandlerThread.MAIN);
-
 		main.playToServer(StructureSceneDataRequest.ID, StructureSceneDataRequest.STREAM_CODEC, StructureSceneDataRequest.HANDLER)
 				.executesOn(HandlerThread.MAIN);
 
+		main.playToClient(OpenGanderUiForDeferredStructureRequest.ID, OpenGanderUiForDeferredStructureRequest.STREAM_CODEC, OpenGanderUiForDeferredStructureRequest.HANDLER)
+				.executesOn(HandlerThread.MAIN);
 		main.playToClient(OpenGanderUiForStructureRequest.ID, OpenGanderUiForStructureRequest.STREAM_CODEC, OpenGanderUiForStructureRequest.HANDLER)
+				.executesOn(HandlerThread.MAIN);
+
+		main.playToClient(RenderInWorldForDeferredStructureRequest.ID, RenderInWorldForDeferredStructureRequest.STREAM_CODEC, RenderInWorldForDeferredStructureRequest.HANDLER)
+				.executesOn(HandlerThread.MAIN);
+		main.playToClient(RenderInWorldForStructureRequest.ID, RenderInWorldForStructureRequest.STREAM_CODEC, RenderInWorldForStructureRequest.HANDLER)
 				.executesOn(HandlerThread.MAIN);
 	}
 }

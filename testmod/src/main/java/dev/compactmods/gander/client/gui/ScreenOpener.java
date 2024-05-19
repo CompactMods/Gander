@@ -40,7 +40,7 @@ public class ScreenOpener {
 	}
 
 	public static void forStructure(ResourceLocation sceneID) {
-		open(() -> new GanderUI(new StructureSceneDataRequest(sceneID)));
+		open(() -> new GanderUI(new StructureSceneDataRequest(sceneID, false)));
 	}
 
 	public static void forStructureData(Component source, StructureTemplate data) {

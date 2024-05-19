@@ -109,7 +109,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		return chunkSource;
 	}
 
-	VirtualBlockSystem blockSystem() {
+	public VirtualBlockSystem blockSystem() {
 		return this.blocks;
 	}
 

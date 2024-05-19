@@ -47,7 +47,8 @@ public class ScreenBlockRenderer {
 		renderSectionLayer(bakedLevel.fluidRenderBuffers(), renderTypeStore::redirectedFluidRenderType, renderType, poseStack, cameraPosition, pProjectionMatrix);
 	}
 
-	private static void renderSectionLayer(Map<RenderType, VertexBuffer> renderBuffers, Function<RenderType, RenderType> redirector, RenderType renderType, PoseStack poseStack,
+	// TODO: we shouldn't leak internals...
+	public static void renderSectionLayer(Map<RenderType, VertexBuffer> renderBuffers, Function<RenderType, RenderType> redirector, RenderType renderType, PoseStack poseStack,
 			Vector3f cameraPosition, Matrix4f pProjectionMatrix) {
 		final var mc = Minecraft.getInstance();
 

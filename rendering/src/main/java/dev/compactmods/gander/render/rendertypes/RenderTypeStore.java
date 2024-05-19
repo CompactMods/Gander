@@ -72,40 +72,6 @@ public class RenderTypeStore {
 		return AAAAAAAA;
 	}
 
-	public void processTransclucency(float partialTicks) {
-		// TODO: copy this over to TranslucencyChain if necessary
-		/*{
-			var target = translucencyChain.getRenderTarget("final");
-			var other = translucencyChain.getRenderTarget("translucent");
-			GlStateManager._glBindFramebuffer(GlConst.GL_READ_FRAMEBUFFER, other.frameBufferId);
-			GlStateManager._glBindFramebuffer(GlConst.GL_DRAW_FRAMEBUFFER, target.frameBufferId);
-			GlStateManager._glBlitFrameBuffer(0,
-					0,
-					other.width,
-					other.height,
-					0,
-					0,
-					target.width,
-					target.height,
-					GlConst.GL_DEPTH_BUFFER_BIT | GL11.GL_STENCIL_BUFFER_BIT,
-					GlConst.GL_NEAREST);
-			GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, 0);
-		}
-
-		{
-			var target = translucencyChain.getRenderTarget(RedirectedRenderTypeStore.MAIN_TARGET);
-			var other = translucencyChain.getRenderTarget("final");
-			GlStateManager._glBindFramebuffer(GlConst.GL_READ_FRAMEBUFFER, other.frameBufferId);
-			GlStateManager._glBindFramebuffer(GlConst.GL_DRAW_FRAMEBUFFER, target.frameBufferId);
-			GlStateManager._glBlitFrameBuffer(
-					0, 0, other.width, other.height,
-					0, 0, target.width, target.height,
-					GlConst.GL_DEPTH_BUFFER_BIT | GL11.GL_STENCIL_BUFFER_BIT,
-					GlConst.GL_NEAREST);
-			GlStateManager._glBindFramebuffer(GlConst.GL_FRAMEBUFFER, 0);
-		}*/
-	}
-
 	public void dispose() {
 		REMAPPED_BLOCK_RENDER_TYPES.clear();
 		REMAPPED_FLUID_RENDER_TYPES.clear();
