@@ -57,7 +57,7 @@ public record LevelInLevelRenderer(UUID id, BakedDirectLevelRenderingContext<Vir
             var stack = new PoseStack();
             stack.mulPose(evt.getModelViewMatrix());
 
-            pipeline.staticGeometryPass(ctx, chunkRenderType, stack, evt.getCamera(), evt.getProjectionMatrix(), renderOffset);
+            pipeline.staticGeometryPass(ctx, evt.getPartialTick(), chunkRenderType, stack, evt.getCamera(), evt.getProjectionMatrix(), renderOffset);
         } else if (evt.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES) {
             pipeline.blockEntitiesPass(ctx, evt.getPartialTick(),
                 evt.getPoseStack(),
