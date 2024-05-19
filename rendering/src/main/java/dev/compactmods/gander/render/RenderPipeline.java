@@ -2,7 +2,7 @@ package dev.compactmods.gander.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import dev.compactmods.gander.render.pipeline.context.BakedDirectLevelRenderingContext;
+import dev.compactmods.gander.render.pipeline.context.LevelRenderingContext;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -19,17 +19,17 @@ import org.joml.Vector3fc;
  * A render pipeline is a pre-configured set of rendering steps for rendering a
  * level to a specific target.
  */
-public interface RenderPipeline<T extends Level> {
+public interface RenderPipeline<TLevel extends Level, TCtx extends LevelRenderingContext<TLevel>> {
 
-    default void staticGeometryPass(BakedDirectLevelRenderingContext<T> ctx, RenderType renderType, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix) {
+    default void staticGeometryPass(TCtx ctx, RenderType renderType, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix) {
         staticGeometryPass(ctx, renderType, poseStack, camera, projectionMatrix, Vec3.ZERO.toVector3f());
     }
 
-    void staticGeometryPass(BakedDirectLevelRenderingContext<T> ctx, RenderType renderType, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix, Vector3fc renderOffset);
+    void staticGeometryPass(TCtx ctx, RenderType renderType, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix, Vector3fc renderOffset);
 
-    default void blockEntitiesPass(BakedDirectLevelRenderingContext<T> ctx, float partialTick, PoseStack poseStack, Camera camera, Frustum frustum, MultiBufferSource.BufferSource bufferSource) {
+    default void blockEntitiesPass(TCtx ctx, float partialTick, PoseStack poseStack, Camera camera, Frustum frustum, MultiBufferSource.BufferSource bufferSource) {
         blockEntitiesPass(ctx, partialTick, poseStack, camera, frustum, bufferSource, Vec3.ZERO.toVector3f());
     }
 
-    void blockEntitiesPass(BakedDirectLevelRenderingContext<T> ctx, float partialTick, PoseStack poseStack, Camera camera, Frustum frustum, MultiBufferSource.BufferSource bufferSource, Vector3fc renderOffset);
+    void blockEntitiesPass(TCtx ctx, float partialTick, PoseStack poseStack, Camera camera, Frustum frustum, MultiBufferSource.BufferSource bufferSource, Vector3fc renderOffset);
 }

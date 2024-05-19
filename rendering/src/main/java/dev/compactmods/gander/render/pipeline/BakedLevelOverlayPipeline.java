@@ -20,7 +20,7 @@ import org.joml.Vector3fc;
 
 import java.util.function.Function;
 
-public final class BakedLevelOverlayPipeline<T extends Level> implements RenderPipeline<T> {
+public final class BakedLevelOverlayPipeline<T extends Level> implements RenderPipeline<T, BakedDirectLevelRenderingContext<T>> {
 
     @Override
     public void staticGeometryPass(BakedDirectLevelRenderingContext<T> ctx, RenderType renderType, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix, Vector3fc renderOffset) {

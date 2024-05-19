@@ -24,5 +24,5 @@ public record BakedDirectLevelRenderingContext<T extends Level>(T level,
                                                                 Map<RenderType, VertexBuffer> blockBuffers,
                                                                 Map<RenderType, VertexBuffer> fluidBuffers,
                                                                 Supplier<Stream<BlockEntity>> blockEntities)
-    implements LevelRenderingContext {
+    implements LevelRenderingContext<T> {
 }

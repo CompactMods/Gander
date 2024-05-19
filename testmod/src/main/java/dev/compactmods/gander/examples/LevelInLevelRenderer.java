@@ -23,7 +23,7 @@ import org.joml.Vector3f;
  * Serves as a reference implementation of a level-in-level renderer, using a pre-built rendering pipeline.
  */
 public record LevelInLevelRenderer(UUID id, BakedDirectLevelRenderingContext<VirtualLevel> ctx, Vector3f renderOffset) {
-    private static final Supplier<RenderPipeline<VirtualLevel>> PIPELINE = Suppliers.memoize(BakedLevelOverlayPipeline::new);
+    private static final Supplier<RenderPipeline<VirtualLevel, BakedDirectLevelRenderingContext<VirtualLevel>>> PIPELINE = Suppliers.memoize(BakedLevelOverlayPipeline::new);
 
     public static LevelInLevelRenderer create(BakedLevel level, VirtualLevel virtualLevel) {
         BoundingBox bounds = virtualLevel.getBounds();
