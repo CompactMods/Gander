@@ -1,4 +1,4 @@
-package dev.compactmods.gander.render.baked;
+package dev.compactmods.gander.render.geometry;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 

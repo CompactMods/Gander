@@ -1,6 +1,6 @@
 package dev.compactmods.gander;
 
-import dev.compactmods.gander.core.GanderCommand;
+import dev.compactmods.gander.command.GanderCommand;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.CommonColors;
@@ -20,7 +20,7 @@ public class CommonEvents {
 	}
 
 	private static void test(RegisterGuiLayersEvent event) {
-		event.registerAboveAll(GanderLib.asResource("title"), (graphics, partialTick) -> {
+		event.registerAboveAll(GanderTestMod.asResource("title"), (graphics, partialTick) -> {
 			var font = Minecraft.getInstance().font;
 			graphics.drawCenteredString(font, TITLE, Minecraft.getInstance().getWindow().getGuiScaledWidth() / 2, font.lineHeight, CommonColors.WHITE);
 		});

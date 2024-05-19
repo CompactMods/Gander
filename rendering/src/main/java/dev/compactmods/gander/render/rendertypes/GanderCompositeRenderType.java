@@ -1,8 +1,5 @@
 package dev.compactmods.gander.render.rendertypes;
 
-import com.mojang.blaze3d.pipeline.RenderTarget;
-
-import dev.compactmods.gander.render.translucency.TranslucentRenderTarget;
 import dev.compactmods.gander.render.translucency.TranslucentRenderTargetLayer;
 import net.minecraft.client.renderer.RenderType;
 

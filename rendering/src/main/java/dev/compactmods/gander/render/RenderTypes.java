@@ -6,9 +6,21 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 // TODO 1.17: use custom shaders instead of vanilla ones
 public class RenderTypes extends RenderStateShard {
+
+    private static final Map<RenderLevelStageEvent.Stage, RenderType> GEOMETRY_STAGES
+        = RenderType.chunkBufferLayers()
+        .stream()
+        .collect(Collectors.toMap(RenderLevelStageEvent.Stage::fromRenderType, Function.identity()));
 
 	protected static final RenderStateShard.ShaderStateShard BLOCK_SHADER =
 			new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeTranslucentMovingBlockShader);
@@ -35,6 +47,10 @@ public class RenderTypes extends RenderStateShard {
 	public static RenderType getFluid() {
 		return FLUID;
 	}
+
+    public static @Nullable RenderType renderTypeForStage(RenderLevelStageEvent.Stage stage) {
+        return GEOMETRY_STAGES.get(stage);
+    }
 
 	// Mmm gimme those protected fields
 	private RenderTypes() {

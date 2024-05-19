@@ -1,4 +1,4 @@
-package dev.compactmods.gander.render;
+package dev.compactmods.gander.render.toolkit;
 
 import javax.annotation.Nullable;
 
@@ -30,7 +30,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-public class ScreenBlockEntityRender {
+public class BlockEntityRender {
 	private static final Logger LOGS = LogManager.getLogger();
 
 	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, Vector3f cameraPosition,
@@ -46,7 +46,7 @@ public class ScreenBlockEntityRender {
 	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, Vector3f cameraPosition,
 							  @Nullable Matrix4f lightTransform, RenderTypeStore renderTypeStore, MultiBufferSource.BufferSource buffer, float pt) {
 
-		final var wrappedBuffer = WrappedBufferSource.forBlocks(renderTypeStore, buffer);
+		final var wrappedBuffer = RedirectingBufferSource.forBlocks(renderTypeStore, buffer);
 
 		resolver.filter(Objects::nonNull).forEach(ent -> render(world, ent, ms, cameraPosition, lightTransform, wrappedBuffer, pt));
 		wrappedBuffer.endBatch(RenderType.solid());

@@ -1,12 +1,17 @@
 package dev.compactmods.gander;
 
+import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+import dev.compactmods.gander.examples.LevelInLevelRenderer;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
-import dev.compactmods.gander.client.event.LevelRenderEventHandler;
 import dev.compactmods.gander.network.OpenGanderUiForDeferredStructureRequest;
 import dev.compactmods.gander.network.OpenGanderUiForStructureRequest;
 import dev.compactmods.gander.network.RenderInWorldForDeferredStructureRequest;
@@ -22,11 +27,13 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.HandlerThread;
 
 @Mod("gander")
-public class GanderLib {
+public class GanderTestMod {
 
 	public static final String ID = "gander";
 
 	public static final Logger LOGGER = LogUtils.getLogger();
+
+    public static final Map<UUID, LevelInLevelRenderer> LIL_RENDERERS = new ConcurrentHashMap<>();
 
 	/**
 	 * Use the {@link Random} of a local {@link Level} or {@link Entity} or create one
@@ -34,13 +41,11 @@ public class GanderLib {
 	@Deprecated
 	public static final Random RANDOM = new Random();
 
-	public GanderLib(IEventBus modEventBus) {
-		modEventBus.addListener(GanderLib::onPacketRegistration);
+	public GanderTestMod(IEventBus modEventBus) {
+		modEventBus.addListener(GanderTestMod::onPacketRegistration);
 		CommonEvents.register(modEventBus);
 
-		// now we wait 20 years for Neogradle to get its shit together.....
-		final var gameBus = NeoForge.EVENT_BUS;
-		gameBus.addListener(LevelRenderEventHandler::onRenderStage);
+        NeoForge.EVENT_BUS.addListener((RenderLevelStageEvent renderStage) -> LIL_RENDERERS.values().forEach(lil -> lil.onRenderStage(renderStage)));
 	}
 
 	public static ResourceLocation asResource(String path) {
@@ -63,4 +68,12 @@ public class GanderLib {
 		main.playToClient(RenderInWorldForStructureRequest.ID, RenderInWorldForStructureRequest.STREAM_CODEC, RenderInWorldForStructureRequest.HANDLER)
 				.executesOn(HandlerThread.MAIN);
 	}
+
+    public static void addLevelInLevelRenderer(LevelInLevelRenderer lilRenderer) {
+        LIL_RENDERERS.putIfAbsent(lilRenderer.id(), lilRenderer);
+    }
+
+    public static void removeLevelInLevelRenderer(UUID id) {
+        LIL_RENDERERS.remove(id);
+    }
 }

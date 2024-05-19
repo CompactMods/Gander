@@ -9,6 +9,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -16,7 +17,9 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
-public record RenderInWorldForStructureRequest(Component sceneSource, StructureTemplate data)
+import org.joml.Vector3f;
+
+public record RenderInWorldForStructureRequest(Component sceneSource, StructureTemplate data, Vector3f renderLocation)
 		implements CustomPacketPayload
 {
 	public static final Type<RenderInWorldForStructureRequest> ID = new Type<>(new ResourceLocation("gander", "in_world_scene_data_response"));
@@ -36,12 +39,13 @@ public record RenderInWorldForStructureRequest(Component sceneSource, StructureT
 	public static final StreamCodec<RegistryFriendlyByteBuf, RenderInWorldForStructureRequest> STREAM_CODEC = StreamCodec.composite(
 			ComponentSerialization.STREAM_CODEC, RenderInWorldForStructureRequest::sceneSource,
 			STRUCTURE_TEMPLATE_STREAM_CODEC, RenderInWorldForStructureRequest::data,
+            ByteBufCodecs.VECTOR3F, RenderInWorldForStructureRequest::renderLocation,
 			RenderInWorldForStructureRequest::new
 	);
 
 	public static final IPayloadHandler<RenderInWorldForStructureRequest> HANDLER = (pkt, ctx) -> {
 		if(FMLEnvironment.dist.isClient())
-			ctx.enqueueWork(() -> InWorldRenderer.forStructureData(pkt.sceneSource, pkt.data));
+			ctx.enqueueWork(() -> InWorldRenderer.forStructureData(pkt.sceneSource, pkt.data, pkt.renderLocation));
 	};
 
 	@Override

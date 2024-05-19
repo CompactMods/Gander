@@ -2,7 +2,6 @@ package dev.compactmods.gander.client.gui.widget;
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.GlConst;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -14,12 +13,12 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexSorting;
 
-import dev.compactmods.gander.GanderLib;
+import dev.compactmods.gander.GanderTestMod;
+import dev.compactmods.gander.render.toolkit.BlockEntityRender;
+import dev.compactmods.gander.render.toolkit.BlockRenderer;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
-import dev.compactmods.gander.render.ScreenBlockEntityRender;
-import dev.compactmods.gander.render.ScreenBlockRenderer;
 import dev.compactmods.gander.SceneCamera;
-import dev.compactmods.gander.render.baked.BakedLevel;
+import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.translucency.TranslucencyChain;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -79,14 +78,14 @@ public class SpatialRenderer extends AbstractWidget {
 		renderTarget.setClearColor(0, 0, 0, 0);
 
 		var translucencyChain = TranslucencyChain.builder()
-				.addLayer(GanderLib.asResource("main"))
-				.addLayer(GanderLib.asResource("entity"))
-				.addLayer(GanderLib.asResource("water"))
-				.addLayer(GanderLib.asResource("translucent"))
-				.addLayer(GanderLib.asResource("item_entity"))
-				.addLayer(GanderLib.asResource("particles"))
-				.addLayer(GanderLib.asResource("clouds"))
-				.addLayer(GanderLib.asResource("weather"))
+				.addLayer(GanderTestMod.asResource("main"))
+				.addLayer(GanderTestMod.asResource("entity"))
+				.addLayer(GanderTestMod.asResource("water"))
+				.addLayer(GanderTestMod.asResource("translucent"))
+				.addLayer(GanderTestMod.asResource("item_entity"))
+				.addLayer(GanderTestMod.asResource("particles"))
+				.addLayer(GanderTestMod.asResource("clouds"))
+				.addLayer(GanderTestMod.asResource("weather"))
 				.build(renderTarget);
 
 		this.translucencyChain = translucencyChain;
@@ -249,28 +248,28 @@ public class SpatialRenderer extends AbstractWidget {
 			if (bakedLevel != null) {
 				var projectionMatrix = RenderSystem.getProjectionMatrix();
 
-				translucencyChain.prepareLayer(GanderLib.asResource("main"));
-				ScreenBlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
-				ScreenBlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
+				translucencyChain.prepareLayer(GanderTestMod.asResource("main"));
+				BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
 
-				ScreenBlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
-				ScreenBlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
 
-				ScreenBlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
-				ScreenBlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
 
-				translucencyChain.prepareLayer(GanderLib.asResource("entity"));
-				ScreenBlockEntityRender.render(blockAndTints, blockEntities, poseStack, lookFrom, renderTypeStore, buffer, partialTicks);
+				translucencyChain.prepareLayer(GanderTestMod.asResource("entity"));
+				BlockEntityRender.render(blockAndTints, blockEntities, poseStack, lookFrom, renderTypeStore, buffer, partialTicks);
 
-				translucencyChain.prepareLayer(GanderLib.asResource("water"));
-				translucencyChain.prepareLayer(GanderLib.asResource("translucent"));
-				ScreenBlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
-				ScreenBlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
+				translucencyChain.prepareLayer(GanderTestMod.asResource("water"));
+				translucencyChain.prepareLayer(GanderTestMod.asResource("translucent"));
+				BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
 
-				translucencyChain.prepareLayer(GanderLib.asResource("item_entity"));
-				translucencyChain.prepareLayer(GanderLib.asResource("particles"));
-				translucencyChain.prepareLayer(GanderLib.asResource("clouds"));
-				translucencyChain.prepareLayer(GanderLib.asResource("weather"));
+				translucencyChain.prepareLayer(GanderTestMod.asResource("item_entity"));
+				translucencyChain.prepareLayer(GanderTestMod.asResource("particles"));
+				translucencyChain.prepareLayer(GanderTestMod.asResource("clouds"));
+				translucencyChain.prepareLayer(GanderTestMod.asResource("weather"));
 
 				translucencyChain.process();
 			}

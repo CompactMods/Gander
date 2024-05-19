@@ -1,4 +1,4 @@
-package dev.compactmods.gander.render;
+package dev.compactmods.gander.render.toolkit;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
@@ -14,7 +14,8 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.Collection;
 
-public class ScreenEntityRenderer {
+// TODO - Implement and make public
+class EntityRenderer {
 
 	public static void renderEntities(Collection<Entity> entities, PoseStack ms, MultiBufferSource buffer, Camera ari, float pt) {
 		Vec3 Vector3d = ari.getPosition();

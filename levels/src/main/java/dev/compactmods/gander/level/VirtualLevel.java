@@ -201,7 +201,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	@Override
 	protected void tickBlockEntities() {
 		if (tickRateManager().runsNormally()) {
-			blocks.blockAndFluidStorage().streamBlockEntities()
+			blocks.blockAndFluidStorage().blockEntityPositions()
 					.filter(this::shouldTickBlocksAt)
 					.forEach(entityPos -> {
 						var blockEntity = blocks.blockAndFluidStorage().getBlockEntity(entityPos);

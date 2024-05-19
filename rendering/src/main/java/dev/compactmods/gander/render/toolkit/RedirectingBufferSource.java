@@ -1,4 +1,4 @@
-package dev.compactmods.gander.render;
+package dev.compactmods.gander.render.toolkit;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
@@ -10,21 +10,21 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-class WrappedBufferSource extends MultiBufferSource.BufferSource {
+class RedirectingBufferSource extends MultiBufferSource.BufferSource {
 
 	private final Function<RenderType, RenderType> remapper;
 
-	protected WrappedBufferSource(Function<RenderType, RenderType> remapper, BufferSource original) {
+	protected RedirectingBufferSource(Function<RenderType, RenderType> remapper, BufferSource original) {
 		super(original.builder, original.fixedBuffers);
 		this.remapper = remapper;
 	}
 
-	public static WrappedBufferSource forBlocks(RenderTypeStore renderStore, BufferSource original) {
-		return new WrappedBufferSource(renderStore::redirectedBlockRenderType, original);
+	public static RedirectingBufferSource forBlocks(RenderTypeStore renderStore, BufferSource original) {
+		return new RedirectingBufferSource(renderStore::redirectedBlockRenderType, original);
 	}
 
-	public static WrappedBufferSource forFluids(RenderTypeStore renderStore, BufferSource original) {
-		return new WrappedBufferSource(renderStore::redirectedFluidRenderType, original);
+	public static RedirectingBufferSource forFluids(RenderTypeStore renderStore, BufferSource original) {
+		return new RedirectingBufferSource(renderStore::redirectedFluidRenderType, original);
 	}
 
 	@Override

@@ -1,7 +1,5 @@
 package dev.compactmods.gander.level.block;
 
-import com.google.common.collect.Collections2;
-
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -99,9 +97,13 @@ public class VirtualBlockAndFluidStorage {
 		return be;
 	}
 
-	public Stream<BlockPos> streamBlockEntities() {
+	public Stream<BlockPos> blockEntityPositions() {
 		return blockEntities.keySet()
 				.longStream()
 				.mapToObj(BlockPos::of);
 	}
+
+    public Stream<BlockEntity> blockEntities() {
+        return blockEntities.values().stream();
+    }
 }

@@ -1,4 +1,4 @@
-package dev.compactmods.gander.render;
+package dev.compactmods.gander.render.toolkit;
 
 import java.util.function.Function;
 
@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
+import dev.compactmods.gander.render.RenderTypes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -27,7 +28,7 @@ import net.neoforged.neoforge.fluids.FluidType;
 import org.joml.Quaternionf;
 
 @SuppressWarnings("unused")
-public class ScreenFluidRenderer {
+public class FluidRenderer {
 
 	public static VertexConsumer getFluidBuilder(MultiBufferSource buffer) {
 		return buffer.getBuffer(RenderTypes.getFluid());
@@ -142,12 +143,12 @@ public class ScreenFluidRenderer {
 
 	public static void renderStillTiledFace(Direction dir, float left, float down, float right, float up, float depth,
 											VertexConsumer builder, PoseStack ms, int light, int color, TextureAtlasSprite texture) {
-		ScreenFluidRenderer.renderTiledFace(dir, left, down, right, up, depth, builder, ms, light, color, texture, 1);
+		FluidRenderer.renderTiledFace(dir, left, down, right, up, depth, builder, ms, light, color, texture, 1);
 	}
 
 	public static void renderFlowingTiledFace(Direction dir, float left, float down, float right, float up, float depth,
 											  VertexConsumer builder, PoseStack ms, int light, int color, TextureAtlasSprite texture) {
-		ScreenFluidRenderer.renderTiledFace(dir, left, down, right, up, depth, builder, ms, light, color, texture, 0.5f);
+		FluidRenderer.renderTiledFace(dir, left, down, right, up, depth, builder, ms, light, color, texture, 0.5f);
 	}
 
 	public static void renderTiledFace(Direction dir, float left, float down, float right, float up, float depth,
