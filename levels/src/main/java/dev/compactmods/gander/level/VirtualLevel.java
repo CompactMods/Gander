@@ -176,7 +176,9 @@ public class VirtualLevel extends Level implements WorldGenLevel, LevelTicker {
 
 	@Override
 	public void tick(final float deltaTime) {
+		net.neoforged.neoforge.event.EventHooks.fireLevelTickPre(this, () -> true);
 		tickBlockEntities();
+		net.neoforged.neoforge.event.EventHooks.fireLevelTickPost(this, () -> true);
 	}
 
 	protected void animateBlockTick(BlockPos pBlockPos) {
