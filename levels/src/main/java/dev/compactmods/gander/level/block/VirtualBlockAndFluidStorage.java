@@ -81,14 +81,14 @@ public class VirtualBlockAndFluidStorage {
         state.onPlace(owningLevel, pos, oldBlockState, false);
 
         // update stored block entity
+        removeBlockEntity(pos); // remove current block entity
+
         if(state.hasBlockEntity()) {
             var blockEntity = ((EntityBlock) state.getBlock()).newBlockEntity(pos, state);
 
             if(blockEntity != null)
                 setBlockEntity(blockEntity);
         }
-        else
-            removeBlockEntity(pos);
 
         return state;
 	}
