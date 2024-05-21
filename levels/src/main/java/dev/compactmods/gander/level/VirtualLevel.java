@@ -375,7 +375,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
     @Override
     public int getMaxBuildHeight() {
-        return bounds.maxY();
+        return bounds.maxY() + 1;
     }
 
     @Override
