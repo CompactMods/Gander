@@ -39,6 +39,7 @@ java {
 minecraft {
     accessTransformers {
         file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
+        expose(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
     }
 }
 

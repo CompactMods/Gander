@@ -45,6 +45,7 @@ minecraft {
     accessTransformers {
         file(project.project(":rendering").file("src/main/resources/META-INF/accesstransformer.cfg"))
         file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
+        expose(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
     }
 }
 
