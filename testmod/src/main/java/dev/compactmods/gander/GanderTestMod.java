@@ -5,13 +5,11 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import dev.compactmods.gander.examples.LevelInLevelRenderer;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
+import dev.compactmods.gander.examples.LevelInLevelRenderer;
 import dev.compactmods.gander.network.OpenGanderUiForDeferredStructureRequest;
 import dev.compactmods.gander.network.OpenGanderUiForStructureRequest;
 import dev.compactmods.gander.network.RenderInWorldForDeferredStructureRequest;
@@ -22,6 +20,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.HandlerThread;
@@ -46,6 +47,9 @@ public class GanderTestMod {
 		CommonEvents.register(modEventBus);
 
         NeoForge.EVENT_BUS.addListener((RenderLevelStageEvent renderStage) -> LIL_RENDERERS.values().forEach(lil -> lil.onRenderStage(renderStage)));
+
+        if(FMLEnvironment.dist.isClient())
+            NeoForge.EVENT_BUS.addListener(ClientTickEvent.Post.class, event -> LIL_RENDERERS.values().forEach(lil -> lil.onClientTick(event)));
 	}
 
 	public static ResourceLocation asResource(String path) {

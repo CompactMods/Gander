@@ -3,21 +3,22 @@ package dev.compactmods.gander.examples;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.joml.Vector3f;
+
 import com.google.common.base.Suppliers;
+import com.mojang.blaze3d.vertex.PoseStack;
+
+import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.render.RenderPipeline;
 import dev.compactmods.gander.render.RenderTypes;
+import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.pipeline.BakedLevelOverlayPipeline;
 import dev.compactmods.gander.render.pipeline.context.BakedDirectLevelRenderingContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-
-import com.mojang.blaze3d.vertex.PoseStack;
-import dev.compactmods.gander.level.VirtualLevel;
-import dev.compactmods.gander.render.geometry.BakedLevel;
-
-import org.joml.Vector3f;
 
 /**
  * Serves as a reference implementation of a level-in-level renderer, using a pre-built rendering pipeline.
@@ -66,5 +67,9 @@ public record LevelInLevelRenderer(UUID id, BakedDirectLevelRenderingContext<Vir
                 Minecraft.getInstance().renderBuffers().bufferSource(),
                 renderOffset);
         }
+    }
+
+    public void onClientTick(ClientTickEvent.Post event) {
+        ctx.level().tick(Minecraft.getInstance().getPartialTick());
     }
 }
