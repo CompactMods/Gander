@@ -1,5 +1,12 @@
 package dev.compactmods.gander.level.block;
 
+import java.util.function.BiConsumer;
+import java.util.function.BiPredicate;
+import java.util.stream.Stream;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.minecraft.core.BlockPos;
@@ -8,15 +15,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-
 import net.minecraft.world.level.material.FluidState;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.function.BiConsumer;
-import java.util.function.BiPredicate;
-import java.util.stream.Stream;
 
 public class VirtualBlockAndFluidStorage {
 
@@ -39,7 +38,10 @@ public class VirtualBlockAndFluidStorage {
 	}
 
 	public void removeBlockEntity(BlockPos pos) {
-		blockEntities.remove(pos.asLong());
+        var blockEntity = blockEntities.remove(pos.asLong());
+
+        if(blockEntity != null)
+            blockEntity.setRemoved();
 	}
 
 	public @NotNull BlockState getBlockState(BlockPos pos) {
@@ -59,42 +61,51 @@ public class VirtualBlockAndFluidStorage {
 	}
 
 	public BlockState setBlockState(BlockPos pos, @NotNull BlockState state) {
-		if (state.isAir())
-			this.states.remove(pos.asLong());
-		else
-			this.states.put(pos.asLong(), state);
-		this.blockEntities.remove(pos.asLong());
-		return state;
+        var oldBlockState = getBlockState(pos);
+
+        // same block, quit out early
+        if(oldBlockState.is(state.getBlock()))
+            return oldBlockState;
+
+        var longPos = pos.asLong();
+        // notify old block of removal
+        oldBlockState.onRemove(owningLevel, pos, state, false);
+
+        // store new block state (remove if air)
+        if(state.isAir())
+            states.remove(longPos);
+        else
+            states.put(longPos, state);
+
+        // notify new block of placement
+        state.onPlace(owningLevel, pos, oldBlockState, false);
+
+        // update stored block entity
+        if(state.hasBlockEntity()) {
+            var blockEntity = ((EntityBlock) state.getBlock()).newBlockEntity(pos, state);
+
+            if(blockEntity != null)
+                setBlockEntity(blockEntity);
+        }
+        else
+            removeBlockEntity(pos);
+
+        return state;
 	}
 
 	public boolean setBlock(BlockPos pos, BlockState state, int pFlags, int pRecursionLeft) {
 		setBlockState(pos, state);
-		if(state.hasBlockEntity()) {
-			var be = ((EntityBlock) state.getBlock()).newBlockEntity(pos, state);
-			if(be != null) {
-				setBlockEntity(be);
-				be.setLevel(owningLevel);
-			}
-		}
-
 		return true;
 	}
 
 	public void setBlockEntity(BlockEntity blockEntity) {
-		BlockPos blockpos = blockEntity.getBlockPos();
-		if (this.getBlockState(blockpos).hasBlockEntity()) {
-			blockEntity.setLevel(owningLevel);
-			blockEntity.clearRemoved();
-			BlockEntity blockentity = setBlockEntity(blockpos.immutable(), blockEntity);
-			if (blockentity != null && blockentity != blockEntity) {
-				blockentity.setRemoved();
-			}
-		}
-	}
+        removeBlockEntity(blockEntity.getBlockPos()); // remove current block entity
 
-	public BlockEntity setBlockEntity(BlockPos pos, BlockEntity be) {
-		this.blockEntities.put(pos.asLong(), be);
-		return be;
+        if(blockEntity.getBlockState().hasBlockEntity()) {
+            blockEntity.clearRemoved();
+            blockEntity.setLevel(owningLevel);
+            blockEntities.put(blockEntity.getBlockPos().asLong(), blockEntity);
+        }
 	}
 
 	public Stream<BlockPos> blockEntityPositions() {
