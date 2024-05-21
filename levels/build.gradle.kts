@@ -87,7 +87,6 @@ tasks.withType<Jar> {
 val PACKAGES_URL = System.getenv("GH_PKG_URL") ?: "https://maven.pkg.github.com/compactmods/gander"
 publishing {
     publications.register<MavenPublication>("levels") {
-        this.artifact(tasks.jar)
         from(components.getByName("java"))
     }
 
