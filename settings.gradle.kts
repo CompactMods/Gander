@@ -4,54 +4,34 @@ dependencyResolutionManagement {
     }
 
     versionCatalogs.create("neoforged") {
-        version("neogradle", "7.0.133")
-        version("neoforge", "20.6.72-beta")
-
-        library("neoforge", "net.neoforged", "neoforge")
-            .versionRef("neoforge")
-
-        plugin("userdev", "net.neoforged.gradle.userdev")
-            .versionRef("neogradle")
+        version("neoforge", "20.6.94-beta-pr-959-features-gradle-metadata")
+        version("parchment-mappings", "2024.05.01")
+        version("parchment-minecraft", "1.20.6")
+        plugin("moddev", "net.neoforged.moddev").version("0.1.36-pr-1-pr-publish")
     }
 
     versionCatalogs.create("mods") {
-        this.library("jei-common", "mezz.jei", "jei-1.20.4-common-api").versionRef("jei")
-        this.library("jei-neo", "mezz.jei", "jei-1.20.4-neoforge-api").versionRef("jei");
-        this.bundle("jei", listOf("jei-common", "jei-neo"))
-        this.version("jei", "17.3.0.49")
+        /*version("jei", "17.3.0.49")
+        library("jei-common", "mezz.jei", "jei-1.20.4-common-api").versionRef("jei")
+        library("jei-neo", "mezz.jei", "jei-1.20.4-neoforge-api").versionRef("jei");
+        bundle("jei", listOf("jei-common", "jei-neo"))
 
-        this.library("jade", "curse.maven", "jade-324717").version("5109393")
+        library("jade", "curse.maven", "jade-324717").version("5109393")*/
     }
 
     versionCatalogs.create("libraries") {
-        this.library("devlogin", "net.covers1624", "DevLogin").version("0.1.+")
+        version("java", "21")
+        plugin("grgit", "org.ajoberstar.grgit").version("5.2.1")
+        plugin("idea-ext", "org.jetbrains.gradle.plugin.idea-ext").version("1.1.8")
+        library("devlogin", "net.covers1624", "DevLogin").version("0.1.0.4")
     }
 }
 
 pluginManagement {
-    plugins {
-        id("idea")
-        id("eclipse")
-        id("maven-publish")
-        id("java-library")
-    }
-
     repositories {
-        mavenLocal()
-        mavenCentral()
         gradlePluginPortal()
-
-        maven("https://maven.parchmentmc.org") {
-            name = "ParchmentMC"
-        }
-
-        maven("https://maven.neoforged.net/releases") {
-            name = "NeoForged"
-        }
-
-        maven("https://repo.spongepowered.org/repository/maven-public/") {
-            name = "Sponge Snapshots"
-        }
+        maven("https://maven.neoforged.net/releases")
+        maven("https://prmaven.neoforged.net/ModDevGradle/pr1")
     }
 }
 

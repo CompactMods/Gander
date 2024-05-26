@@ -1,99 +1,109 @@
-@file:Suppress("SpellCheckingInspection")
-
 import org.ajoberstar.grgit.Grgit
 import java.text.SimpleDateFormat
 import java.util.*
 
-var envVersion: String = System.getenv("VERSION") ?: "9.9.9"
-if (envVersion.startsWith("v"))
-    envVersion = envVersion.trimStart('v')
-
-val isRelease: Boolean = (System.getenv("RELEASE") ?: "false").equals("true", true)
-
-fun prop(name: String): String {
-    if (project.properties.containsKey(name))
-        return project.property(name) as String;
-
-    return "";
-}
-
 plugins {
     id("idea")
-    id("eclipse")
-    id("maven-publish")
     id("java-library")
-    alias(neoforged.plugins.userdev)
-    id("org.ajoberstar.grgit") version ("5.2.1")
+    id("maven-publish")
+    alias(neoforged.plugins.moddev)
+    alias(libraries.plugins.grgit)
+    alias(libraries.plugins.idea.ext)
 }
 
+val MOD_VERSION = System.getenv("VERSION") ?: "9.9.9"
+val IS_RELEASE = System.getenv("RELEASE").toBoolean()
+val IS_CI = System.getenv("CI_BUILD").toBoolean()
+val JAVA_VERSION = JavaLanguageVersion.of(libraries.versions.java.get())
+val GIT = Grgit.open { currentDir = project.rootDir }
+val PACKAGES_URL = System.getenv("GH_PKG_URL") ?: "https://maven.pkg.github.com/compactmods/gander"
+
 base {
-    archivesName.set("levels")
+    archivesName = "levels"
     group = "dev.compactmods.gander"
-    version = envVersion
+    version = MOD_VERSION
+}
+
+idea.module {
+    if(!IS_CI) {
+        isDownloadSources = true
+        isDownloadJavadoc = true
+    }
+
+    excludeDirs.addAll(files(
+        ".gradle",
+        ".idea",
+        ".build",
+        "gradle"
+    ))
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    withSourcesJar()
+    withJavadocJar()
+
+    toolchain {
+        vendor = if(IS_CI) JvmVendorSpec.ADOPTIUM else JvmVendorSpec.JETBRAINS
+        languageVersion.set(JAVA_VERSION)
+    }
 }
 
-repositories {
-    mavenLocal()
-}
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+    options.release.set(JAVA_VERSION.asInt())
+    options.compilerArgs.addAll(arrayOf("-Xmaxerrs", "9000"))
 
-dependencies {
-    this.api(neoforged.neoforge)
+    javaToolchains.compilerFor { languageVersion.set(JAVA_VERSION) }
 }
 
 tasks.withType<ProcessResources> {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
-    options.compilerArgs.addAll(arrayOf("-Xmaxerrs", "1000"))
-}
-
-tasks.withType<Jar> {
-    val mainGit = Grgit.open {
-        currentDir = project.rootDir
-    }
-
+tasks.jar {
     manifest {
         from("src/main/resources/META-INF/MANIFEST.MF")
-        val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(Date())
-        val name = prop("mod_name")
 
-        val attrs = mapOf<String, Any>(
-            "Specification-Title" to name,
+        attributes(mapOf(
+            "Specification-Title" to "levels",
             "Specification-Vendor" to "CompactMods",
             "Specification-Version" to "1",
-            "Implementation-Title" to name,
-            "Implementation-Version" to envVersion,
+            "Implementation-Title" to "levels",
+            "Implementation-Version" to MOD_VERSION,
             "Implementation-Vendor" to "CompactMods",
-            "Implementation-Timestamp" to now,
+            "Implementation-Timestamp" to SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(Date()),
             "Minecraft-Version" to mojang.versions.minecraft.get(),
             "NeoForge-Version" to neoforged.versions.neoforge.get(),
-            "Main-Commit" to mainGit.head().id,
-            "FMLModType" to "GAMELIBRARY",
-            "Automatic-Module-Name" to "ganderrendering",
-            "MixinConfigs" to "gander_render.mixins.json"
-
-        )
-
-        attributes(attrs)
+            "Main-Commit" to GIT.head().id
+        ))
     }
 }
 
-val PACKAGES_URL = System.getenv("GH_PKG_URL") ?: "https://maven.pkg.github.com/compactmods/gander"
+repositories {
+    // mavenLocal()
+    maven("https://prmaven.neoforged.net/NeoForge/pr959")
+}
+
+neoForge {
+    version = neoforged.versions.neoforge
+
+    if(!IS_CI) {
+        parchment {
+            mappingsVersion = neoforged.versions.parchment.mappings
+            minecraftVersion = neoforged.versions.parchment.minecraft
+        }
+    }
+}
+
 publishing {
     publications.register<MavenPublication>("levels") {
         from(components.getByName("java"))
     }
 
     repositories {
-        // GitHub Packages
         maven(PACKAGES_URL) {
             name = "GitHubPackages"
+
             credentials {
                 username = System.getenv("GITHUB_ACTOR")
                 password = System.getenv("GITHUB_TOKEN")

@@ -1,34 +1,28 @@
-modLoader="javafml"
-loaderVersion="${loader_version_range}" #mandatory
-license="${mod_license}"
+license = "MIT"
+# issueTrackerURL = "https://github.com/CompactMods/Gander/issues"
+issueTrackerURL = "https://discord.gg/Y5QhUWxQdq"
+modLoader = "javafml"
+loaderVersion = "[3,)"
 
 [[mods]]
-modId="${mod_id}"
-version="${mod_version}"
-displayName="${mod_name}"
-authors="${mod_authors}"
-description='''${mod_description}'''
+    modId = "gander"
+    displayName = "Gander - TestMod"
+    version = "${MOD_VERSION}"
+    authors = "RobotGryphon, FiniteReality, ApexModder"
+    description = "Take a peek at the world and what it has to offer!"
 
-[[accessTransformers]]
-file="META-INF/accesstransformer.cfg"
+    [[accessTransformers]]
+        file = "META-INF/accesstransformer.cfg"
 
-[[dependencies.${mod_id}]]
-modId="neoforge"
-type="required"
-versionRange="${neo_version_range}"
-ordering="NONE"
-side="BOTH"
-
-# Here's another dependency
-[[dependencies.${mod_id}]]
-modId="minecraft"
-type="required"
-versionRange="${minecraft_version_range}"
-ordering="NONE"
-side="BOTH"
-
-# Features are specific properties of the game environment, that you may want to declare you require. This example declares
-# that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
-# stop your mod loading on the server for example.
-#[features.${mod_id}]
-#openGLVersion="[3.2,)"
+    [[dependencies.gander]]
+        modId = "minecraft"
+        type = "required"
+        versionRange = "[1.20.6,1.21)"
+        ordering = "NONE"
+        side = "BOTH"
+    [[dependencies.gander]]
+        modId = "neoforge"
+        type = "required"
+        versionRange = "[20.6,21.0)"
+        ordering = "NONE"
+        side = "BOTH"
