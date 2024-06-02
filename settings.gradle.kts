@@ -1,11 +1,11 @@
 dependencyResolutionManagement {
     versionCatalogs.create("mojang") {
-        version("minecraft", "1.20.6")
+        version("minecraft", "1.21.0")
     }
 
     versionCatalogs.create("neoforged") {
-        version("neogradle", "7.0.133")
-        version("neoforge", "20.6.72-beta")
+        version("neogradle", "7.0.142")
+        version("neoforge", "21.0.0-alpha.1.21-pre4.20240608.172712")
 
         library("neoforge", "net.neoforged", "neoforge")
             .versionRef("neoforge")
@@ -21,10 +21,6 @@ dependencyResolutionManagement {
         this.version("jei", "17.3.0.49")
 
         this.library("jade", "curse.maven", "jade-324717").version("5109393")
-    }
-
-    versionCatalogs.create("libraries") {
-        this.library("devlogin", "net.covers1624", "DevLogin").version("0.1.+")
     }
 }
 

@@ -75,9 +75,15 @@ runs {
         programArguments("--width", "1920")
         programArguments("--height", "1080")
 
-        // https://github.com/covers1624/DevLogin/wiki/NeoGradle
-        mainClass.set("net.covers1624.devlogin.DevLogin")
-        programArguments("--launch_target", "cpw.mods.bootstraplauncher.BootstrapLauncher")
+        // known issue with DevLogin support on kotlin
+        // need to use the FQN
+        /*devLogin {
+            enabled = true
+        }*/
+
+        configure<net.neoforged.gradle.dsl.common.runs.run.RunDevLogin> {
+            enabled(true)
+        }
     }
 
     create("remoteClient") {
@@ -96,6 +102,13 @@ runs {
 
 repositories {
     mavenLocal()
+    // FIXME: Remove once PR publishing becomes available
+    maven("https://maven.apexstudios.dev/private") {
+        name = "Apex's Maven"
+        content {
+            includeGroup("net.neoforged")
+        }
+    }
 
     maven("https://maven.blamejared.com/") {
         // location of the maven that hosts JEI files since January 2023
@@ -112,11 +125,6 @@ repositories {
         // location of a maven mirror for JEI files, as a fallback
         name = "ModMaven"
     }
-
-    maven("https://maven.covers1624.net") {
-        // location for DevLogin
-        name = "Covers's Maven"
-    }
 }
 
 dependencies {
@@ -125,10 +133,6 @@ dependencies {
 
     implementation(project(":levels", "default"))
     implementation(project(":rendering", "default"))
-
-    // DevLogin for fully authed clients in dev
-    // https://github.com/covers1624/DevLogin
-    runtimeOnly(libraries.devlogin)
 
     // Mods
     //mod(mods.bundles.jei)

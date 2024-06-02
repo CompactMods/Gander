@@ -38,6 +38,13 @@ java {
 
 repositories {
     mavenLocal()
+    // FIXME: Remove once PR publishing becomes available
+    maven("https://maven.apexstudios.dev/private") {
+        name = "Apex's Maven"
+        content {
+            includeGroup("net.neoforged")
+        }
+    }
 }
 
 dependencies {
