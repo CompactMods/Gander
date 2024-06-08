@@ -1,5 +1,8 @@
 package dev.compactmods.gander.network;
 
+import org.joml.Vector3f;
+
+import dev.compactmods.gander.GanderTestMod;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -10,11 +13,9 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
-import org.joml.Vector3f;
-
 public record StructureSceneDataRequest(ResourceLocation templateID, boolean inWorld,
                                         Vector3f renderLocation) implements CustomPacketPayload {
-    public static final Type<StructureSceneDataRequest> ID = new Type<>(new ResourceLocation("gander", "scene_data"));
+    public static final Type<StructureSceneDataRequest> ID = new Type<>(GanderTestMod.asResource("scene_data"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, StructureSceneDataRequest> STREAM_CODEC = StreamCodec.composite(
         ResourceLocation.STREAM_CODEC, StructureSceneDataRequest::templateID,

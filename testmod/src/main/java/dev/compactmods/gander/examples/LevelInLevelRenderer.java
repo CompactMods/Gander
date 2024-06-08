@@ -54,13 +54,14 @@ public record LevelInLevelRenderer(UUID id, BakedDirectLevelRenderingContext<Vir
         if (pipeline == null) return;
 
         var chunkRenderType = RenderTypes.renderTypeForStage(evt.getStage());
+        var partialTick = evt.getPartialTick().getGameTimeDeltaPartialTick(true);
         if (chunkRenderType != null) {
             var stack = new PoseStack();
             stack.mulPose(evt.getModelViewMatrix());
 
-            pipeline.staticGeometryPass(ctx, evt.getPartialTick(), chunkRenderType, stack, evt.getCamera(), evt.getProjectionMatrix(), renderOffset);
+            pipeline.staticGeometryPass(ctx, partialTick, chunkRenderType, stack, evt.getCamera(), evt.getProjectionMatrix(), renderOffset);
         } else if (evt.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES) {
-            pipeline.blockEntitiesPass(ctx, evt.getPartialTick(),
+            pipeline.blockEntitiesPass(ctx, partialTick,
                 evt.getPoseStack(),
                 evt.getCamera(),
                 evt.getFrustum(),
@@ -70,6 +71,6 @@ public record LevelInLevelRenderer(UUID id, BakedDirectLevelRenderingContext<Vir
     }
 
     public void onClientTick(ClientTickEvent.Post event) {
-        ctx.level().tick(Minecraft.getInstance().getPartialTick());
+        ctx.level().tick(Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true));
     }
 }

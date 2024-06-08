@@ -1,6 +1,6 @@
 package dev.compactmods.gander.network;
 
-import dev.compactmods.gander.client.gui.GanderUI;
+import dev.compactmods.gander.GanderTestMod;
 import dev.compactmods.gander.client.gui.ScreenOpener;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -10,15 +10,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
 public record OpenGanderUiForStructureRequest(Component sceneSource, StructureTemplate data) implements CustomPacketPayload
 {
-	public static final Type<OpenGanderUiForStructureRequest> ID = new Type<>(new ResourceLocation("gander", "scene_data_response"));
+	public static final Type<OpenGanderUiForStructureRequest> ID = new Type<>(GanderTestMod.asResource("scene_data_response"));
 
 	private static final StreamCodec<RegistryFriendlyByteBuf, StructureTemplate> STRUCTURE_TEMPLATE_STREAM_CODEC = StreamCodec.of(
 			(RegistryFriendlyByteBuf buf, StructureTemplate val) -> {

@@ -1,22 +1,19 @@
 package dev.compactmods.gander.client.gui;
 
+import java.io.IOException;
+
 import com.mojang.blaze3d.platform.InputConstants;
 
-import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.client.gui.widget.SpatialRenderer;
+import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.geometry.BakedLevel;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
-
 import net.minecraft.network.chat.Component;
-
-import net.minecraft.client.gui.GuiGraphics;
-
 import net.minecraft.world.item.DyeColor;
 import net.neoforged.neoforge.network.PacketDistributor;
-
-import java.io.IOException;
 
 public class GanderUI extends Screen {
 
@@ -101,7 +98,7 @@ public class GanderUI extends Screen {
 		if (this.scene != null) {
 			// TODO: :)
 			var level = ((VirtualLevel)scene.originalLevel().get());
-			level.tick(minecraft.getPartialTick());
+			level.tick(minecraft.getTimer().getRealtimeDeltaTicks());
 			// level.animateTick();
 		}
 

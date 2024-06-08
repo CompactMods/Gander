@@ -1,5 +1,15 @@
 package dev.compactmods.gander.client.gui.widget;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
+
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -8,43 +18,29 @@ import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexSorting;
 
 import dev.compactmods.gander.GanderTestMod;
-import dev.compactmods.gander.render.toolkit.BlockEntityRender;
-import dev.compactmods.gander.render.toolkit.BlockRenderer;
-import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import dev.compactmods.gander.SceneCamera;
 import dev.compactmods.gander.render.geometry.BakedLevel;
+import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
+import dev.compactmods.gander.render.toolkit.BlockEntityRender;
+import dev.compactmods.gander.render.toolkit.BlockRenderer;
 import dev.compactmods.gander.render.translucency.TranslucencyChain;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
-
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-
 import net.minecraft.world.level.BlockAndTintGetter;
-
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
-
-import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class SpatialRenderer extends AbstractWidget {
 
@@ -223,13 +219,12 @@ public class SpatialRenderer extends AbstractWidget {
 		float f2 = (float)renderTarget.viewWidth / (float)renderTarget.width;
 		float f3 = (float)renderTarget.viewHeight / (float)renderTarget.height;
 		Tesselator tesselator = RenderSystem.renderThreadTesselator();
-		BufferBuilder bufferbuilder = tesselator.getBuilder();
-		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-		bufferbuilder.vertex(0.0, f1, 0.0).uv(0.0F, 0.0F).color(255, 255, 255, 255).endVertex();
-		bufferbuilder.vertex(f, f1, 0.0).uv(f2, 0.0F).color(255, 255, 255, 255).endVertex();
-		bufferbuilder.vertex(f, 0.0, 0.0).uv(f2, f3).color(255, 255, 255, 255).endVertex();
-		bufferbuilder.vertex(0.0, 0.0, 0.0).uv(0.0F, f3).color(255, 255, 255, 255).endVertex();
-		BufferUploader.draw(bufferbuilder.end());
+		BufferBuilder bufferbuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+		bufferbuilder.addVertex(0.0F, f1, 0.0F).setUv(0.0F, 0.0F).setColor(255, 255, 255, 255);
+		bufferbuilder.addVertex(f, f1, 0.0F).setUv(f2, 0.0F).setColor(255, 255, 255, 255);
+		bufferbuilder.addVertex(f, 0.0F, 0.0F).setUv(f2, f3).setColor(255, 255, 255, 255);
+		bufferbuilder.addVertex(0.0F, 0.0F, 0.0F).setUv(0.0F, f3).setColor(255, 255, 255, 255);
+		BufferUploader.draw(bufferbuilder.buildOrThrow());
 		shaderinstance.clear();
 		GlStateManager._depthMask(true);
 	}
