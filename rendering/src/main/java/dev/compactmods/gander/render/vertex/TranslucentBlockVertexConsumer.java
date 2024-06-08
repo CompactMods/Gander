@@ -1,13 +1,13 @@
 package dev.compactmods.gander.render.vertex;
 
+import java.util.Arrays;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.util.Mth;
 import net.neoforged.neoforge.client.model.pipeline.VertexConsumerWrapper;
-
-import java.util.Arrays;
 
 public final class TranslucentBlockVertexConsumer extends VertexConsumerWrapper {
 
@@ -27,7 +27,7 @@ public final class TranslucentBlockVertexConsumer extends VertexConsumerWrapper 
 	}
 
 	@Override
-	public VertexConsumer color(int red, int green, int blue, int pAlpha) {
-		return parent.color(red, green, blue, this.alpha);
+	public VertexConsumer setColor(int red, int green, int blue, int pAlpha) {
+		return parent.setColor(red, green, blue, this.alpha);
 	}
 }

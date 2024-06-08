@@ -2,6 +2,8 @@ package dev.compactmods.gander.render.toolkit;
 
 import java.util.function.Function;
 
+import org.joml.Quaternionf;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -24,8 +26,6 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
-
-import org.joml.Quaternionf;
 
 @SuppressWarnings("unused")
 public class FluidRenderer {
@@ -226,13 +226,12 @@ public class FluidRenderer {
 		int g = color >> 8 & 0xff;
 		int b = color & 0xff;
 
-		builder.vertex(peek.pose(), x, y, z)
-				.color(r, g, b, a)
-				.uv(u, v)
-				.overlayCoords(OverlayTexture.NO_OVERLAY)
-				.uv2(light)
-				.normal(peek, normal.getX(), normal.getY(), normal.getZ())
-				.endVertex();
+		builder.addVertex(peek.pose(), x, y, z)
+				.setColor(r, g, b, a)
+				.setUv(u, v)
+				.setOverlay(OverlayTexture.NO_OVERLAY)
+				.setLight(light)
+				.setNormal(peek, normal.getX(), normal.getY(), normal.getZ());
 	}
 
 	private static float horizontalAngle(Direction facing) {

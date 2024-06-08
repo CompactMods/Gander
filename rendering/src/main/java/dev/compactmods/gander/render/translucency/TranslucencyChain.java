@@ -1,11 +1,13 @@
 package dev.compactmods.gander.render.translucency;
 
+import java.util.List;
+
+import org.joml.Matrix4f;
+import org.lwjgl.opengl.GL32;
+
 import com.mojang.blaze3d.pipeline.RenderTarget;
-
 import com.mojang.blaze3d.platform.GlConst;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -16,11 +18,6 @@ import dev.compactmods.gander.render.translucency.shader.TranslucencyEffectInsta
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.PostChain;
 import net.minecraft.resources.ResourceLocation;
-
-import org.joml.Matrix4f;
-import org.lwjgl.opengl.GL32;
-
-import java.util.List;
 
 /**
  * A translucency chain. Intended to replace {@link PostChain} uses with the
@@ -134,13 +131,12 @@ public final class TranslucencyChain implements AutoCloseable
 		RenderSystem.enableDepthTest();
 		RenderSystem.depthMask(true);
 		RenderSystem.disableBlend();
-		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
-		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-		bufferbuilder.vertex(0.0, 0.0, 500.0).endVertex();
-		bufferbuilder.vertex(layeredTargets.getWidth(), 0.0, 500.0).endVertex();
-		bufferbuilder.vertex(layeredTargets.getWidth(), layeredTargets.getHeight(), 500.0).endVertex();
-		bufferbuilder.vertex(0.0, layeredTargets.getHeight(), 500.0).endVertex();
-		BufferUploader.draw(bufferbuilder.end());
+		BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+		bufferbuilder.addVertex(0.0F, 0.0F, 500.0F);
+		bufferbuilder.addVertex(layeredTargets.getWidth(), 0.0F, 500.0F);
+		bufferbuilder.addVertex(layeredTargets.getWidth(), layeredTargets.getHeight(), 500.0F);
+		bufferbuilder.addVertex(0.0F, layeredTargets.getHeight(), 500.0F);
+		BufferUploader.draw(bufferbuilder.buildOrThrow());
 		RenderSystem.depthFunc(GlConst.GL_LEQUAL);
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthMask(false);
