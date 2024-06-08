@@ -1,8 +1,10 @@
 package dev.compactmods.gander.level.chunk;
 
-import com.mojang.serialization.MapCodec;
-
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
+
+import com.mojang.serialization.MapCodec;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.WorldGenRegion;
@@ -19,10 +21,6 @@ import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
-
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 public class VirtualChunkGenerator extends ChunkGenerator {
 
@@ -55,8 +53,8 @@ public class VirtualChunkGenerator extends ChunkGenerator {
 		return 384;
 	}
 
-	@Override
-	public CompletableFuture<ChunkAccess> fillFromNoise(Executor pExecutor, Blender pBlender, RandomState pRandom, StructureManager pStructureManager, ChunkAccess pChunk) {
+    @Override
+	public CompletableFuture<ChunkAccess> fillFromNoise(Blender pBlender, RandomState pRandom, StructureManager pStructureManager, ChunkAccess pChunk) {
 		return CompletableFuture.completedFuture(pChunk);
 	}
 

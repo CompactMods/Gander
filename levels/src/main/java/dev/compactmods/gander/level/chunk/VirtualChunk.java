@@ -1,5 +1,7 @@
 package dev.compactmods.gander.level.chunk;
 
+import static net.minecraft.world.level.chunk.ProtoChunk.packOffsetCoordinates;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -10,13 +12,11 @@ import java.util.function.BiPredicate;
 import javax.annotation.Nullable;
 
 import dev.compactmods.gander.level.VirtualLevel;
-import dev.compactmods.gander.level.util.VirtualLevelUtils;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ChunkPos;
@@ -24,19 +24,13 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
-
-import static net.minecraft.world.level.chunk.ProtoChunk.packOffsetCoordinates;
-
-import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureStart;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.TickContainerAccess;
 
@@ -162,10 +156,11 @@ public class VirtualChunk extends EmptyLevelChunk {
 		return false;
 	}
 
-	@Override
+    // TODO: Is there some other overload for this?
+	/*@Override
 	public ChunkStatus getStatus() {
 		return ChunkStatus.LIGHT;
-	}
+	}*/
 
 	@Override
 	public void removeBlockEntity(BlockPos pos) {
