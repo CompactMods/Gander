@@ -45,11 +45,11 @@ minecraft {
 
 repositories {
     mavenLocal()
-    // FIXME: Remove once PR publishing becomes available
-    maven("https://maven.apexstudios.dev/private") {
-        name = "Apex's Maven"
+    maven("https://prmaven.neoforged.net/NeoForge/pr1076") {
+        name = "NeoForge PR #1076 (1.21 port)"
         content {
-            includeGroup("net.neoforged")
+            includeModule("net.neoforged", "neoforge")
+            includeModule("net.neoforged", "testframework")
         }
     }
 }
