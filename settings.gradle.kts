@@ -1,17 +1,23 @@
 dependencyResolutionManagement {
     versionCatalogs.create("mojang") {
-        version("minecraft", "1.20.6")
+        version("minecraft", "[1.20.6,1.21)")
     }
 
     versionCatalogs.create("neoforged") {
-        version("neogradle", "7.0.119")
-        version("neoforge", "20.6.18-beta")
+        version("neogradle", "7.0.139")
+        version("neoforge", "20.6.104-beta")
+        version("loader", "[3.0.45,3.1)")
 
         library("neoforge", "net.neoforged", "neoforge")
             .versionRef("neoforge")
 
         plugin("userdev", "net.neoforged.gradle.userdev")
             .versionRef("neogradle")
+    }
+
+    versionCatalogs.create("utilities") {
+        library("roaringbitmap", "org.roaringbitmap", "RoaringBitmap")
+            .version("[1.0,1.1)")
     }
 
     versionCatalogs.create("mods") {
@@ -66,4 +72,4 @@ rootProject.name = "Gander"
 include("levels")
 include("rendering")
 
-include("testmod")
+include("gander_test")

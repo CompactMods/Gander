@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexSorting;
 
 import dev.compactmods.gander.render.FluidVertexConsumer;
+import dev.compactmods.gander.render.baked.section.SectionBaker;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -22,7 +23,9 @@ import net.minecraft.client.renderer.chunk.RenderRegionCache;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -43,6 +46,12 @@ import java.util.Set;
 public class LevelBakery {
 
 	public static BakedLevel bakeVertices(Level level, BoundingBox blockBoundaries, Vector3f cameraPosition) {
+		var shaper = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper();
+		blockBoundaries.intersectingChunks()
+			.flatMap(chunk -> SectionPos.aroundChunk(chunk, 0, level.getMinSection(), level.getMaxSection()))
+			.forEach(section -> {
+				SectionBaker.bake(level, section, shaper);
+			});
 
 		final Set<RenderType> visitedBlockRenderTypes = new HashSet<>();
 		final Set<RenderType> visitedFluidRenderTypes = new HashSet<>();

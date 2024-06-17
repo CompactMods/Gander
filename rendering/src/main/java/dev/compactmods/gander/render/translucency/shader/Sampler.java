@@ -5,7 +5,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.shaders.Uniform;
 import com.mojang.blaze3d.systems.RenderSystem;
 
-import dev.compactmods.gander.render.mixin.GlStateManagerAccessor;
+import dev.compactmods.gander.render.mixin.accessor.GlStateManagerAccessor;
 
 import org.lwjgl.opengl.GL11;
 

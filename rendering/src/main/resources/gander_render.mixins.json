@@ -4,7 +4,12 @@
   "package": "dev.compactmods.gander.render.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "accessor.BlockModelAccessor",
+    "accessor.CompositeModelAccessor",
+    "accessor.GlStateManagerAccessor",
+    "accessor.ModelManagerAccessor",
+    "accessor.StitchResultAccessor",
     "CompositeRenderTypeMixin",
-    "GlStateManagerAccessor"
+    "ModelManagerMixin"
   ]
 }

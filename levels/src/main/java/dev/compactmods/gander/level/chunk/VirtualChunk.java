@@ -27,6 +27,7 @@ import net.minecraft.world.level.chunk.ChunkAccess;
 
 import static net.minecraft.world.level.chunk.ProtoChunk.packOffsetCoordinates;
 
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.level.chunk.EmptyLevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
@@ -40,19 +41,20 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.TickContainerAccess;
 
-public class VirtualChunk extends EmptyLevelChunk {
+public class VirtualChunk extends LevelChunk
+{
 
 	private final VirtualLevel virtualLevel;
 	private final VirtualChunkSection[] sections;
 
 	private boolean needsLight;
 
-	public VirtualChunk(VirtualLevel world, int x, int z) {
-		super(world, new ChunkPos(x, z), world.getBiome());
+	public VirtualChunk(VirtualLevel level, int x, int z) {
+		super(level, new ChunkPos(x, z));
 
-		this.virtualLevel = world;
+		this.virtualLevel = level;
 
-		int sectionCount = world.getSectionsCount();
+		int sectionCount = level.getSectionsCount();
 		this.sections = new VirtualChunkSection[sectionCount];
 
 		for (int i = 0; i < sectionCount; i++) {

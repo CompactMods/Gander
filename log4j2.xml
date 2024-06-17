@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+        <Console name="STDOUT">
+            <PatternLayout pattern="%highlight{%level{TRACE=trce,DEBUG=dbug,INFO=info,WARN=warn,ERROR=fail,FATAL=crit}}{TRACE=white,DEBUG=bright_white,INFO=green,WARN=yellow,ERROR=bg_red fg_black,FATAL=bg_bright_red fg_bright_white}: %c%notEmpty{ => %marker}%n%message%n%notEmpty{%rException%n}">
+                <Replace regex="\r?\n(?!\Z)" replacement="${sys:line.separator}      " />
+            </PatternLayout>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Logger name="dev.compactmods.gander" level="trace" />
+        <Root level="info">
+            <AppenderRef ref="STDOUT" />
+        </Root>
+    </Loggers>
+</Configuration>
