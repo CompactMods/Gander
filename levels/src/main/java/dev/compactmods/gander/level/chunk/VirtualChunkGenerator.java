@@ -56,9 +56,15 @@ public class VirtualChunkGenerator extends ChunkGenerator {
 	}
 
 	@Override
-	public CompletableFuture<ChunkAccess> fillFromNoise(Executor pExecutor, Blender pBlender, RandomState pRandom, StructureManager pStructureManager, ChunkAccess pChunk) {
-		return CompletableFuture.completedFuture(pChunk);
+	public CompletableFuture<ChunkAccess> fillFromNoise(
+		final Blender blender,
+		final RandomState randomState,
+		final StructureManager structureManager,
+		final ChunkAccess chunkAccess)
+	{
+		return CompletableFuture.completedFuture(chunkAccess);
 	}
+
 
 	@Override
 	public int getSeaLevel() {

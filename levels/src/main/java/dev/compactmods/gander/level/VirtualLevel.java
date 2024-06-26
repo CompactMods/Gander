@@ -330,12 +330,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	@Override
 	public FeatureFlagSet enabledFeatures() {
-		return FeatureFlagSet.of(
-				FeatureFlags.VANILLA,
-				FeatureFlags.UPDATE_1_21,
-				FeatureFlags.TRADE_REBALANCE,
-				FeatureFlags.BUNDLE
-		);
+		return FeatureFlags.REGISTRY.allFlags();
 	}
 
 	@Override

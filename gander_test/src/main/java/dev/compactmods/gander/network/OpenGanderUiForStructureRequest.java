@@ -18,7 +18,7 @@ import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
 public record OpenGanderUiForStructureRequest(Component sceneSource, StructureTemplate data) implements CustomPacketPayload
 {
-	public static final Type<OpenGanderUiForStructureRequest> ID = new Type<>(new ResourceLocation("gander", "scene_data_response"));
+	public static final Type<OpenGanderUiForStructureRequest> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("gander", "scene_data_response"));
 
 	private static final StreamCodec<RegistryFriendlyByteBuf, StructureTemplate> STRUCTURE_TEMPLATE_STREAM_CODEC = StreamCodec.of(
 			(RegistryFriendlyByteBuf buf, StructureTemplate val) -> {

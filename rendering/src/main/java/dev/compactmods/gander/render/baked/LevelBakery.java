@@ -2,6 +2,7 @@ package dev.compactmods.gander.render.baked;
 
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import com.mojang.blaze3d.vertex.VertexBuffer;
@@ -46,7 +47,8 @@ import java.util.Set;
 public class LevelBakery {
 
 	public static BakedLevel bakeVertices(Level level, BoundingBox blockBoundaries, Vector3f cameraPosition) {
-		var shaper = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper();
+		return new BakedLevel(null, null, null, null, null, null, null, null);
+		/*var shaper = Minecraft.getInstance().getBlockRenderer().getBlockModelShaper();
 		blockBoundaries.intersectingChunks()
 			.flatMap(chunk -> SectionPos.aroundChunk(chunk, 0, level.getMinSection(), level.getMaxSection()))
 			.forEach(section -> {
@@ -130,14 +132,14 @@ public class LevelBakery {
 			return builder;
 		}, createRegion(regionCache, additionalRenderers, level, blockBoundaries), pose);
 
-		BufferBuilder.SortState blockTransparencyState = null;
+		MeshData.SortState blockTransparencyState = null;
 		if (visitedBlockRenderTypes.contains(RenderType.translucent())) {
 			final var builder = blockPack.builder(RenderType.translucent());
 			builder.setQuadSorting(VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z));
 			blockTransparencyState = builder.getSortState();
 		}
 
-		BufferBuilder.SortState fluidTransparencyState = null;
+		MeshData.SortState fluidTransparencyState = null;
 		if (visitedFluidRenderTypes.contains(RenderType.translucent())) {
 			final var builder = fluidPack.builder(RenderType.translucent());
 			builder.setQuadSorting(VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z));
@@ -172,14 +174,15 @@ public class LevelBakery {
 			}
 		});
 
-		return new BakedLevel(new WeakReference<>(level), blockPack, fluidPack, blockGeometry, fluidGeometry, blockTransparencyState, fluidTransparencyState, blockBoundaries);
+		return new BakedLevel(new WeakReference<>(level), blockPack, fluidPack, blockGeometry, fluidGeometry, blockTransparencyState, fluidTransparencyState, blockBoundaries);*/
 	}
 
 	private static RenderChunkRegion createRegion(RenderRegionCache cache, List<AddSectionGeometryEvent.AdditionalSectionRenderer> additionalRenderers, Level level, BoundingBox bounds) {
-		return cache.createRegion(level,
+		/*return cache.createRegion(level,
 				new BlockPos(bounds.minX(), bounds.minY(), bounds.minZ()),
 				new BlockPos(bounds.maxX(), bounds.maxY(), bounds.maxZ()),
 				0,
-				additionalRenderers.isEmpty());
+				additionalRenderers.isEmpty());*/
+		return null;
 	}
 }

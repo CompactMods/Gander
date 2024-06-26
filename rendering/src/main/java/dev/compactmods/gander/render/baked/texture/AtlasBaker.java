@@ -33,7 +33,10 @@ public final class AtlasBaker
 
     public static List<ResourceLocation> getAtlasIndexes(ResourceLocation atlas)
     {
-        return ATLASES.get(atlas).indexes();
+        var x = ATLASES.getOrDefault(atlas, null);
+        return x != null
+            ? x.indexes()
+            : List.of();
     }
 
     public static Map<ResourceLocation, CompletableFuture<AtlasSet.StitchResult>> bakeAtlases(

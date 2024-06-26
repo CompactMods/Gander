@@ -165,11 +165,6 @@ public class VirtualChunk extends LevelChunk
 	}
 
 	@Override
-	public ChunkStatus getStatus() {
-		return ChunkStatus.LIGHT;
-	}
-
-	@Override
 	public void removeBlockEntity(BlockPos pos) {
 		virtualLevel.removeBlockEntity(pos);
 	}

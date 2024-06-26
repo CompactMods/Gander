@@ -6,35 +6,41 @@ import com.mojang.blaze3d.shaders.Uniform;
 import dev.compactmods.gander.GanderTestMod;
 import dev.compactmods.gander.render.baked.model.ModelRebaker;
 import dev.compactmods.gander.render.baked.texture.AtlasBaker;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.block.BlockModelShaper;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage;
-import net.neoforged.neoforge.client.util.DebuggingHelper;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.joml.Matrix4f;
-import org.lwjgl.opengl.ARBInstancedArrays;
-import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL32;
-import org.lwjgl.opengl.GL33;
-import org.lwjgl.system.MemoryUtil;
+
+import java.util.Objects;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
 
-public record GanderDebugRenderPacket() implements CustomPacketPayload
+public record GanderDebugRenderPacket(BlockState state) implements CustomPacketPayload
 {
     private static boolean render = false;
 
-    public static final GanderDebugRenderPacket INSTANCE = new GanderDebugRenderPacket();
-
     public static final Type<GanderDebugRenderPacket> ID = new Type<>(GanderTestMod.asResource("debug"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, GanderDebugRenderPacket> STREAM_CODEC = StreamCodec.unit(INSTANCE);
+    public static final StreamCodec<RegistryFriendlyByteBuf, GanderDebugRenderPacket> STREAM_CODEC
+        = StreamCodec.composite(
+            ResourceKey.streamCodec(Registries.BLOCK), pkt -> pkt.state().getBlockHolder().unwrapKey().get(),
+            key -> new GanderDebugRenderPacket(Objects.requireNonNull(BuiltInRegistries.BLOCK.get(key)).defaultBlockState()));
 
     @Override
     public Type<? extends CustomPacketPayload> type()
@@ -47,94 +53,132 @@ public record GanderDebugRenderPacket() implements CustomPacketPayload
         if (FMLEnvironment.dist.isClient())
         {
             render = !render;
+            lastBlockState = pkt.state();
         }
     }
 
     private static final int COUNT = (1 << 18) - 1;
-    private static final ModelResourceLocation modelRL = ModelResourceLocation.vanilla("stone", "");
     private static boolean builtBuffers = false;
     private static int vertexArray;
     private static int numberIndices;
     private static int spriteUVs;
 
-    private static void buildBuffers()
+    private static final IntList buffers = new IntArrayList();
+
+    private static void buildBuffers(BlockState state)
     {
-        var archetypes = ModelRebaker.getModelArchetypes(modelRL);
-        var models = ModelRebaker.getArchetypeMeshes(archetypes.stream().findFirst().get());
-        var model = ModelRebaker.getMesh(models.stream().findFirst().get());
-        var textures = AtlasBaker.getAtlasBuffer(TextureAtlas.LOCATION_BLOCKS);
+        var modelLocation = BlockModelShaper.stateToModelLocation(state);
+        var archetypes = ModelRebaker.getModelArchetypes(modelLocation);
+        var models = ModelRebaker.getArchetypeModel(archetypes.stream().findFirst().get());
+        var model = ModelRebaker.getArchetypeMesh(models.stream().findFirst().get());
+        var textureAtlas = AtlasBaker.getAtlasBuffer(TextureAtlas.LOCATION_BLOCKS);
         var indexes = AtlasBaker.getAtlasIndexes(TextureAtlas.LOCATION_BLOCKS);
-        var stoneIndex = indexes.indexOf(new ResourceLocation("minecraft:block/stone"));
+        var materialInstances = ModelRebaker.getMaterialInstances(modelLocation);
 
         vertexArray = GL32.glGenVertexArrays();
         GL32.glBindVertexArray(vertexArray);
 
         try (var stack = stackPush())
         {
-            var vertices = stack.mallocFloat(model.vertices().remaining());
-            var indices = stack.malloc(model.indices().remaining());
-            var normals = stack.mallocFloat(model.normals().remaining());
-            var uvs = stack.mallocFloat(model.uvs().remaining());
-            var textureUvs = stack.mallocFloat(textures.remaining());
-            var textureIndices = MemoryUtil.memAllocInt(COUNT);
-
+            var vertices = stack.mallocFloat(model.vertices().limit());
             vertices.put(model.vertices());
             vertices.flip();
-            indices.put(model.indices());
-            indices.flip();
-            normals.put(model.normals());
-            normals.flip();
-            uvs.put(model.uvs());
-            uvs.flip();
-            textureUvs.put(textures);
-            textureUvs.flip();
-
-            for (int i = 0; i < COUNT; i++)
-            {
-                textureIndices.put(stoneIndex);
-            }
-            textureIndices.flip();
 
             int vertexBuffer = GL32.glGenBuffers();
+            buffers.add(vertexBuffer);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, vertexBuffer);
             GL32.glBufferData(GL32.GL_ARRAY_BUFFER, vertices, GL32.GL_STATIC_DRAW);
+        }
+
+        try (var stack = stackPush())
+        {
+            var indices = stack.malloc(model.indices().limit());
+            indices.put(model.indices());
+            indices.flip();
 
             int indexBuffer = GL32.glGenBuffers();
+            buffers.add(indexBuffer);
             GL32.glBindBuffer(GL32.GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
             GL32.glBufferData(GL32.GL_ELEMENT_ARRAY_BUFFER, indices, GL32.GL_STATIC_DRAW);
             GL32.glVertexAttribPointer(0, 3, GL32.GL_FLOAT, false, 0, 0);
             GL32.glEnableVertexAttribArray(0);
             numberIndices = model.indices().limit();
+        }
+
+        try (var stack = stackPush())
+        {
+            var normals = stack.mallocFloat(model.normals().limit());
+            normals.put(model.normals());
+            normals.flip();
 
             int normalBuffer = GL32.glGenBuffers();
+            buffers.add(normalBuffer);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, normalBuffer);
             GL32.glBufferData(GL32.GL_ARRAY_BUFFER, normals, GL32.GL_STATIC_DRAW);
             GL32.glVertexAttribPointer(1, 3, GL32.GL_FLOAT, false, 0, 0);
             GL32.glEnableVertexAttribArray(1);
+        }
+
+        try (var stack = stackPush())
+        {
+            var uvs = stack.mallocFloat(model.uvs().limit());
+            uvs.put(model.uvs());
+            uvs.flip();
 
             int uvBuffer = GL32.glGenBuffers();
+            buffers.add(uvBuffer);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, uvBuffer);
             GL32.glBufferData(GL32.GL_ARRAY_BUFFER, uvs, GL32.GL_STATIC_DRAW);
             GL32.glVertexAttribPointer(2, 2, GL32.GL_FLOAT, false, 0, 0);
             GL32.glEnableVertexAttribArray(2);
+        }
+
+        try (var stack = stackPush())
+        {
+            var sprites = stack.mallocInt(model.vertexCount());
+
+            for (int i = 0; i < model.vertexCount(); i++)
+            {
+                var material = model.materials().get(model.materialIndexes()[i]);
+                var instances = materialInstances.get(material);
+                if (instances.isEmpty())
+                {
+                    sprites.put(indexes.indexOf(MissingTextureAtlasSprite.getLocation()));
+                }
+                else
+                {
+                    var instance = instances.stream().findFirst().get();
+                    var index = indexes.indexOf(instance.getEffectiveTexture());
+                    if (index < 0)
+                    {
+                        sprites.put(indexes.indexOf(MissingTextureAtlasSprite.getLocation()));
+                    }
+                    else
+                    {
+                        sprites.put(index);
+                    }
+                }
+            }
+            sprites.flip();
 
             int spriteIndices = GL32.glGenBuffers();
+            buffers.add(spriteIndices);
             GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, spriteIndices);
-            GL32.glBufferData(GL32.GL_ARRAY_BUFFER, textureIndices, GL32.GL_STATIC_DRAW);
+            GL32.glBufferData(GL32.GL_ARRAY_BUFFER, sprites, GL32.GL_STATIC_DRAW);
             GL32.glVertexAttribIPointer(3, 1, GL32.GL_INT, 0, 0);
-            if (GL.getCapabilities().OpenGL33)
-            {
-                GL33.glVertexAttribDivisor(3, 1);
-            }
-            else if (GL.getCapabilities().GL_ARB_instanced_arrays)
-            {
-                ARBInstancedArrays.glVertexAttribDivisorARB(3, 1);
-            }
             GL32.glEnableVertexAttribArray(3);
+        }
+
+        try (var stack = stackPush())
+        {
+            var textures = stack.mallocFloat(textureAtlas.limit());
+            textures.put(textureAtlas);
+            textures.flip();
 
             spriteUVs = GL32.glGenBuffers();
+            buffers.add(spriteUVs);
             GL32.glBindBuffer(GL32.GL_UNIFORM_BUFFER, spriteUVs);
-            GL32.glBufferData(GL32.GL_UNIFORM_BUFFER, textureUvs, GL32.GL_STATIC_DRAW);
+            GL32.glBufferData(GL32.GL_UNIFORM_BUFFER, textures, GL32.GL_STATIC_DRAW);
         }
 
         builtBuffers = true;
@@ -145,6 +189,9 @@ public record GanderDebugRenderPacket() implements CustomPacketPayload
     private static Uniform projectionMatrix;
     private static Uniform modelViewMatrix;
 
+    private static BlockState lastBlockState;
+    private static final IntList shaders = new IntArrayList();
+
     private static void buildShader()
     {
         projectionMatrix = new Uniform("ProjMat", Uniform.UT_MAT4, 16, null);
@@ -152,8 +199,10 @@ public record GanderDebugRenderPacket() implements CustomPacketPayload
 
         var atlasSize = AtlasBaker.getAtlasIndexes(TextureAtlas.LOCATION_BLOCKS).size();
         var vertex = GL32.glCreateShader(GL32.GL_VERTEX_SHADER);
+        shaders.add(vertex);
+        // TODO: this requires 3.3...
         GL32.glShaderSource(vertex, """
-            #version 150
+            #version 330
 
             in vec3 Position;
             in vec3 Normal;
@@ -174,25 +223,63 @@ public record GanderDebugRenderPacket() implements CustomPacketPayload
                 vec2 texCoords;
             } vs_out;
             
+            float nextafter(float x, float y)
+            {
+                int bits = floatBitsToInt(x);
+            
+                if (x == y)
+                {
+                    return y;
+                }
+                else if (x > y)
+                {
+                    // x needs to get smaller
+                    if (x < 0)
+                    {
+                        bits++;
+                    }
+                    else
+                    {
+                        bits--;
+                    }
+                }
+                else
+                {
+                    // x needs to get larger
+                    if (x < 0)
+                    {
+                        bits--;
+                    }
+                    else
+                    {
+                        bits++;
+                    }
+                }
+            
+                return intBitsToFloat(bits);
+            }
+            
             void main() {
                 // section relative coords are packed in XZY order 
                 int x = gl_InstanceID & 0x3F;
                 int z = (gl_InstanceID >> 6) & 0x3F;
                 int y = (gl_InstanceID >> 12) & 0x3F;
                 vec4 position = vec4(Position, 1.0);
-                // Models are scaled 16x
-                position -= vec4(x * 16.0f, y * 16.0f, z * 16.0f, 0.0f);
+                position -= vec4(x, y, z, 0.0f);
 
                 gl_Position = ProjMat * ModelViewMat * position;
                 vs_out.normal = Normal;
 
                 // Sprite bounds is the rectangle we can draw in
                 vec4 spriteBounds = textureAtlas[AtlasIndex];
-                // uv is the 0..1 as a percentage of spriteBounds
-                vec2 uv = TexCoords / 16.0f;
+                // Shrink it a little to avoid floating point rounding errors from sampling
+                spriteBounds.x = nextafter(nextafter(spriteBounds.x, spriteBounds.z), spriteBounds.z);
+                spriteBounds.y = nextafter(nextafter(spriteBounds.y, spriteBounds.w), spriteBounds.w);
+                spriteBounds.z = nextafter(nextafter(spriteBounds.z, spriteBounds.x), spriteBounds.x);
+                spriteBounds.w = nextafter(nextafter(spriteBounds.w, spriteBounds.y), spriteBounds.y);
                 // spriteSize is the size of the sprite in UV coordinates
                 vec2 spriteSize = spriteBounds.zw - spriteBounds.xy;
-                vs_out.texCoords = spriteBounds.xy + (spriteSize * uv);
+                vs_out.texCoords = spriteBounds + (spriteSize * TexCoords);
             }
             """.formatted(atlasSize));
         GL32.glCompileShader(vertex);
@@ -204,6 +291,7 @@ public record GanderDebugRenderPacket() implements CustomPacketPayload
         }
 
         var fragment = GL32.glCreateShader(GL32.GL_FRAGMENT_SHADER);
+        shaders.add(fragment);
         GL32.glShaderSource(fragment, """
             #version 150
             
@@ -220,7 +308,7 @@ public record GanderDebugRenderPacket() implements CustomPacketPayload
                 color = texture(BlockAtlas, vs_out.texCoords);
             }
             """);
-                    GL32.glCompileShader(fragment);
+        GL32.glCompileShader(fragment);
         compileStatus = GlStateManager.glGetShaderi(fragment, GlConst.GL_COMPILE_STATUS);
         if (compileStatus != GlConst.GL_TRUE)
         {
@@ -254,13 +342,28 @@ public record GanderDebugRenderPacket() implements CustomPacketPayload
     private static final Matrix4f pMatrix = new Matrix4f();
     public static void render(RenderLevelStageEvent e)
     {
-        if (!render) return;
+        if (!render)
+        {
+            if (builtShader)
+            {
+                GL32.glDeleteProgram(shader);
+                shaders.forEach(GL32::glDeleteShader);
+                builtShader = false;
+            }
+            if (builtBuffers)
+            {
+                GL32.glDeleteVertexArrays(vertexArray);
+                buffers.forEach(GL32::glDeleteBuffers);
+                builtBuffers = false;
+            }
+            return;
+        }
 
         if (e.getStage() == Stage.AFTER_SOLID_BLOCKS)
         {
             //DebuggingHelper.releaseMouse();
 
-            if (!builtBuffers) buildBuffers();
+            if (!builtBuffers) buildBuffers(lastBlockState);
             if (!builtShader) buildShader();
 
             // This is mildly frustrating...
@@ -268,7 +371,6 @@ public record GanderDebugRenderPacket() implements CustomPacketPayload
             mvMatrix.identity();
             mvMatrix.mul(e.getModelViewMatrix());
             mvMatrix.translate((float)-position.x, (float)-position.y, (float)-position.z);
-            mvMatrix.scale(1f/16f);
             pMatrix.set(e.getProjectionMatrix());
 
             // TODO: combine these into a single uniform
@@ -284,8 +386,9 @@ public record GanderDebugRenderPacket() implements CustomPacketPayload
                 .getTexture(TextureAtlas.LOCATION_BLOCKS);
             GL32.glActiveTexture(GL32.GL_TEXTURE0);
             GL32.glBindTexture(GL32.GL_TEXTURE_2D, tex.getId());
+            GL32.glBindBuffer(GL32.GL_UNIFORM_BUFFER, spriteUVs);
             GL32.glBindBufferBase(GL32.GL_UNIFORM_BUFFER, 0, spriteUVs);
-            GL32.glDrawElementsInstanced(GL32.GL_TRIANGLES, numberIndices, GL32.GL_UNSIGNED_BYTE, 0, COUNT);
+            GL32.glDrawElementsInstanced(GL32.GL_TRIANGLES, numberIndices, GL32.GL_UNSIGNED_BYTE, 0, (1 << 18) - 1);
         }
     }
 

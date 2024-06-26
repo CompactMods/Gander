@@ -7,7 +7,12 @@
     "accessor.BlockModelAccessor",
     "accessor.CompositeModelAccessor",
     "accessor.GlStateManagerAccessor",
+    "accessor.ModelBakeryAccessor",
     "accessor.ModelManagerAccessor",
+    "accessor.ObjModel$ModelGroupAccessor",
+    "accessor.ObjModel$ModelMeshAccessor",
+    "accessor.ObjModel$ModelObjectAccessor",
+    "accessor.ObjModelAccessor",
     "accessor.StitchResultAccessor",
     "CompositeRenderTypeMixin",
     "ModelManagerMixin"

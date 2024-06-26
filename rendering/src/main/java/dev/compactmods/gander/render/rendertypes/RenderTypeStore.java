@@ -10,7 +10,7 @@ import java.util.Map;
 import net.minecraft.resources.ResourceLocation;
 
 public class RenderTypeStore {
-	public static final ResourceLocation MAIN_TARGET = new ResourceLocation("gander_test", "main");
+	public static final ResourceLocation MAIN_TARGET = ResourceLocation.fromNamespaceAndPath("gander_test", "main");
 
 	private static final Map<RenderStateShard.OutputStateShard, String> BLOCK_RENDER_TARGET_MAP = Map.of(
 			RenderStateShard.OutputStateShard.MAIN_TARGET, "main",
@@ -43,7 +43,7 @@ public class RenderTypeStore {
 	public RenderType redirectedBlockRenderType(RenderType desiredType) {
 		final var crying = GanderCompositeRenderType.of(desiredType);
 		// TODO: GanderLib.asResource
-		final var remappedQuestionMark = new ResourceLocation("gander_test", BLOCK_RENDER_TARGET_MAP.get(crying.state().outputState));
+		final var remappedQuestionMark = ResourceLocation.fromNamespaceAndPath("gander_test", BLOCK_RENDER_TARGET_MAP.get(crying.state().outputState));
 
 		if (remappedQuestionMark == null)
 			return desiredType;
@@ -59,7 +59,7 @@ public class RenderTypeStore {
 	public RenderType redirectedFluidRenderType(RenderType desiredType) {
 		final var crying = GanderCompositeRenderType.of(desiredType);
 		// TODO: GanderLib.asResource
-		final var remappedQuestionMark = new ResourceLocation("gander_test", FLUID_RENDER_TARGET_MAP.get(crying.state().outputState));
+		final var remappedQuestionMark = ResourceLocation.fromNamespaceAndPath("gander_test", FLUID_RENDER_TARGET_MAP.get(crying.state().outputState));
 
 		if (remappedQuestionMark == null)
 			return desiredType;

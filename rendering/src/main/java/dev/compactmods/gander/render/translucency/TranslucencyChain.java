@@ -134,13 +134,13 @@ public final class TranslucencyChain implements AutoCloseable
 		RenderSystem.enableDepthTest();
 		RenderSystem.depthMask(true);
 		RenderSystem.disableBlend();
-		BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
-		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-		bufferbuilder.vertex(0.0, 0.0, 500.0).endVertex();
-		bufferbuilder.vertex(layeredTargets.getWidth(), 0.0, 500.0).endVertex();
-		bufferbuilder.vertex(layeredTargets.getWidth(), layeredTargets.getHeight(), 500.0).endVertex();
-		bufferbuilder.vertex(0.0, layeredTargets.getHeight(), 500.0).endVertex();
-		BufferUploader.draw(bufferbuilder.end());
+		BufferBuilder bufferbuilder = Tesselator.getInstance()
+			.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+		bufferbuilder.addVertex(0.0f, 0.0f, 500.0f);
+		bufferbuilder.addVertex(layeredTargets.getWidth(), 0.0f, 500.0f);
+		bufferbuilder.addVertex(layeredTargets.getWidth(), layeredTargets.getHeight(), 500.0f);
+		bufferbuilder.addVertex(0.0f, layeredTargets.getHeight(), 500.0f);
+		BufferUploader.draw(bufferbuilder.buildOrThrow());
 		RenderSystem.depthFunc(GlConst.GL_LEQUAL);
 		RenderSystem.disableDepthTest();
 		RenderSystem.depthMask(false);

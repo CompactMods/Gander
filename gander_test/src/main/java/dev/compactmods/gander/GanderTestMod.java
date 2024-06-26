@@ -43,7 +43,7 @@ public class GanderTestMod
 	}
 
 	public static ResourceLocation asResource(String path) {
-		return new ResourceLocation(ID, path);
+		return ResourceLocation.fromNamespaceAndPath(ID, path);
 	}
 
 	private static void onPacketRegistration(final RegisterPayloadHandlersEvent payloads) {

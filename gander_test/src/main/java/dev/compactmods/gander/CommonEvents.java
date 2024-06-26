@@ -15,7 +15,6 @@ public class CommonEvents {
 		var dispatcher = event.getDispatcher();
 		var root = GanderCommand.make();
 		dispatcher.register(root);
-
-		dispatcher.register(TestCommand.COMMAND);
+		dispatcher.register(TestCommand.build(event.getBuildContext()));
 	}
 }

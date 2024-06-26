@@ -9,7 +9,7 @@ import net.neoforged.neoforge.network.handling.IPayloadHandler;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 public record StructureSceneDataRequest(ResourceLocation templateID) implements CustomPacketPayload {
-	public static final Type<StructureSceneDataRequest> ID = new Type<>(new ResourceLocation("gander", "scene_data"));
+	public static final Type<StructureSceneDataRequest> ID = new Type<>(ResourceLocation.fromNamespaceAndPath("gander", "scene_data"));
 
 	public static final StreamCodec<RegistryFriendlyByteBuf, StructureSceneDataRequest> STREAM_CODEC = StreamCodec.composite(
 			ResourceLocation.STREAM_CODEC, StructureSceneDataRequest::templateID,

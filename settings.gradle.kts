@@ -1,12 +1,12 @@
 dependencyResolutionManagement {
     versionCatalogs.create("mojang") {
-        version("minecraft", "[1.20.6,1.21)")
+        version("minecraft", "[1.21,1.22)")
     }
 
     versionCatalogs.create("neoforged") {
-        version("neogradle", "7.0.139")
-        version("neoforge", "20.6.104-beta")
-        version("loader", "[3.0.45,3.1)")
+        version("neogradle", "7.0.143")
+        version("neoforge", "21.0.16-beta")
+        version("loader", "[4.0.6,)")
 
         library("neoforge", "net.neoforged", "neoforge")
             .versionRef("neoforge")

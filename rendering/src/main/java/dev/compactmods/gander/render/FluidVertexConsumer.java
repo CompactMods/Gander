@@ -16,50 +16,40 @@ import net.minecraft.core.BlockPos;
 public record FluidVertexConsumer(VertexConsumer prior, PoseStack pose, BlockPos pos) implements VertexConsumer {
 
 	@Override
-	public VertexConsumer vertex(double x, double y, double z) {
+	public VertexConsumer addVertex(float x, float y, float z) {
 		final float dx = pos.getX() & 15;
 		final float dy = pos.getY() & 15;
 		final float dz = pos.getZ() & 15;
-		return prior.vertex(pose.last().pose(), (float) x - dx, (float) y - dy, (float) z - dz);
+		return prior.addVertex(pose.last().pose(), x - dx, y - dy, z - dz);
 	}
 
 	@Override
-	public VertexConsumer color(int r, int g, int b, int a) {
-		return prior.color(r, g, b, a);
+	public VertexConsumer setColor(final int i, final int i1, final int i2, final int i3)
+	{
+		return prior.setColor(i, i1, i2, i3);
 	}
 
 	@Override
-	public VertexConsumer uv(float u, float v) {
-		return prior.uv(u, v);
+	public VertexConsumer setUv(final float v, final float v1)
+	{
+		return prior.setUv(v, v1);
 	}
 
 	@Override
-	public VertexConsumer overlayCoords(int u, int v) {
-		return prior.overlayCoords(u, v);
+	public VertexConsumer setUv1(final int i, final int i1)
+	{
+		return prior.setUv1(i, i1);
 	}
 
 	@Override
-	public VertexConsumer uv2(int u, int v) {
-		return prior.uv2(u, v);
+	public VertexConsumer setUv2(final int i, final int i1)
+	{
+		return prior.setUv2(i, i1);
 	}
 
 	@Override
-	public VertexConsumer normal(float x, float y, float z) {
-		return prior.normal(pose.last(), x, y, z);
-	}
-
-	@Override
-	public void endVertex() {
-		prior.endVertex();
-	}
-
-	@Override
-	public void defaultColor(int r, int g, int b, int a) {
-		prior.defaultColor(r, g, b, a);
-	}
-
-	@Override
-	public void unsetDefaultColor() {
-		prior.unsetDefaultColor();
+	public VertexConsumer setNormal(final float v, final float v1, final float v2)
+	{
+		return prior.setNormal(v, v1, v2);
 	}
 }

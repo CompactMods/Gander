@@ -222,14 +222,21 @@ public class SpatialRenderer extends AbstractWidget {
 		float f1 = (float)height;
 		float f2 = (float)renderTarget.viewWidth / (float)renderTarget.width;
 		float f3 = (float)renderTarget.viewHeight / (float)renderTarget.height;
-		Tesselator tesselator = RenderSystem.renderThreadTesselator();
-		BufferBuilder bufferbuilder = tesselator.getBuilder();
-		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-		bufferbuilder.vertex(0.0, f1, 0.0).uv(0.0F, 0.0F).color(255, 255, 255, 255).endVertex();
-		bufferbuilder.vertex(f, f1, 0.0).uv(f2, 0.0F).color(255, 255, 255, 255).endVertex();
-		bufferbuilder.vertex(f, 0.0, 0.0).uv(f2, f3).color(255, 255, 255, 255).endVertex();
-		bufferbuilder.vertex(0.0, 0.0, 0.0).uv(0.0F, f3).color(255, 255, 255, 255).endVertex();
-		BufferUploader.draw(bufferbuilder.end());
+		var buffer = RenderSystem.renderThreadTesselator()
+			.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+		buffer.addVertex(0.0f, f1, 0.0f)
+			.setUv(0.0F, 0.0F)
+			.setColor(255, 255, 255, 255);
+		buffer.addVertex(f, f1, 0.0f)
+			.setUv(f2, 0.0F)
+			.setColor(255, 255, 255, 255);
+		buffer.addVertex(f, 0.0f, 0.0f)
+			.setUv(f2, f3)
+			.setColor(255, 255, 255, 255);
+		buffer.addVertex(0.0f, 0.0f, 0.0f)
+			.setUv(0.0F, f3)
+			.setColor(255, 255, 255, 255);
+		BufferUploader.draw(buffer.buildOrThrow());
 		shaderinstance.clear();
 		GlStateManager._depthMask(true);
 	}
