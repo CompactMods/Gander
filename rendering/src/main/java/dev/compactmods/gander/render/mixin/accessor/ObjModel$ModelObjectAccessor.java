@@ -10,5 +10,8 @@ import java.util.List;
 public interface ObjModel$ModelObjectAccessor
 {
     @Accessor
+    String getName();
+
+    @Accessor
     List<ObjModel$ModelMeshAccessor> getMeshes();
 }

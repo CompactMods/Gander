@@ -8,6 +8,7 @@
         </Console>
     </Appenders>
     <Loggers>
+        <Logger name="dev.compactmods.gander.render.baked" level="debug" />
         <Logger name="dev.compactmods.gander" level="trace" />
         <Root level="info">
             <AppenderRef ref="STDOUT" />

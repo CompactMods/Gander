@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
 import dev.compactmods.gander.render.baked.BakedMesh;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeBaker;
+import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
 import dev.compactmods.gander.render.baked.model.material.MaterialParent;
 import dev.compactmods.gander.render.baked.model.ModelVertices;
 import dev.compactmods.gander.render.baked.model.ModelVertices.ModelVertex;
@@ -29,9 +30,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -41,7 +40,7 @@ public final class ObjModelBaker
 
     private ObjModelBaker() { }
 
-    public static Map<ModelResourceLocation, BakedMesh> bakeObjModel(
+    public static Stream<ArchetypeComponent> bakeObjModel(
         ModelResourceLocation originalName,
         BlockModel model,
         ObjModel obj)
@@ -60,11 +59,10 @@ public final class ObjModelBaker
                     it.getValue(),
                     obj,
                     model);
-            })
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            });
     }
 
-    private static Stream<Map.Entry<ModelResourceLocation, BakedMesh>> bakePart(
+    private static Stream<ArchetypeComponent> bakePart(
         ModelResourceLocation partName,
         ObjModel.ModelObject part,
         ObjModel model,
@@ -78,9 +76,9 @@ public final class ObjModelBaker
                 var name = ArchetypeBaker.computeMeshName(
                     partName,
                     String.valueOf(it));
-                var mesh = bakeMesh(meshes.get(it), model, originalModel);
+                var mesh = bakeMesh(name, meshes.get(it), accessor, model, originalModel);
                 if (mesh != null)
-                    return Map.entry(name, mesh);
+                    return mesh;
 
                 if (LOGGER.isTraceEnabled())
                     LOGGER.trace("Failed to bake part {} mesh index {}", partName, it);
@@ -95,7 +93,7 @@ public final class ObjModelBaker
         return result;
     }
 
-    private static Stream<Map.Entry<ModelResourceLocation, BakedMesh>> bakeGroup(
+    private static Stream<ArchetypeComponent> bakeGroup(
         ModelResourceLocation partName,
         ObjModel.ModelGroup group,
         ObjModel model,
@@ -119,8 +117,10 @@ public final class ObjModelBaker
     }
 
     // TODO: almost identical logic is used in BlockModelBaker, this should be deduplicated.
-    private static BakedMesh bakeMesh(
+    private static ArchetypeComponent bakeMesh(
+        ModelResourceLocation meshName,
         ObjModel$ModelMeshAccessor mesh,
+        ObjModel$ModelObjectAccessor object,
         ObjModel model,
         BlockModel originalModel)
     {
@@ -210,13 +210,19 @@ public final class ObjModelBaker
             materialIndexes[i++] = materials.indexOf(materialByName);
         }
 
-        return new BakedMesh(
-            deduplicatedVertices.size(),
-            vertexBuffer.flip(),
-            normalBuffer.flip(),
-            uvBuffer.flip(),
-            indexBuffer.flip(),
-            materials, materialIndexes);
+        var renderType = ArchetypeBaker.getRenderType(originalModel);
+
+        return new ArchetypeComponent(
+            meshName,
+            new BakedMesh(
+                deduplicatedVertices.size(),
+                vertexBuffer.flip(),
+                normalBuffer.flip(),
+                uvBuffer.flip(),
+                indexBuffer.flip(),
+                materials, materialIndexes),
+            renderType,
+            originalModel.customData.isComponentVisible(object.getName(), true));
     }
 
     private static ModelVertices bakeFace(

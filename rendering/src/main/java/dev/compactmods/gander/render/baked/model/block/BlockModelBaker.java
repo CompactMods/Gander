@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
 import dev.compactmods.gander.render.baked.BakedMesh;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeBaker;
+import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
 import dev.compactmods.gander.render.baked.model.material.MaterialParent;
 import dev.compactmods.gander.render.baked.model.block.ModelUvs.ModelUv;
 import dev.compactmods.gander.render.baked.model.block.ModelUvs.UvIndex;
@@ -32,7 +33,6 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import static dev.compactmods.gander.render.baked.model.RotationUtil.rotate;
@@ -44,11 +44,13 @@ public final class BlockModelBaker
     private BlockModelBaker() { }
 
     // TODO: almost identical logic is used in ObjModelBaker, this should be deduplicated.
-    public static Map<ModelResourceLocation, BakedMesh> bakeBlockModel(
+    public static Stream<ArchetypeComponent> bakeBlockModel(
         ModelResourceLocation originalName,
         BlockModel model)
     {
+        var renderType = ArchetypeBaker.getRenderType(model);
         var name = ArchetypeBaker.computeMeshName(originalName);
+
         var allFaces = model.getElements().stream()
             .map(BlockModelBaker::bakeElement)
             .reduce(ModelVertices::combine)
@@ -151,14 +153,17 @@ public final class BlockModelBaker
             materialIndexes[i++] = materials.indexOf(materialByName);
         }
 
-        return Map.of(name,
-            new BakedMesh(
-                deduplicatedVertices.size(),
-                vertexBuffer.flip(),
-                normalBuffer.flip(),
-                uvBuffer.flip(),
-                indexBuffer.flip(),
-                materials, materialIndexes));
+        return Stream.of(
+            new ArchetypeComponent(
+                name,
+                new BakedMesh(
+                    deduplicatedVertices.size(),
+                    vertexBuffer.flip(),
+                    normalBuffer.flip(),
+                    uvBuffer.flip(),
+                    indexBuffer.flip(),
+                    materials, materialIndexes),
+                renderType, true));
     }
 
     private static ModelVertices bakeElement(BlockElement element)

@@ -1,5 +1,6 @@
 package dev.compactmods.gander.render.mixin.accessor;
 
+import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelManager;
@@ -23,4 +24,8 @@ public interface ModelManagerAccessor
     @Intrinsic
     @Accessor
     ModelBakery getModelBakery();
+
+    @Intrinsic
+    @Accessor
+    BlockModelShaper getBlockModelShaper();
 }

@@ -1,38 +1,40 @@
 package dev.compactmods.gander.render.baked.model;
 
-import com.google.common.base.Preconditions;
+import com.google.common.collect.BiMap;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.mojang.datafixers.util.Either;
-import com.mojang.datafixers.util.Pair;
-import dev.compactmods.gander.render.baked.BakedMesh;
+import com.mojang.math.Transformation;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeBaker;
+import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
+import dev.compactmods.gander.render.baked.model.material.MaterialBaker;
 import dev.compactmods.gander.render.baked.model.material.MaterialInstance;
 import dev.compactmods.gander.render.baked.model.material.MaterialParent;
-import dev.compactmods.gander.render.mixin.accessor.BlockModelAccessor;
+import dev.compactmods.gander.render.mixin.accessor.BlockModelShaperAccessor;
 import dev.compactmods.gander.render.mixin.accessor.ModelBakeryAccessor;
 import dev.compactmods.gander.render.mixin.accessor.ModelManagerAccessor;
+import dev.compactmods.gander.render.mixin.accessor.MultiPartAccessor;
+import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.renderer.block.model.BlockModel;
 import net.minecraft.client.renderer.block.model.MultiVariant;
 import net.minecraft.client.renderer.block.model.Variant;
 import net.minecraft.client.renderer.block.model.multipart.MultiPart;
-import net.minecraft.client.resources.model.Material;
+import net.minecraft.client.renderer.block.model.multipart.Selector;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.resources.model.UnbakedModel;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
@@ -52,29 +54,25 @@ public final class ModelRebaker
 
     private ModelRebaker() { }
 
+    // Map of model -> material instances
     private static Map<ModelResourceLocation, Multimap<MaterialParent, MaterialInstance>> MODEL_MATERIAL_INSTANCES;
-    private static Map<ModelResourceLocation, Set<ModelResourceLocation>> MODEL_ARCHETYPES;
-    private static Map<ModelResourceLocation, Set<ModelResourceLocation>> ARCHETYPE_MESHES;
-    private static Map<ModelResourceLocation, BakedMesh> BAKED_MESHES;
+    // Multimap of model -> baked mesh
+    private static Multimap<ModelResourceLocation, DisplayableMesh> BAKED_MODEL_MESHES;
 
-    public static Set<ModelResourceLocation> getModelArchetypes(ModelResourceLocation model)
+    public static Collection<DisplayableMesh> getArchetypeMeshes(ModelResourceLocation model)
     {
-        return MODEL_ARCHETYPES.getOrDefault(model, Set.of());
-    }
-
-    public static Set<ModelResourceLocation> getArchetypeModel(ModelResourceLocation archetype)
-    {
-        return ARCHETYPE_MESHES.getOrDefault(archetype, Set.of());
-    }
-
-    public static BakedMesh getArchetypeMesh(ModelResourceLocation archetypeModel)
-    {
-        return BAKED_MESHES.get(archetypeModel);
+        // This SHOULD be unmodifiable, but just in case...
+        return Collections.unmodifiableCollection(
+            BAKED_MODEL_MESHES.asMap()
+                .getOrDefault(model, Collections.emptySet()));
     }
 
     public static Multimap<MaterialParent, MaterialInstance> getMaterialInstances(ModelResourceLocation model)
     {
-        return MODEL_MATERIAL_INSTANCES.getOrDefault(model, Multimaps.forMap(Map.of()));
+        // This SHOULD be unmodifiable, but just in case...
+        return Multimaps.unmodifiableMultimap(
+            MODEL_MATERIAL_INSTANCES.getOrDefault(model,
+                Multimaps.forMap(Map.of())));
     }
 
     public static void rebakeModels(ModelManagerAccessor manager, ProfilerFiller reloadProfiler)
@@ -86,49 +84,95 @@ public final class ModelRebaker
             reloadProfiler.startTick();
             reloadProfiler.push("archetype_discovery");
             var archetypeSet = new HashSet<ModelResourceLocation>();
-            var modelArchetypes = new HashMap<ModelResourceLocation, Set<ModelResourceLocation>>();
+            var modelArchetypes = new HashMap<ModelResourceLocation, BiMap<ModelResourceLocation, UnbakedModel>>();
             for (var pair : manager.getBakedRegistry().entrySet())
             {
                 if (LOGGER.isTraceEnabled())
                     LOGGER.trace("Discovering archetypes of model {} ", pair.getKey());
 
                 reloadProfiler.push(pair.getKey().toString());
-                var archetypes = getArchetypes(pair.getKey(), manager, bakery);
+                var archetypes = ArchetypeBaker.getArchetypes(pair.getKey(), manager, bakery);
                 modelArchetypes.put(pair.getKey(), archetypes);
-                archetypeSet.addAll(archetypes);
+                archetypeSet.addAll(archetypes.keySet());
                 reloadProfiler.pop();
             }
 
             if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Computed {} different archetype models for all models", archetypeSet.size());
+                LOGGER.debug("Computed {} different archetype models", archetypeSet.size());
 
             reloadProfiler.popPush("archetype_baking");
-            var archetypeMeshes = new HashMap<ModelResourceLocation, Set<ModelResourceLocation>>();
-            var bakedMeshes = new HashMap<ModelResourceLocation, BakedMesh>();
+            var archetypeMeshes = HashMultimap.<ModelResourceLocation, ModelResourceLocation>create();
+            var bakedComponents = HashMultimap.<ModelResourceLocation, ArchetypeComponent>create();
             for (var archetype : archetypeSet)
             {
                 var model = bakery.getModel(archetype.id());
                 if (LOGGER.isTraceEnabled())
                     LOGGER.trace("Baking archetype model {} of model type {}", archetype, model.getClass());
 
-                var archetypes = ArchetypeBaker.bakeArchetypes(archetype, model);
-                if (archetypes == null)
+                var components = ArchetypeBaker.bakeArchetypeComponents(archetype, model)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+                if (components.isEmpty())
                 {
-                    LOGGER.warn("Archetype model {} returned no archetypes?", archetype);
+                    LOGGER.warn("Archetype model {} returned no archetype components?", archetype);
                     continue;
                 }
 
-                bakedMeshes.putAll(archetypes);
-                archetypeMeshes.put(archetype, archetypes.keySet());
+                for (var component : components)
+                {
+                    bakedComponents.put(component.name(), component);
+                    archetypeMeshes.put(archetype, component.name());
+                }
             }
 
             if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Baked {} different archetypes", archetypeMeshes.size());
+                LOGGER.debug("Baked {} different archetype meshes", archetypeMeshes.size());
+
+            reloadProfiler.popPush("archetype_association");
+
+            var reverseMap = ((BlockModelShaperAccessor)manager.getBlockModelShaper())
+                .getModelByStateCache()
+                .entrySet()
+                .stream()
+                .collect(Multimaps.toMultimap(
+                    it -> BlockModelShaper.stateToModelLocation(it.getKey()),
+                    Entry::getKey,
+                    HashMultimap::create));
+
+            // For every model...
+            var bakedModelMeshes = modelArchetypes.entrySet().stream()
+                // For every archetype for this model...
+                .flatMap(model -> model.getValue().keySet().stream()
+                    .map(archetype -> Map.entry(model.getKey(), archetype)))
+                // For every archetype mesh for this archetype...
+                .flatMap(model -> archetypeMeshes.asMap().getOrDefault(model.getValue(), Set.of()).stream()
+                    .map(mesh -> Map.entry(model.getKey(), mesh)))
+                // For every component for this archetype mesh...
+                .flatMap(model -> bakedComponents.asMap().getOrDefault(model.getValue(), Set.of()).stream()
+                    .map(component -> Map.entry(model.getKey(), component)))
+                // Where the component is visible
+                .filter(it -> it.getValue().isVisible())
+                // Create a map of model -> baked mesh
+                .collect(Multimaps.flatteningToMultimap(
+                    Map.Entry::getKey,
+                    it -> getDisplayMesh(
+                        modelArchetypes.get(it.getKey()),
+                        reverseMap.asMap().getOrDefault(it.getKey(), Set.of()),
+                        bakery,
+                        it.getKey(),
+                        it.getValue()),
+                    HashMultimap::create));
+
+            if (LOGGER.isDebugEnabled())
+                LOGGER.debug("Associated {} unique models to {} display meshes ({} min {} avg {} max display meshes per model)",
+                    bakedModelMeshes.keySet().size(),
+                    bakedModelMeshes.size(),
+                    bakedModelMeshes.asMap().values().stream().mapToInt(Collection::size).min().orElse(0),
+                    bakedModelMeshes.asMap().values().stream().mapToInt(Collection::size).average().orElse(0),
+                    bakedModelMeshes.asMap().values().stream().mapToInt(Collection::size).max().orElse(0));
 
             reloadProfiler.popPush("archetype_cache");
-            MODEL_ARCHETYPES = Collections.unmodifiableMap(modelArchetypes);
-            ARCHETYPE_MESHES = Collections.unmodifiableMap(archetypeMeshes);
-            BAKED_MESHES = Collections.unmodifiableMap(bakedMeshes);
+            BAKED_MODEL_MESHES = Multimaps.unmodifiableMultimap(bakedModelMeshes);
 
             reloadProfiler.popPush("material_instances");
             var modelMaterials = new HashMap<ModelResourceLocation, Multimap<MaterialParent, MaterialInstance>>();
@@ -141,7 +185,7 @@ public final class ModelRebaker
                     .get(pair.getKey());
 
                 modelMaterials.put(pair.getKey(),
-                    getMaterialInstances(bakery, pair.getKey(), unbakedModel)
+                    MaterialBaker.getMaterialInstances(bakery, pair.getKey(), unbakedModel)
                         .stream()
                         .collect(Multimaps.toMultimap(
                             MaterialInstance::material,
@@ -164,189 +208,95 @@ public final class ModelRebaker
         }
     }
 
-    private static Set<ModelResourceLocation> getArchetypes(
+    private static Stream<DisplayableMesh> getDisplayMesh(
+        BiMap<ModelResourceLocation, UnbakedModel> archetypes,
+        Collection<BlockState> sourceBlockStates,
+        ModelBakery bakery,
         ModelResourceLocation model,
-        ModelManagerAccessor manager,
-        ModelBakery bakery)
+        ArchetypeComponent component)
     {
-        var result = ImmutableSet.<ModelResourceLocation>builder();
-        var visited = new HashSet<ResourceLocation>();
-        var queue = new ArrayDeque<UnbakedModel>();
-
         var unbakedModel = ((ModelBakeryAccessor)bakery).getTopLevelModels().get(model);
-
-        // If the model itself has geometry, it is its own archetype.
-        if (hasGeometry(unbakedModel))
+        switch (unbakedModel)
         {
-            return Set.of(model);
-        }
-
-        // Otherwise, we need to search its parents
-        queue.add(unbakedModel);
-        while (!queue.isEmpty())
-        {
-            var first = queue.removeFirst();
-            for (var dep : first.getDependencies())
+            case null ->
             {
-                var childModel = bakery.getModel(dep);
-                // TODO: figure out if this is what we want to do here
-                if (childModel == manager.getMissingModel()) continue;
-
-                var deps = childModel.getDependencies();
-                // If this rootmost model has geometry, it is an archetype
-                if (deps.isEmpty() && hasGeometry(childModel))
-                {
-                    result.add(new ModelResourceLocation(dep, "gander_archetype"));
-                }
-                // If it has geometry, it overrides any other parents
-                else if (hasGeometry(childModel))
-                {
-                    result.add(new ModelResourceLocation(dep, "gander_archetype"));
-                }
-                // Otherwise, check we haven't seen it before.
-                else if (visited.add(dep))
-                {
-                    queue.addLast(childModel);
-                }
+                LOGGER.error("Failed to get unbaked model {}", model);
+                return Stream.of(
+                    new DisplayableMesh(
+                        component.name(),
+                        component.bakedMesh(),
+                        component.renderType(),
+                        Transformation.identity(),
+                        1));
             }
-        }
-
-        return result.build();
-    }
-
-    private static boolean hasGeometry(UnbakedModel model)
-    {
-        // If the child model has its own geometry, it overrides any
-        // parents.
-        if (model instanceof BlockModel blockModel)
-        {
-            if (blockModel.customData.hasCustomGeometry())
+            case BlockModel block ->
             {
-                return true;
+                LOGGER.trace("Model {} is its own archetype?", model);
+                return Stream.of(
+                    new DisplayableMesh(
+                        component.name(),
+                        component.bakedMesh(),
+                        component.renderType(),
+                        Transformation.identity(),
+                        1));
             }
-
-            var accessor = (BlockModelAccessor)blockModel;
-            if (!accessor.getOwnElements().isEmpty())
+            case MultiPart multiPart ->
             {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static Set<MaterialInstance> getMaterialInstances(ModelBakery bakery, ModelResourceLocation key, UnbakedModel model)
-    {
-        switch (model)
-        {
-            case BlockModel block -> {
-                return getBlockModelMaterials(key, block);
-            }
-            case MultiPart multiPart -> {
-                return multiPart.getMultiVariants()
+                var modelToArchetype = archetypes.inverse();
+                var accessor = (MultiPartAccessor)multiPart;
+                return accessor.getSelectors()
                     .stream()
+                    .filter(p -> {
+                        var predicate = p.getPredicate(accessor.getDefinition());
+                        return sourceBlockStates.stream().anyMatch(predicate);
+                    })
+                    .map(Selector::getVariant)
                     .map(MultiVariant::getVariants)
                     .flatMap(List::stream)
-                    .map(Variant::getModelLocation)
-                    .map(bakery::getModel)
-                    .map(it -> getMaterialInstances(bakery, key, it))
-                    .flatMap(Set::stream)
-                    .collect(Collectors.toSet());
+                    .filter(it -> variantMatchesArchetype(modelToArchetype, bakery, it, component))
+                    .map(it -> new DisplayableMesh(
+                        component.name(),
+                        component.bakedMesh(),
+                        component.renderType(),
+                        it.getRotation(),
+                        it.getWeight()));
             }
-            case MultiVariant multiVariant -> {
+            case MultiVariant multiVariant ->
+            {
+                var modelToArchetype = archetypes.inverse();
                 return multiVariant.getVariants()
                     .stream()
-                    .map(Variant::getModelLocation)
-                    .map(bakery::getModel)
-                    .map(it -> getMaterialInstances(bakery, key, it))
-                    .flatMap(Set::stream)
-                    .collect(Collectors.toSet());
+                    .filter(it -> variantMatchesArchetype(modelToArchetype, bakery, it, component))
+                    .map(it -> new DisplayableMesh(
+                        component.name(),
+                        component.bakedMesh(),
+                        component.renderType(),
+                        it.getRotation(),
+                        it.getWeight()));
             }
-            default -> throw new IllegalStateException("Unexpected value: " + model);
+            default -> {
+                LOGGER.error("Unknown unbaked model type {}", unbakedModel.getClass());
+                return Stream.of();
+            }
         }
     }
 
-    private static Set<MaterialInstance> getBlockModelMaterials(ModelResourceLocation name, final BlockModel model)
+    private static boolean variantMatchesArchetype(
+        BiMap<UnbakedModel, ModelResourceLocation> modelToArchetype,
+        ModelBakery bakery,
+        Variant variant,
+        ArchetypeComponent component)
     {
-        var result = new HashSet<MaterialInstance>();
-        Stream<Map.Entry<String, Either<net.minecraft.client.resources.model.Material, String>>> materials = Stream.of();
-        for (var mdl = model; mdl != null; mdl = mdl.parent)
+        // TODO: as of 1.21 getModel can only return a BlockModel. This may change in the future...
+        var variantModel = (BlockModel)bakery.getModel(variant.getModelLocation());
+        while (variantModel.parent != null)
         {
-            materials = Stream.concat(materials, mdl.textureMap.entrySet().stream());
+            if (modelToArchetype.containsKey(variantModel))
+                break;
+
+            variantModel = variantModel.parent;
         }
 
-        var fullMaterialMap = materials.collect(Collectors.toSet());
-
-        var materialParents = getModelArchetypes(name)
-            .stream()
-            .map(ModelRebaker::getArchetypeModel)
-            .flatMap(Set::stream)
-            .map(ModelRebaker::getArchetypeMesh)
-            .map(BakedMesh::materials)
-            .flatMap(List::stream)
-            .collect(Collectors.toSet());
-
-        var parentsByName = new HashMap<String, MaterialParent>();
-        materialParents.forEach(material -> {
-            parentsByName.put(material.name(), material);
-        });
-
-        fullMaterialMap.stream()
-            .map(it -> Pair.of(it.getKey(), it.getValue().left().orElse(null)))
-            .filter(it -> it.getSecond() != null)
-            .forEach(material -> {
-                parentsByName.putIfAbsent(
-                    material.getFirst(),
-                    new MaterialParent(
-                        material.getFirst(),
-                        material.getSecond().atlasLocation(),
-                        material.getSecond().texture()));
-            });
-
-        var usedMaterials = fullMaterialMap
-            .stream()
-            .map(it -> it.getValue()
-                .map(
-                    left -> Map.entry(
-                        it.getKey(),
-                        checkMaterials(
-                            it.getKey(),
-                            parentsByName.getOrDefault(
-                                it.getKey(),
-                                MaterialParent.MISSING),
-                            left)),
-                    ref -> Map.entry(
-                        it.getKey(),
-                        parentsByName.getOrDefault(
-                            ref,
-                            MaterialParent.MISSING))))
-            .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
-
-        for (var usedMaterial : usedMaterials)
-        {
-            var parent = parentsByName.get(usedMaterial.getKey());
-            var resolved = usedMaterial.getValue();
-            var overridenTexture = resolved.defaultValue();
-
-            result.add(new MaterialInstance(parent, overridenTexture));
-        }
-
-        return result;
-    }
-
-    private static MaterialParent checkMaterials(
-        String name,
-        MaterialParent material,
-        Material vanilla)
-    {
-        if (material == null)
-        {
-            return new MaterialParent(name, vanilla.atlasLocation(), vanilla.texture());
-        }
-
-        // We only care if the atlas matches, because if it doesn't that's a problem.
-        Preconditions.checkArgument(vanilla.atlasLocation().equals(material.atlas()));
-        return material;
+        return modelToArchetype.get(variantModel).id().equals(component.name().id());
     }
 }

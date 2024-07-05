@@ -1,20 +1,19 @@
 package dev.compactmods.gander.render.baked.model.composite;
 
-import dev.compactmods.gander.render.baked.BakedMesh;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeBaker;
+import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
 import dev.compactmods.gander.render.mixin.accessor.CompositeModelAccessor;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.neoforged.neoforge.client.model.CompositeModel;
 
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class CompositeModelBaker
 {
     private CompositeModelBaker() { }
 
-    public static Map<ModelResourceLocation, BakedMesh> bakeCompositeModel(
+    public static Stream<ArchetypeComponent> bakeCompositeModel(
         ModelResourceLocation originalName,
         UnbakedModel model,
         CompositeModel composite)
@@ -23,15 +22,13 @@ public final class CompositeModelBaker
 
         return accessor.getChildren().entrySet()
             .stream()
-            .map(it -> {
+            .flatMap(it -> {
                 var name = it.getValue().name;
                 if (name.isBlank()) name = it.getKey();
 
-                return ArchetypeBaker.bakeArchetypes(
+                return ArchetypeBaker.bakeArchetypeComponents(
                     ArchetypeBaker.computeMeshName(originalName, "composite_child/" + name),
                     it.getValue());
-            })
-            .flatMap(it -> it.entrySet().stream())
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            });
     }
 }

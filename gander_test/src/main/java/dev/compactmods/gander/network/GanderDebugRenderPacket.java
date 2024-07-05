@@ -27,6 +27,8 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
@@ -34,6 +36,8 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 
 public record GanderDebugRenderPacket(BlockState state) implements CustomPacketPayload
 {
+    private static Logger LOGGER = LoggerFactory.getLogger(GanderDebugRenderPacket.class);
+
     private static boolean render = false;
 
     public static final Type<GanderDebugRenderPacket> ID = new Type<>(GanderTestMod.asResource("debug"));
@@ -68,9 +72,9 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
     private static void buildBuffers(BlockState state)
     {
         var modelLocation = BlockModelShaper.stateToModelLocation(state);
-        var archetypes = ModelRebaker.getModelArchetypes(modelLocation);
-        var models = ModelRebaker.getArchetypeModel(archetypes.stream().findFirst().get());
-        var model = ModelRebaker.getArchetypeMesh(models.stream().findFirst().get());
+        var archetypes = ModelRebaker.getArchetypeMeshes(modelLocation);
+        var model = archetypes.stream().findFirst().get();
+        var mesh = model.mesh();
         var textureAtlas = AtlasBaker.getAtlasBuffer(TextureAtlas.LOCATION_BLOCKS);
         var indexes = AtlasBaker.getAtlasIndexes(TextureAtlas.LOCATION_BLOCKS);
         var materialInstances = ModelRebaker.getMaterialInstances(modelLocation);
@@ -80,8 +84,8 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
 
         try (var stack = stackPush())
         {
-            var vertices = stack.mallocFloat(model.vertices().limit());
-            vertices.put(model.vertices());
+            var vertices = stack.mallocFloat(mesh.vertices().limit());
+            vertices.put(mesh.vertices());
             vertices.flip();
 
             int vertexBuffer = GL32.glGenBuffers();
@@ -92,8 +96,8 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
 
         try (var stack = stackPush())
         {
-            var indices = stack.malloc(model.indices().limit());
-            indices.put(model.indices());
+            var indices = stack.malloc(mesh.indices().limit());
+            indices.put(mesh.indices());
             indices.flip();
 
             int indexBuffer = GL32.glGenBuffers();
@@ -102,13 +106,13 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
             GL32.glBufferData(GL32.GL_ELEMENT_ARRAY_BUFFER, indices, GL32.GL_STATIC_DRAW);
             GL32.glVertexAttribPointer(0, 3, GL32.GL_FLOAT, false, 0, 0);
             GL32.glEnableVertexAttribArray(0);
-            numberIndices = model.indices().limit();
+            numberIndices = mesh.indices().limit();
         }
 
         try (var stack = stackPush())
         {
-            var normals = stack.mallocFloat(model.normals().limit());
-            normals.put(model.normals());
+            var normals = stack.mallocFloat(mesh.normals().limit());
+            normals.put(mesh.normals());
             normals.flip();
 
             int normalBuffer = GL32.glGenBuffers();
@@ -121,8 +125,8 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
 
         try (var stack = stackPush())
         {
-            var uvs = stack.mallocFloat(model.uvs().limit());
-            uvs.put(model.uvs());
+            var uvs = stack.mallocFloat(mesh.uvs().limit());
+            uvs.put(mesh.uvs());
             uvs.flip();
 
             int uvBuffer = GL32.glGenBuffers();
@@ -135,11 +139,11 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
 
         try (var stack = stackPush())
         {
-            var sprites = stack.mallocInt(model.vertexCount());
+            var sprites = stack.mallocInt(mesh.vertexCount());
 
-            for (int i = 0; i < model.vertexCount(); i++)
+            for (int i = 0; i < mesh.vertexCount(); i++)
             {
-                var material = model.materials().get(model.materialIndexes()[i]);
+                var material = mesh.materials().get(mesh.materialIndexes()[i]);
                 var instances = materialInstances.get(material);
                 if (instances.isEmpty())
                 {
@@ -279,13 +283,14 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                 spriteBounds.w = nextafter(nextafter(spriteBounds.w, spriteBounds.y), spriteBounds.y);
                 // spriteSize is the size of the sprite in UV coordinates
                 vec2 spriteSize = spriteBounds.zw - spriteBounds.xy;
-                vs_out.texCoords = spriteBounds + (spriteSize * TexCoords);
+                vs_out.texCoords = spriteBounds.xy + (spriteSize * TexCoords);
             }
             """.formatted(atlasSize));
         GL32.glCompileShader(vertex);
         var compileStatus = GlStateManager.glGetShaderi(vertex, GlConst.GL_COMPILE_STATUS);
         if (compileStatus != GlConst.GL_TRUE)
         {
+            LOGGER.error("Vertex shader compilation failed: {}", GL32.glGetShaderInfoLog(vertex));
             // TODO: log info here and use a better result
             throw new RuntimeException("Failed to compile shader");
         }
@@ -312,6 +317,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
         compileStatus = GlStateManager.glGetShaderi(fragment, GlConst.GL_COMPILE_STATUS);
         if (compileStatus != GlConst.GL_TRUE)
         {
+            LOGGER.error("Fragment shader compilation failed: {}", GL32.glGetShaderInfoLog(fragment));
             // TODO: log info here and use a better result
             throw new RuntimeException("Failed to compile shader");
         }
@@ -324,6 +330,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
         final var linkStatus = GlStateManager.glGetProgrami(shader, GlConst.GL_LINK_STATUS);
         if (linkStatus != GlConst.GL_TRUE)
         {
+            LOGGER.error("Program link failed: {}", GL32.glGetProgramInfoLog(shader));
             // TODO: log info here and use a better result
             throw new RuntimeException("Failed to link programs");
         }
