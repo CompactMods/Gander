@@ -1,6 +1,7 @@
-package dev.compactmods.gander.render.baked.texture;
+package dev.compactmods.gander.runtime.baked.texture;
 
-import dev.compactmods.gander.render.mixin.accessor.StitchResultAccessor;
+import dev.compactmods.gander.render.baked.texture.AtlasIndices;
+import dev.compactmods.gander.runtime.mixin.accessor.StitchResultAccessor;
 import net.minecraft.client.resources.model.AtlasSet;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Vector4f;
@@ -18,20 +19,18 @@ import java.util.stream.Collectors;
 /**
  * Bakes texture atlases into a UV buffer
  */
-public final class AtlasBaker
+public final class AtlasIndexer
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AtlasBaker.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AtlasIndexer.class);
 
-    private AtlasBaker() { }
+    private Map<ResourceLocation, AtlasIndices> ATLASES;
 
-    private static Map<ResourceLocation, AtlasIndices> ATLASES;
-
-    public static FloatBuffer getAtlasBuffer(ResourceLocation atlas)
+    public FloatBuffer getAtlasBuffer(ResourceLocation atlas)
     {
         return ATLASES.get(atlas).buffer();
     }
 
-    public static List<ResourceLocation> getAtlasIndexes(ResourceLocation atlas)
+    public List<ResourceLocation> getAtlasIndexes(ResourceLocation atlas)
     {
         var x = ATLASES.getOrDefault(atlas, null);
         return x != null
@@ -39,7 +38,7 @@ public final class AtlasBaker
             : List.of();
     }
 
-    public static Map<ResourceLocation, CompletableFuture<AtlasSet.StitchResult>> bakeAtlases(
+    public Map<ResourceLocation, CompletableFuture<AtlasSet.StitchResult>> bakeAtlasIndices(
         Map<ResourceLocation, CompletableFuture<AtlasSet.StitchResult>> original,
 
         Executor backgroundExecutor)
@@ -64,7 +63,7 @@ public final class AtlasBaker
                 entry -> result.thenCompose(unused -> entry.getValue())));
     }
 
-    private static AtlasIndices bakeAtlas(
+    private AtlasIndices bakeAtlas(
         ResourceLocation atlas,
         AtlasSet.StitchResult stitchResult)
     {

@@ -1,4 +1,4 @@
-package dev.compactmods.gander.render.baked;
+package dev.compactmods.gander.render.baked.model;
 
 import dev.compactmods.gander.render.baked.model.material.MaterialParent;
 

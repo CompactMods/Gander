@@ -3,7 +3,7 @@ package dev.compactmods.gander.render.baked.model.obj;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
-import dev.compactmods.gander.render.baked.BakedMesh;
+import dev.compactmods.gander.render.baked.model.BakedMesh;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeBaker;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
 import dev.compactmods.gander.render.baked.model.material.MaterialParent;
@@ -16,6 +16,7 @@ import dev.compactmods.gander.render.mixin.accessor.ObjModelAccessor;
 import net.minecraft.client.renderer.block.model.BlockModel;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.model.obj.ObjModel;
 import org.joml.Vector2f;
@@ -42,8 +43,7 @@ public final class ObjModelBaker
 
     public static Stream<ArchetypeComponent> bakeObjModel(
         ModelResourceLocation originalName,
-        BlockModel model,
-        ObjModel obj)
+        UnbakedModel model)
     {
         var accessor = (ObjModelAccessor)obj;
 

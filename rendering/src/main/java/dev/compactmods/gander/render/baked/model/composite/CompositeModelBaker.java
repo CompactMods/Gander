@@ -1,6 +1,6 @@
 package dev.compactmods.gander.render.baked.model.composite;
 
-import dev.compactmods.gander.render.baked.model.archetype.ArchetypeBaker;
+import dev.compactmods.gander.render.baked.model.archetype.Archetypes;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
 import dev.compactmods.gander.render.mixin.accessor.CompositeModelAccessor;
 import net.minecraft.client.resources.model.ModelResourceLocation;
@@ -15,8 +15,7 @@ public final class CompositeModelBaker
 
     public static Stream<ArchetypeComponent> bakeCompositeModel(
         ModelResourceLocation originalName,
-        UnbakedModel model,
-        CompositeModel composite)
+        UnbakedModel model)
     {
         var accessor = (CompositeModelAccessor)composite;
 
@@ -27,7 +26,7 @@ public final class CompositeModelBaker
                 if (name.isBlank()) name = it.getKey();
 
                 return ArchetypeBaker.bakeArchetypeComponents(
-                    ArchetypeBaker.computeMeshName(originalName, "composite_child/" + name),
+                    Archetypes.computeMeshName(originalName, "composite_child/" + name),
                     it.getValue());
             });
     }

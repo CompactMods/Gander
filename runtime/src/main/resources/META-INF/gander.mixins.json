@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.compactmods.gander.runtime.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "accessor.BlockGeometryBakingContextAccessor",
+    "accessor.BlockModelAccessor",
+    "accessor.BlockModelShaperAccessor",
+    "accessor.CompositeModelAccessor",
+    "accessor.GlStateManagerAccessor",
+    "accessor.ModelBakeryAccessor",
+    "accessor.ModelManagerAccessor",
+    "accessor.MultiPartAccessor",
+    "accessor.ObjModel$ModelGroupAccessor",
+    "accessor.ObjModel$ModelMeshAccessor",
+    "accessor.ObjModel$ModelObjectAccessor",
+    "accessor.ObjModelAccessor",
+    "accessor.StitchResultAccessor",
+
+    "ModelManagerMixin"
+  ]
+}

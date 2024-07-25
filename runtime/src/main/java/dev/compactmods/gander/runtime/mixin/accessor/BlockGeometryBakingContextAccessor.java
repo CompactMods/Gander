@@ -1,4 +1,4 @@
-package dev.compactmods.gander.render.mixin.accessor;
+package dev.compactmods.gander.runtime.mixin.accessor;
 
 import net.neoforged.neoforge.client.model.geometry.BlockGeometryBakingContext;
 import net.neoforged.neoforge.client.model.geometry.IUnbakedGeometry;

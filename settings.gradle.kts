@@ -4,9 +4,9 @@ dependencyResolutionManagement {
     }
 
     versionCatalogs.create("neoforged") {
-        version("neogradle", "7.0.143")
-        version("neoforge", "21.0.16-beta")
-        version("loader", "[4.0.6,)")
+        version("neogradle", "7.0.154")
+        version("neoforge", "21.0.133-beta")
+        version("loader", "[4.0.9,)")
 
         library("neoforge", "net.neoforged", "neoforge")
             .versionRef("neoforge")
@@ -71,5 +71,7 @@ rootProject.name = "Gander"
 
 include("levels")
 include("rendering")
+
+include("runtime")
 
 include("gander_test")

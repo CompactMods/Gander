@@ -1,4 +1,4 @@
-package dev.compactmods.gander.render.mixin.accessor;
+package dev.compactmods.gander.runtime.mixin.accessor;
 
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.resources.model.BakedModel;

@@ -14,28 +14,57 @@ plugins {
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
-base.archivesName = "gander_test"
+base.archivesName = "${project.name}-neoforge"
 
-dependencies {
-    // Core Projects and Libraries
-    implementation(neoforged.neoforge)
+minecraft {
+    modIdentifier = "gander"
+    accessTransformers {
+        file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
+        expose(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
 
-    compileOnly(project(":runtime"))
+        consume(project(":rendering"))
+    }
 }
 
-//...graaaadle
-evaluationDependsOn(":levels")
-evaluationDependsOn(":rendering")
-evaluationDependsOn(":runtime")
+repositories {
+    mavenLocal()
+    mavenCentral()
+    gradlePluginPortal()
+
+    // maven("https://maven.architectury.dev/")
+
+    maven("https://maven.parchmentmc.org") {
+        name = "ParchmentMC"
+    }
+
+    maven("https://maven.neoforged.net/releases") {
+        name = "NeoForged"
+    }
+
+    maven("https://repo.spongepowered.org/repository/maven-public/") {
+        name = "Sponge Snapshots"
+    }
+}
+
+dependencies {
+    compileOnly(neoforged.neoforge)
+
+    implementation(project(":rendering"))
+    implementation(project(":levels"))
+}
 
 runs {
     configureEach {
         systemProperty("log4j2.configurationFile", file("../log4j2.xml").absolutePath)
 
         modSource(sourceSets["main"])
-        modSources(project(":levels").sourceSets["main"])
+        modSource(project(":levels").sourceSets["main"])
         modSource(project(":rendering").sourceSets["main"])
-        modSource(project(":runtime").sourceSets["main"])
+
+        // because *apparently* it can't figure out transitives properly :unamused:
+        dependencies {
+            runtime(utilities.roaringbitmap)
+        }
     }
 
     register("client") {
@@ -46,37 +75,13 @@ runs {
     register("server")
 }
 
-repositories {
-    mavenLocal()
-
-    maven("https://maven.blamejared.com/") {
-        // location of the maven that hosts JEI files since January 2023
-        name = "Jared's maven"
-    }
-
-    maven("https://www.cursemaven.com") {
-        content {
-            includeGroup("curse.maven")
-        }
-    }
-
-    maven("https://modmaven.dev") {
-        // location of a maven mirror for JEI files, as a fallback
-        name = "ModMaven"
-    }
-
-    maven("https://maven.covers1624.net") {
-        // location for DevLogin
-        name = "Covers's Maven"
-    }
-}
-
 tasks.withType<Jar> {
     val mainGit = Grgit.open {
         currentDir = project.rootDir
     }
 
     manifest {
+        from("src/main/resources/META-INF/MANIFEST.MF")
         val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(Date())
 
         attributes(

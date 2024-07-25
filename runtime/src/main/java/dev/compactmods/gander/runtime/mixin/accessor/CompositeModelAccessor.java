@@ -1,4 +1,4 @@
-package dev.compactmods.gander.render.mixin.accessor;
+package dev.compactmods.gander.runtime.mixin.accessor;
 
 import com.google.common.collect.ImmutableMap;
 import net.minecraft.client.renderer.block.model.BlockModel;

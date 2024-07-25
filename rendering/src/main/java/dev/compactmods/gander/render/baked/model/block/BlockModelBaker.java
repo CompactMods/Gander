@@ -3,7 +3,7 @@ package dev.compactmods.gander.render.baked.model.block;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
-import dev.compactmods.gander.render.baked.BakedMesh;
+import dev.compactmods.gander.render.baked.model.BakedMesh;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeBaker;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
 import dev.compactmods.gander.render.baked.model.material.MaterialParent;

@@ -1,4 +1,4 @@
-package dev.compactmods.gander.render.mixin.accessor;
+package dev.compactmods.gander.runtime.mixin.accessor;
 
 import net.minecraft.world.phys.Vec2;
 import net.neoforged.neoforge.client.model.obj.ObjModel;

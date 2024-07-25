@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * A small helper type for storing baked atlases and their sprite indexes.
  */
-record AtlasIndices(
+public record AtlasIndices(
     FloatBuffer buffer,
     List<ResourceLocation> indexes)
 { }

@@ -5,6 +5,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.shaders.Uniform;
 import dev.compactmods.gander.GanderTestMod;
 import dev.compactmods.gander.render.baked.model.ModelRebaker;
+import dev.compactmods.gander.render.baked.section.SectionBaker;
 import dev.compactmods.gander.render.baked.texture.AtlasBaker;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -12,8 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.client.resources.model.ModelBakery;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -368,9 +368,11 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
 
         if (e.getStage() == Stage.AFTER_SOLID_BLOCKS)
         {
-            //DebuggingHelper.releaseMouse();
-
-            if (!builtBuffers) buildBuffers(lastBlockState);
+            if (!builtBuffers)
+            {
+                buildBuffers(lastBlockState);
+                SectionBaker.bake(Minecraft.getInstance().level, SectionPos.of(0,0,0));
+            }
             if (!builtShader) buildShader();
 
             // This is mildly frustrating...

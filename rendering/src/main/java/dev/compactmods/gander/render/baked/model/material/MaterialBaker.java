@@ -3,7 +3,7 @@ package dev.compactmods.gander.render.baked.model.material;
 import com.google.common.base.Preconditions;
 import com.mojang.datafixers.util.Either;
 import com.mojang.datafixers.util.Pair;
-import dev.compactmods.gander.render.baked.BakedMesh;
+import dev.compactmods.gander.render.baked.model.BakedMesh;
 import dev.compactmods.gander.render.baked.model.ModelRebaker;
 import dev.compactmods.gander.render.baked.model.DisplayableMesh;
 import net.minecraft.client.renderer.block.model.BlockModel;
@@ -17,7 +17,6 @@ import net.minecraft.client.resources.model.UnbakedModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;

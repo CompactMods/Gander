@@ -1,0 +1,34 @@
+modLoader="javafml"
+loaderVersion="${loader_version}"
+license="MIT"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="Gander"
+authors="The Gander Team"
+description='''
+Take a peek at the world and see what it has to offer!
+
+An advanced level and geometry rendering API focused on performance and ease of use.
+'''
+
+[[mixins]]
+config="META-INF/${mod_id}.mixins.json"
+
+[[accessTransformers]]
+file="META-INF/accesstransformer.cfg"
+
+[[dependencies."${mod_id}"]]
+modId="neoforge"
+type="required"
+versionRange="${neo_version}"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies."${mod_id}"]]
+modId="minecraft"
+type="required"
+versionRange="${minecraft_version}"
+ordering="NONE"
+side="BOTH"

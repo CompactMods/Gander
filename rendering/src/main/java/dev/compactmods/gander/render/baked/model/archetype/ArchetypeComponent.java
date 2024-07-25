@@ -1,6 +1,6 @@
 package dev.compactmods.gander.render.baked.model.archetype;
 
-import dev.compactmods.gander.render.baked.BakedMesh;
+import dev.compactmods.gander.render.baked.model.BakedMesh;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;

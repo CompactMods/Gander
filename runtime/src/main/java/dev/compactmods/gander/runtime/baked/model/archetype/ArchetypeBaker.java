@@ -1,17 +1,15 @@
-package dev.compactmods.gander.render.baked.model.archetype;
+package dev.compactmods.gander.runtime.baked.model.archetype;
 
 import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
+import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
 import dev.compactmods.gander.render.baked.model.block.BlockModelBaker;
 import dev.compactmods.gander.render.baked.model.composite.CompositeModelBaker;
 import dev.compactmods.gander.render.baked.model.obj.ObjModelBaker;
-import dev.compactmods.gander.render.mixin.accessor.BlockGeometryBakingContextAccessor;
-import dev.compactmods.gander.render.mixin.accessor.BlockModelAccessor;
-import dev.compactmods.gander.render.mixin.accessor.ModelBakeryAccessor;
-import dev.compactmods.gander.render.mixin.accessor.ModelManagerAccessor;
+import dev.compactmods.gander.runtime.mixin.accessor.BlockGeometryBakingContextAccessor;
+import dev.compactmods.gander.runtime.mixin.accessor.BlockModelAccessor;
+import dev.compactmods.gander.runtime.mixin.accessor.ModelBakeryAccessor;
+import dev.compactmods.gander.runtime.mixin.accessor.ModelManagerAccessor;
 import net.minecraft.client.renderer.block.model.BlockModel;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
@@ -24,12 +22,9 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.AbstractMap;
 import java.util.ArrayDeque;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Stream;
 
 public final class ArchetypeBaker
@@ -37,39 +32,6 @@ public final class ArchetypeBaker
     private static final Logger LOGGER = LoggerFactory.getLogger(ArchetypeBaker.class);
 
     private ArchetypeBaker() { }
-
-    public static ModelResourceLocation computeMeshName(
-        ModelResourceLocation original)
-    {
-        if (original.getVariant().isEmpty())
-            return new ModelResourceLocation(
-                original.id(),
-                "gander_archetype");
-        else if (original.getVariant().startsWith("gander_archetype"))
-            return original;
-        else
-            return new ModelResourceLocation(
-                original.id(),
-                "gander_archetype/" + original.getVariant());
-    }
-
-    public static ModelResourceLocation computeMeshName(
-        ModelResourceLocation original,
-        String variant)
-    {
-        if (original.getVariant().isEmpty())
-            return new ModelResourceLocation(
-                original.id(),
-                "gander_archetype/" + variant);
-        else if (original.getVariant().startsWith("gander_archetype"))
-            return new ModelResourceLocation(
-                original.id(),
-                original.getVariant() + "/" + variant);
-        else
-            return new ModelResourceLocation(
-                original.id(),
-                "gander_archetype/" + original.getVariant() + "/" + variant);
-    }
 
     // TODO: this should support mods registering their own geometry types
     public static Stream<ArchetypeComponent> bakeArchetypeComponents(
