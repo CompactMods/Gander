@@ -4,9 +4,9 @@ dependencyResolutionManagement {
     }
 
     versionCatalogs.create("neoforged") {
-        version("neogradle", "7.0.154")
-        version("neoforge", "21.0.133-beta")
-        version("loader", "[4.0.9,)")
+        version("neogradle", "7.0.191-pr-232-fix-no-recompile")
+        version("neoforge", "21.0.143")
+        version("loader", "[4.0.21,)")
 
         library("neoforge", "net.neoforged", "neoforge")
             .versionRef("neoforge")
@@ -59,6 +59,32 @@ pluginManagement {
 
         maven("https://repo.spongepowered.org/repository/maven-public/") {
             name = "Sponge Snapshots"
+        }
+
+        maven("https://prmaven.neoforged.net/NeoGradle/pr232") {
+            name = "NeoGradle PR #232"
+            content {
+                includeModule("net.neoforged.gradle.common", "net.neoforged.gradle.common.gradle.plugin")
+                includeModule("net.neoforged.gradle", "utils")
+                includeModule("net.neoforged.gradle", "platform")
+                includeModule("net.neoforged.gradle", "common")
+                includeModule("net.neoforged.gradle.platform", "net.neoforged.gradle.platform.gradle.plugin")
+                includeModule("net.neoforged.gradle", "test-utils")
+                includeModule("net.neoforged.gradle", "dsl-common")
+                includeModule("net.neoforged.gradle", "neoform")
+                includeModule("net.neoforged.gradle.neoform", "net.neoforged.gradle.neoform.gradle.plugin")
+                includeModule("net.neoforged.gradle", "dsl-mixin")
+                includeModule("net.neoforged.gradle.vanilla", "net.neoforged.gradle.vanilla.gradle.plugin")
+                includeModule("net.neoforged.gradle", "dsl-userdev")
+                includeModule("net.neoforged.gradle", "mixin")
+                includeModule("net.neoforged.gradle", "vanilla")
+                includeModule("net.neoforged.gradle", "dsl-neoform")
+                includeModule("net.neoforged.gradle", "dsl-vanilla")
+                includeModule("net.neoforged.gradle", "dsl-platform")
+                includeModule("net.neoforged.gradle.mixin", "net.neoforged.gradle.mixin.gradle.plugin")
+                includeModule("net.neoforged.gradle.userdev", "net.neoforged.gradle.userdev.gradle.plugin")
+                includeModule("net.neoforged.gradle", "userdev")
+            }
         }
     }
 }

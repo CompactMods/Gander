@@ -11,7 +11,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexSorting;
 
 import dev.compactmods.gander.render.FluidVertexConsumer;
-import dev.compactmods.gander.render.baked.section.SectionBaker;
+//import dev.compactmods.gander.render.baked.section.SectionBaker;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;

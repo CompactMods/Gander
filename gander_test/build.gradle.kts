@@ -38,12 +38,14 @@ runs {
         modSource(project(":runtime").sourceSets["main"])
     }
 
-    register("client") {
+    create("client") {
         programArguments("--width", "1920")
         programArguments("--height", "1080")
+
+        renderDoc.enabled = true
     }
 
-    register("server")
+    create("server")
 }
 
 repositories {

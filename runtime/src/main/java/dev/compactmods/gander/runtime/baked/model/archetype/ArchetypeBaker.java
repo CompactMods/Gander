@@ -3,9 +3,8 @@ package dev.compactmods.gander.runtime.baked.model.archetype;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
-import dev.compactmods.gander.render.baked.model.block.BlockModelBaker;
-import dev.compactmods.gander.render.baked.model.composite.CompositeModelBaker;
-import dev.compactmods.gander.render.baked.model.obj.ObjModelBaker;
+import dev.compactmods.gander.render.event.RegisterGeometryProvidersEvent;
+import dev.compactmods.gander.render.event.RegisterGeometryProvidersEvent.IUnbakedModelGeometryProvider;
 import dev.compactmods.gander.runtime.mixin.accessor.BlockGeometryBakingContextAccessor;
 import dev.compactmods.gander.runtime.mixin.accessor.BlockModelAccessor;
 import dev.compactmods.gander.runtime.mixin.accessor.ModelBakeryAccessor;
@@ -15,62 +14,63 @@ import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.client.model.CompositeModel;
-import net.neoforged.neoforge.client.model.geometry.IUnbakedGeometry;
-import net.neoforged.neoforge.client.model.obj.ObjModel;
+import net.neoforged.fml.ModLoader;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Objects;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public final class ArchetypeBaker
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(ArchetypeBaker.class);
 
+    private static final Map<Class<?>, IUnbakedModelGeometryProvider<?>> MODEL_GEOMETRY_PROVIDERS;
+    private static final Map<Class<?>, IUnbakedModelGeometryProvider<?>> NEO_CUSTOM_GEOMETRY_PROVIDERS;
+
+    static
+    {
+        // TODO: does this need to be concurrent?
+        Map<Class<?>, IUnbakedModelGeometryProvider<?>> modelGeometryProviders = new HashMap<>();
+        Map<Class<?>, IUnbakedModelGeometryProvider<?>> neoCustomGeometryProviders = new HashMap<>();
+
+        ModLoader.postEvent(new RegisterGeometryProvidersEvent(
+            modelGeometryProviders::put,
+            neoCustomGeometryProviders::put));
+
+        MODEL_GEOMETRY_PROVIDERS = Collections.unmodifiableMap(modelGeometryProviders);
+        NEO_CUSTOM_GEOMETRY_PROVIDERS = Collections.unmodifiableMap(neoCustomGeometryProviders);
+    }
+
+    @SuppressWarnings({"unchecked", "DataFlowIssue"})
+    private static IUnbakedModelGeometryProvider<UnbakedModel> getProvider(UnbakedModel model)
+    {
+        if (model instanceof BlockModel blockModel
+            && blockModel.customData.hasCustomGeometry())
+        {
+            var geom = blockModel.customData.getCustomGeometry();
+            return (IUnbakedModelGeometryProvider<UnbakedModel>)NEO_CUSTOM_GEOMETRY_PROVIDERS.get(geom.getClass());
+        }
+
+        return (IUnbakedModelGeometryProvider<UnbakedModel>)MODEL_GEOMETRY_PROVIDERS.get(model.getClass());
+    }
+
     private ArchetypeBaker() { }
 
-    // TODO: this should support mods registering their own geometry types
     public static Stream<ArchetypeComponent> bakeArchetypeComponents(
         ModelResourceLocation originalName,
         UnbakedModel model)
     {
-        return switch (model)
-        {
-            case BlockModel block ->
-                // Since we know we're already a "root" model, this is safe to call
-                block.customData.hasCustomGeometry()
-                    ? dispatchBakeCustomGeometry(
-                        originalName,
-                        block,
-                        Objects.requireNonNull(
-                            block.customData.getCustomGeometry()))
-                    : BlockModelBaker.bakeBlockModel(originalName, block);
-            default -> throw new IllegalStateException("Unexpected value: " + model);
-        };
-    }
+        var provider = getProvider(model);
+        if (provider == null)
+            throw new IllegalStateException("Unknown model kind: " + model);
 
-    // TODO: this should support mods registering their own geometry types
-    private static Stream<ArchetypeComponent> dispatchBakeCustomGeometry(
-        ModelResourceLocation originalName,
-        BlockModel model,
-        IUnbakedGeometry<?> geometry)
-    {
-        return switch (geometry)
-        {
-            case CompositeModel composite ->
-                CompositeModelBaker.bakeCompositeModel(originalName, model, composite);
-            case ObjModel obj ->
-                ObjModelBaker.bakeObjModel(originalName, model, obj);
-            default ->
-            {
-                LOGGER.error("Unsupported custom geometry type {}", geometry.getClass());
-                yield Stream.of();
-            }
-        };
+        return provider.bake(originalName, model);
     }
 
     public static BiMap<ModelResourceLocation, UnbakedModel> getArchetypes(
@@ -128,6 +128,7 @@ public final class ArchetypeBaker
         return blockModel.customData.getRenderTypeHint();
     }
 
+    // TODO: support custom geometry here
     private static boolean hasGeometry(UnbakedModel model)
     {
         // If the child model has its own geometry, it overrides any

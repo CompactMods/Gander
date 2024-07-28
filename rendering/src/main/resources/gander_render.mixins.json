@@ -4,6 +4,7 @@
   "package": "dev.compactmods.gander.render.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "CompositeRenderTypeMixin"
+    "CompositeRenderTypeMixin",
+    "accessor.GlStateManagerAccessor"
   ]
 }

@@ -100,6 +100,30 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	}
 
 	@Override
+	public void setDayTimeFraction(final float v)
+	{
+
+	}
+
+	@Override
+	public float getDayTimeFraction()
+	{
+		return 0;
+	}
+
+	@Override
+	public float getDayTimePerTick()
+	{
+		return 0;
+	}
+
+	@Override
+	public void setDayTimePerTick(final float v)
+	{
+
+	}
+
+	@Override
 	public MapId getFreeMapId() {
 		return new MapId(0);
 	}

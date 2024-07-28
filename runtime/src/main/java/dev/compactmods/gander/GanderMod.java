@@ -1,8 +1,8 @@
 package dev.compactmods.gander;
 
-import dev.compactmods.gander.render.baked.model.block.BlockModelBaker;
-import dev.compactmods.gander.render.baked.model.composite.CompositeModelBaker;
-import dev.compactmods.gander.render.baked.model.obj.ObjModelBaker;
+import dev.compactmods.gander.runtime.baked.model.block.BlockModelBaker;
+import dev.compactmods.gander.runtime.baked.model.composite.CompositeModelBaker;
+import dev.compactmods.gander.runtime.baked.model.obj.ObjModelBaker;
 import dev.compactmods.gander.render.event.RegisterGeometryProvidersEvent;
 import net.minecraft.client.renderer.block.model.BlockModel;
 import net.neoforged.api.distmarker.Dist;
@@ -10,7 +10,6 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.model.CompositeModel;
 import net.neoforged.neoforge.client.model.obj.ObjModel;
-import net.neoforged.neoforge.common.NeoForge;
 
 @Mod(GanderMod.ID)
 public class GanderMod

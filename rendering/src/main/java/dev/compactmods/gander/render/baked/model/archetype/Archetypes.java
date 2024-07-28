@@ -1,6 +1,11 @@
 package dev.compactmods.gander.render.baked.model.archetype;
 
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.client.NamedRenderTypeManager;
 
 public final class Archetypes
 {

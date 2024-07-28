@@ -49,8 +49,8 @@ repositories {
 dependencies {
     compileOnly(neoforged.neoforge)
 
-    implementation(project(":rendering"))
-    implementation(project(":levels"))
+    api(project(":rendering"))
+    api(project(":levels"))
 }
 
 runs {
@@ -81,7 +81,6 @@ tasks.withType<Jar> {
     }
 
     manifest {
-        from("src/main/resources/META-INF/MANIFEST.MF")
         val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(Date())
 
         attributes(

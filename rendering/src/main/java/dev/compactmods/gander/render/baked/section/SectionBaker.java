@@ -3,7 +3,7 @@ package dev.compactmods.gander.render.baked.section;
 import com.mojang.math.Transformation;
 import dev.compactmods.gander.render.baked.model.BakedMesh;
 import dev.compactmods.gander.render.baked.model.DisplayableMesh;
-import dev.compactmods.gander.render.baked.model.ModelRebaker;
+//import dev.compactmods.gander.render.baked.model.ModelRebaker;
 import dev.compactmods.gander.render.baked.model.material.MaterialInstance;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.core.BlockPos;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public final class SectionBaker
+/*public final class SectionBaker
 {
     private record InstanceInfo(Transformation transform, List<MaterialInstance> materials)
     { }
@@ -96,4 +96,4 @@ public final class SectionBaker
             original.getScale(),
             original.getRightRotation());
     }
-}
+}*/

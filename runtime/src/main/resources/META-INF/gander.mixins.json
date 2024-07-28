@@ -8,7 +8,6 @@
     "accessor.BlockModelAccessor",
     "accessor.BlockModelShaperAccessor",
     "accessor.CompositeModelAccessor",
-    "accessor.GlStateManagerAccessor",
     "accessor.ModelBakeryAccessor",
     "accessor.ModelManagerAccessor",
     "accessor.MultiPartAccessor",

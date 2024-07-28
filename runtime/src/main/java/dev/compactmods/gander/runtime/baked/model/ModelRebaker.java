@@ -1,15 +1,18 @@
 package dev.compactmods.gander.runtime.baked.model;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.mojang.datafixers.util.Either;
+import com.mojang.datafixers.util.Pair;
 import com.mojang.math.Transformation;
+import dev.compactmods.gander.render.baked.model.BakedMesh;
 import dev.compactmods.gander.render.baked.model.DisplayableMesh;
 import dev.compactmods.gander.runtime.baked.model.archetype.ArchetypeBaker;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
-import dev.compactmods.gander.render.baked.model.material.MaterialBaker;
 import dev.compactmods.gander.render.baked.model.material.MaterialInstance;
 import dev.compactmods.gander.render.baked.model.material.MaterialParent;
 import dev.compactmods.gander.runtime.mixin.accessor.BlockModelShaperAccessor;
@@ -24,6 +27,7 @@ import net.minecraft.client.renderer.block.model.MultiVariant;
 import net.minecraft.client.renderer.block.model.Variant;
 import net.minecraft.client.renderer.block.model.multipart.MultiPart;
 import net.minecraft.client.renderer.block.model.multipart.Selector;
+import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.resources.model.UnbakedModel;
@@ -39,6 +43,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -57,16 +62,16 @@ public final class ModelRebaker
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelRebaker.class);
 
     // Map of model -> material instances
-    private Map<ModelResourceLocation, Multimap<MaterialParent, MaterialInstance>> MODEL_MATERIAL_INSTANCES;
+    private Map<ModelResourceLocation, Multimap<MaterialParent, MaterialInstance>> modelMaterialInstances;
     // Multimap of model -> baked mesh
-    private Multimap<ModelResourceLocation, DisplayableMesh> BAKED_MODEL_MESHES;
+    private Multimap<ModelResourceLocation, DisplayableMesh> bakedModelMeshes;
 
     // TODO: this should be a DisplayableModel or something
     public Collection<DisplayableMesh> getArchetypeMeshes(ModelResourceLocation model)
     {
         // This SHOULD be unmodifiable, but just in case...
         return Collections.unmodifiableCollection(
-            BAKED_MODEL_MESHES.asMap()
+            bakedModelMeshes.asMap()
                 .getOrDefault(model, Collections.emptySet()));
     }
 
@@ -74,7 +79,7 @@ public final class ModelRebaker
     {
         // This SHOULD be unmodifiable, but just in case...
         return Multimaps.unmodifiableMultimap(
-            MODEL_MATERIAL_INSTANCES.getOrDefault(model,
+            modelMaterialInstances.getOrDefault(model,
                 Multimaps.forMap(Map.of())));
     }
 
@@ -175,7 +180,7 @@ public final class ModelRebaker
                     bakedModelMeshes.asMap().values().stream().mapToInt(Collection::size).max().orElse(0));
 
             reloadProfiler.popPush("archetype_cache");
-            BAKED_MODEL_MESHES = Multimaps.unmodifiableMultimap(bakedModelMeshes);
+            this.bakedModelMeshes = Multimaps.unmodifiableMultimap(bakedModelMeshes);
 
             reloadProfiler.popPush("material_instances");
             var modelMaterials = new HashMap<ModelResourceLocation, Multimap<MaterialParent, MaterialInstance>>();
@@ -188,7 +193,7 @@ public final class ModelRebaker
                     .get(pair.getKey());
 
                 modelMaterials.put(pair.getKey(),
-                    MaterialBaker.getMaterialInstances(bakery, pair.getKey(), unbakedModel)
+                    getMaterialInstances(bakery, pair.getKey(), unbakedModel)
                         .stream()
                         .collect(Multimaps.toMultimap(
                             MaterialInstance::material,
@@ -200,7 +205,7 @@ public final class ModelRebaker
                 LOGGER.debug("Baked {} different material instances", modelMaterials.size());
 
             reloadProfiler.popPush("material_instances_cache");
-            MODEL_MATERIAL_INSTANCES = Collections.unmodifiableMap(modelMaterials);
+            modelMaterialInstances = Collections.unmodifiableMap(modelMaterials);
 
             reloadProfiler.pop();
             reloadProfiler.endTick();
@@ -209,6 +214,107 @@ public final class ModelRebaker
         {
             LOGGER.error("Failed to rebake models", e);
         }
+    }
+
+    private Set<MaterialInstance> getMaterialInstances(
+        ModelBakery bakery, ModelResourceLocation key, UnbakedModel model)
+    {
+        switch (model)
+        {
+            case BlockModel block ->
+            {
+                return getBlockModelMaterials(key, block);
+            }
+            case MultiPart multiPart ->
+            {
+                return multiPart.getMultiVariants()
+                    .stream()
+                    .map(MultiVariant::getVariants)
+                    .flatMap(List::stream)
+                    .map(Variant::getModelLocation)
+                    .map(bakery::getModel)
+                    .map(it -> getMaterialInstances(bakery, key, it))
+                    .flatMap(Set::stream)
+                    .collect(Collectors.toSet());
+            }
+            case MultiVariant multiVariant ->
+            {
+                return multiVariant.getVariants()
+                    .stream()
+                    .map(Variant::getModelLocation)
+                    .map(bakery::getModel)
+                    .map(it -> getMaterialInstances(bakery, key, it))
+                    .flatMap(Set::stream)
+                    .collect(Collectors.toSet());
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + model);
+        }
+    }
+
+    private Set<MaterialInstance> getBlockModelMaterials(ModelResourceLocation name, final BlockModel model)
+    {
+        var result = new HashSet<MaterialInstance>();
+        Stream<Entry<String, Either<Material, String>>> materials = Stream.of();
+        for (var mdl = model; mdl != null; mdl = mdl.parent)
+        {
+            materials = Stream.concat(materials, mdl.textureMap.entrySet().stream());
+        }
+
+        var fullMaterialMap = materials.collect(Collectors.toSet());
+
+        var materialParents = getArchetypeMeshes(name)
+            .stream()
+            .map(DisplayableMesh::mesh)
+            .map(BakedMesh::materials)
+            .flatMap(List::stream)
+            .collect(Collectors.toSet());
+
+        var parentsByName = new HashMap<String, MaterialParent>();
+        materialParents.forEach(material -> {
+            parentsByName.put(material.name(), material);
+        });
+
+        fullMaterialMap.stream()
+            .map(it -> Pair.of(it.getKey(), it.getValue().left().orElse(null)))
+            .filter(it -> it.getSecond() != null)
+            .forEach(material -> {
+                parentsByName.putIfAbsent(material.getFirst(),
+                    new MaterialParent(material.getFirst(),
+                        material.getSecond().atlasLocation(),
+                        material.getSecond().texture()));
+            });
+
+        var usedMaterials = fullMaterialMap.stream()
+            .map(it -> it.getValue()
+                .map(left -> Map.entry(it.getKey(),
+                        checkMaterials(it.getKey(), parentsByName.getOrDefault(it.getKey(), MaterialParent.MISSING), left)),
+                    ref -> Map.entry(it.getKey(), parentsByName.getOrDefault(ref, MaterialParent.MISSING))))
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+
+        for (var usedMaterial : usedMaterials)
+        {
+            var parent = parentsByName.get(usedMaterial.getKey());
+            var resolved = usedMaterial.getValue();
+            var overridenTexture = resolved.defaultValue();
+
+            result.add(new MaterialInstance(parent, overridenTexture));
+        }
+
+        return result;
+    }
+
+    private static MaterialParent checkMaterials(
+        String name, MaterialParent material, Material vanilla)
+    {
+        if (material == null)
+        {
+            return new MaterialParent(name, vanilla.atlasLocation(), vanilla.texture());
+        }
+
+        // We only care if the atlas matches, because if it doesn't that's a problem.
+        Preconditions.checkArgument(vanilla.atlasLocation().equals(material.atlas()));
+        return material;
     }
 
     private Stream<DisplayableMesh> getDisplayMesh(
@@ -304,22 +410,6 @@ public final class ModelRebaker
         }
     }
 
-    @SuppressWarnings("deprecation")
-    private static RenderType getRenderType(ResourceLocation hint, BlockState state)
-    {
-        // If we have no hint, we have to fall back to the Vanilla map
-        if (hint == null)
-            return ItemBlockRenderTypes.getChunkRenderType(state);
-
-        // If we do, pull it from the same source Neo does
-        var group = NamedRenderTypeManager.get(hint);
-        // If it doesn't exist... :ohno:
-        if (group.isEmpty())
-            return RenderType.solid();
-
-        return group.block();
-    }
-
     private static boolean variantMatchesArchetype(
         BiMap<UnbakedModel, ModelResourceLocation> modelToArchetype,
         ModelBakery bakery,
@@ -337,5 +427,21 @@ public final class ModelRebaker
         }
 
         return modelToArchetype.get(variantModel).id().equals(component.name().id());
+    }
+
+    @SuppressWarnings("deprecation")
+    private static RenderType getRenderType(ResourceLocation hint, BlockState state)
+    {
+        // If we have no hint, we have to fall back to the Vanilla map
+        if (hint == null)
+            return ItemBlockRenderTypes.getChunkRenderType(state);
+
+        // If we do, pull it from the same source Neo does
+        var group = NamedRenderTypeManager.get(hint);
+        // If it doesn't exist... :ohno:
+        if (group.isEmpty())
+            return RenderType.solid();
+
+        return group.block();
     }
 }

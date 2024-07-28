@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "dev.compactmods.gander.mixin",
+  "package": "dev.compactmods.gander_test.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "accessor.ParticleEngineAccessor"
