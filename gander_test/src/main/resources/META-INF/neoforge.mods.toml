@@ -5,10 +5,10 @@ license="MIT"
 [[mods]]
 modId="${mod_id}"
 version="${mod_version}"
-displayName="Gander"
-authors="RobotGryphon, FiniteReality"
+displayName="Gander Test Mod"
+authors="You!"
 description='''
-Take a peek at the world and see what it has to offer!
+It's testing time
 '''
 
 [[mixins]]
@@ -24,7 +24,6 @@ versionRange="${neo_version}"
 ordering="NONE"
 side="BOTH"
 
-# Here's another dependency
 [[dependencies."${mod_id}"]]
 modId="minecraft"
 type="required"
@@ -32,8 +31,9 @@ versionRange="${minecraft_version}"
 ordering="NONE"
 side="BOTH"
 
-# Features are specific properties of the game environment, that you may want to declare you require. This example declares
-# that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
-# stop your mod loading on the server for example.
-#[features.${mod_id}]
-#openGLVersion="[3.2,)"
+[[dependencies."${mod_id}"]]
+modId="gander"
+type="required"
+versionRange="${mod_version}"
+ordering="AFTER"
+side="CLIENT"

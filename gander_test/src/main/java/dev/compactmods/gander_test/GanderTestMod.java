@@ -5,6 +5,7 @@ import java.util.Random;
 import com.mojang.logging.LogUtils;
 
 //import dev.compactmods.gander.network.GanderDebugRenderPacket;
+import dev.compactmods.gander_test.network.GanderDebugRenderPacket;
 import dev.compactmods.gander_test.network.StructureSceneDataRequest;
 import dev.compactmods.gander_test.network.OpenGanderUiForDeferredStructureRequest;
 import dev.compactmods.gander_test.network.OpenGanderUiForStructureRequest;
@@ -57,7 +58,7 @@ public class GanderTestMod
 		main.playToClient(OpenGanderUiForStructureRequest.ID, OpenGanderUiForStructureRequest.STREAM_CODEC, OpenGanderUiForStructureRequest.HANDLER)
 				.executesOn(HandlerThread.MAIN);
 
-		//main.playToClient(GanderDebugRenderPacket.ID, GanderDebugRenderPacket.STREAM_CODEC, GanderDebugRenderPacket::handle)
-		//	.executesOn(HandlerThread.MAIN);
+		main.playToClient(GanderDebugRenderPacket.ID, GanderDebugRenderPacket.STREAM_CODEC, GanderDebugRenderPacket::handle)
+			.executesOn(HandlerThread.MAIN);
 	}
 }

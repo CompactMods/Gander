@@ -28,10 +28,10 @@ public abstract class ModelManagerMixin
 {
     @Unique
     @Final
-    private ModelRebaker modelRebaker;
+    public ModelRebaker modelRebaker;
     @Unique
     @Final
-    private AtlasIndexer atlasIndexer;
+    public AtlasIndexer atlasIndexer;
 
     @Unique
     private CompletableFuture<Void> rebakeMeshes(

@@ -1,13 +1,15 @@
-package dev.compactmods.gander.render.baked.section;
+package dev.compactmods.gander.runtime.baked.section;
 
 import com.mojang.math.Transformation;
 import dev.compactmods.gander.render.baked.model.BakedMesh;
 import dev.compactmods.gander.render.baked.model.DisplayableMesh;
 //import dev.compactmods.gander.render.baked.model.ModelRebaker;
 import dev.compactmods.gander.render.baked.model.material.MaterialInstance;
+import dev.compactmods.gander.runtime.baked.model.ModelRebaker;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
@@ -16,18 +18,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/*public final class SectionBaker
+public final class SectionBaker
 {
     private record InstanceInfo(Transformation transform, List<MaterialInstance> materials)
     { }
 
     private SectionBaker() { }
 
-    public static void bake(Level level, SectionPos section)
+    // TODO: this should take some sort of abstraction, maybe a Function<ModelResourceLocation, Collection<DisplayableMeshGroup>> or some such?
+    public static void bake(Level level, SectionPos section, ModelRebaker rebaker)
     {
+        var randomSource = RandomSource.create();
         // The map of render passes, to the map of meshes
         var renderPasses = section.blocksInside()
-            .flatMap(pos -> modelsAt(level, pos))
+            .flatMap(pos -> modelsAt(level, pos, rebaker, randomSource))
             .collect(Collectors.groupingBy(DisplayableMesh::renderType,
                 Collectors.groupingBy(DisplayableMesh::mesh)));
 
@@ -35,16 +39,17 @@ import java.util.stream.Stream;
         {
             for (var mesh : renderPass.getValue().entrySet())
             {
-                buildBuffers(mesh.getKey(), mesh.getValue());
+                buildBuffers(mesh.getKey(), mesh.getValue(), rebaker);
             }
         }
     }
 
     private static void buildBuffers(
         BakedMesh mesh,
-        Collection<DisplayableMesh> instances)
+        Collection<DisplayableMesh> instances,
+        ModelRebaker rebaker)
     {
-        instances.stream()
+        instances
             .forEach(it -> {
                 var materials = new ArrayList<MaterialInstance>(mesh.materialIndexes().length);
                 for (var index : it.mesh().materialIndexes())
@@ -64,11 +69,15 @@ import java.util.stream.Stream;
     // TODO: should this return a thing
     private static Stream<DisplayableMesh> modelsAt(
         Level level,
-        BlockPos pos)
+        BlockPos pos,
+        ModelRebaker rebaker,
+        RandomSource randomSource)
     {
-        var modelPos = BlockModelShaper.stateToModelLocation(level.getBlockState(pos));
-        return ModelRebaker.getArchetypeMeshes(modelPos)
-            .stream()
+        var blockState = level.getBlockState(pos);
+        randomSource.setSeed(blockState.getSeed(pos));
+        var modelPos = BlockModelShaper.stateToModelLocation(blockState);
+        return rebaker.getArchetypes(modelPos)
+            .meshes(randomSource)
             .map(it -> new DisplayableMesh(
                 it.name(),
                 it.mesh(),
@@ -96,4 +105,4 @@ import java.util.stream.Stream;
             original.getScale(),
             original.getRightRotation());
     }
-}*/
+}

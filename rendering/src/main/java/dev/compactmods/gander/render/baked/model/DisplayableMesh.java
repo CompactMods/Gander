@@ -7,7 +7,6 @@ import dev.compactmods.gander.render.baked.model.material.MaterialParent;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 
-import java.util.Map;
 import java.util.function.Supplier;
 
 /**

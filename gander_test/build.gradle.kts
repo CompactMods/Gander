@@ -41,6 +41,12 @@ runs {
     create("client") {
         programArguments("--width", "1920")
         programArguments("--height", "1080")
+    }
+
+    create("clientRenderDoc") {
+        configure("client")
+        programArguments("--width", "1920")
+        programArguments("--height", "1080")
 
         renderDoc.enabled = true
     }
