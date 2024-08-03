@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -67,7 +68,6 @@ public final class ModelRebaker
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelRebaker.class);
 
     private static final VarHandle _rebakerField;
-
     static
     {
         try
@@ -265,68 +265,78 @@ public final class ModelRebaker
 
     private Set<MaterialInstance> getBlockModelMaterials(ModelResourceLocation name, final BlockModel model)
     {
-        var result = new HashSet<MaterialInstance>();
         Stream<Entry<String, Either<Material, String>>> materials = Stream.of();
         for (var mdl = model; mdl != null; mdl = mdl.parent)
         {
             materials = Stream.concat(materials, mdl.textureMap.entrySet().stream());
         }
 
-        var fullMaterialMap = materials.collect(Collectors.toSet());
+        // All materials used by this model and its parents
+        var fullMaterialMap = new HashSet<Map.Entry<String, Either<Material, String>>>();
+        materials
+            .sorted(Map.Entry.<String, Either<Material, String>>comparingByKey()
+                .thenComparing((left, right) -> {
+                    var leftMatOrRef = left.getValue();
+                    var rightMatOrRef = right.getValue();
 
-        var materialParents = getArchetypes(name)
+                    var result = leftMatOrRef.mapBoth(
+                        leftMaterial -> rightMatOrRef.mapBoth(
+                            rightMaterial -> 0,
+                            rightRef -> -1
+                        ),
+                        leftRef -> rightMatOrRef.mapBoth(
+                            rightMaterial -> 1,
+                            rightRef -> 0
+                        ));
+
+                    return Either.unwrap(Either.unwrap(result));
+                }))
+            .forEach(fullMaterialMap::add);
+
+        // All of the materials used in the parent meshes
+        var parentsByName = new HashMap<String, MaterialParent>();
+        getArchetypes(name)
             .allMeshes()
             .map(DisplayableMesh::mesh)
             .map(BakedMesh::materials)
             .flatMap(List::stream)
-            .collect(Collectors.toSet());
+            .forEach(material -> {
+                parentsByName.put(material.name(), material);
+            });
 
-        var parentsByName = new HashMap<String, MaterialParent>();
-        materialParents.forEach(material -> {
-            parentsByName.put(material.name(), material);
-        });
-
+        // All of the overriden materials in this mesh
+        var overridenByName = new HashMap<String, MaterialInstance>();
         fullMaterialMap.stream()
             .map(it -> Pair.of(it.getKey(), it.getValue().left().orElse(null)))
             .filter(it -> it.getSecond() != null)
             .forEach(material -> {
-                parentsByName.putIfAbsent(material.getFirst(),
-                    new MaterialParent(material.getFirst(),
-                        material.getSecond().atlasLocation(),
-                        material.getSecond().texture()));
+                var missingFromParent = new MaterialParent(material.getFirst(),
+                    material.getSecond().atlasLocation(),
+                    material.getSecond().texture());
+                var parent = parentsByName.putIfAbsent(material.getFirst(), missingFromParent);
+                if (parent != null)
+                {
+                    overridenByName.put(material.getFirst(), new MaterialInstance(parent, material.getSecond().texture()));
+                }
+                else
+                {
+                    overridenByName.put(missingFromParent.name(), new MaterialInstance(missingFromParent, null));
+                }
             });
 
-        var usedMaterials = fullMaterialMap.stream()
+        return fullMaterialMap.stream()
             .map(it -> it.getValue()
                 .map(left -> Map.entry(it.getKey(),
-                        checkMaterials(it.getKey(), parentsByName.getOrDefault(it.getKey(), MaterialParent.MISSING), left)),
-                    ref -> Map.entry(it.getKey(), parentsByName.getOrDefault(ref, MaterialParent.MISSING))))
+                        overridenByName.get(it.getKey())),
+                    ref -> Map.entry(it.getKey(),
+                        overridenByName.getOrDefault(ref,
+                            new MaterialInstance(
+                                parentsByName.getOrDefault(ref,
+                                    MaterialParent.MISSING),
+                                null)))))
             .filter(Objects::nonNull)
+            .map(Map.Entry::getValue)
             .collect(Collectors.toSet());
-
-        for (var usedMaterial : usedMaterials)
-        {
-            var parent = parentsByName.get(usedMaterial.getKey());
-            var resolved = usedMaterial.getValue();
-            var overridenTexture = resolved.defaultValue();
-
-            result.add(new MaterialInstance(parent, overridenTexture));
-        }
-
-        return result;
-    }
-
-    private static MaterialParent checkMaterials(
-        String name, MaterialParent material, Material vanilla)
-    {
-        if (material == null)
-        {
-            return new MaterialParent(name, vanilla.atlasLocation(), vanilla.texture());
-        }
-
-        // We only care if the atlas matches, because if it doesn't that's a problem.
-        Preconditions.checkArgument(vanilla.atlasLocation().equals(material.atlas()));
-        return material;
     }
 
     private DisplayableMeshGroup getDisplayMesh(

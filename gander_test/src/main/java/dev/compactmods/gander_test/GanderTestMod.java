@@ -16,6 +16,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.HandlerThread;
 
@@ -38,8 +39,8 @@ public class GanderTestMod
 	public GanderTestMod(IEventBus modEventBus, Dist dist) {
 		modEventBus.addListener(GanderTestMod::onPacketRegistration);
 
-		//if (dist.isClient())
-		//	NeoForge.EVENT_BUS.addListener(GanderDebugRenderPacket::render);
+		if (dist.isClient())
+			NeoForge.EVENT_BUS.addListener(GanderDebugRenderPacket::render);
 	}
 
 	public static ResourceLocation asResource(String path) {

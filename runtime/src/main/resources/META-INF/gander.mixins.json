@@ -16,6 +16,7 @@
     "accessor.ObjModel$ModelObjectAccessor",
     "accessor.ObjModelAccessor",
     "accessor.StitchResultAccessor",
+    "accessor.TransformationAccessor",
 
     "ModelManagerMixin"
   ]

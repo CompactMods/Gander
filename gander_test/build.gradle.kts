@@ -45,6 +45,7 @@ runs {
 
     create("clientRenderDoc") {
         configure("client")
+        workingDirectory(runs["client"].workingDirectory)
         programArguments("--width", "1920")
         programArguments("--height", "1080")
 

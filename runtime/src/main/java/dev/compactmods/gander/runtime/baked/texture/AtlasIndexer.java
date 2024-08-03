@@ -1,13 +1,17 @@
 package dev.compactmods.gander.runtime.baked.texture;
 
 import dev.compactmods.gander.render.baked.texture.AtlasIndices;
+import dev.compactmods.gander.runtime.baked.model.ModelRebaker;
 import dev.compactmods.gander.runtime.mixin.accessor.StitchResultAccessor;
 import net.minecraft.client.resources.model.AtlasSet;
+import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Vector4f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.nio.FloatBuffer;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +26,26 @@ import java.util.stream.Collectors;
 public final class AtlasIndexer
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(AtlasIndexer.class);
+
+    private static final VarHandle _indexerField;
+    static
+    {
+        try
+        {
+            _indexerField = MethodHandles.lookup()
+                .findVarHandle(ModelManager.class, "atlasIndexer", AtlasIndexer.class);
+        }
+        catch (NoSuchFieldException | IllegalAccessException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static AtlasIndexer of(ModelManager manager)
+    {
+        return (AtlasIndexer)_indexerField.get(manager);
+    }
+
 
     private Map<ResourceLocation, AtlasIndices> ATLASES;
 
