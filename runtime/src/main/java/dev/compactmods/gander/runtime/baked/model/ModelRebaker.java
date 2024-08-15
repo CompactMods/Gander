@@ -1,9 +1,10 @@
 package dev.compactmods.gander.runtime.baked.model;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.mojang.datafixers.util.Either;
@@ -21,6 +22,7 @@ import dev.compactmods.gander.runtime.mixin.accessor.BlockModelShaperAccessor;
 import dev.compactmods.gander.runtime.mixin.accessor.ModelBakeryAccessor;
 import dev.compactmods.gander.runtime.mixin.accessor.ModelManagerAccessor;
 import dev.compactmods.gander.runtime.mixin.accessor.MultiPartAccessor;
+import dev.compactmods.gander.runtime.mixin.accessor.TransformationAccessor;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockModelShaper;
@@ -38,6 +40,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.NamedRenderTypeManager;
+import org.joml.Matrix4f;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +56,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -86,8 +88,8 @@ public final class ModelRebaker
         return (ModelRebaker)_rebakerField.get(manager);
     }
 
-    // Map of model -> material instances
-    private Map<ModelResourceLocation, Multimap<MaterialParent, MaterialInstance>> modelMaterialInstances;
+    // Map of model -> parent instances
+    private Map<DisplayableMesh, Set<MaterialInstance>> modelMaterialInstances;
     // Multimap of model -> baked mesh
     private Map<ModelResourceLocation, DisplayableMeshGroup> bakedModelMeshes;
 
@@ -96,12 +98,13 @@ public final class ModelRebaker
         return bakedModelMeshes.getOrDefault(model, DisplayableMeshGroup.of());
     }
 
-    public Multimap<MaterialParent, MaterialInstance> getMaterialInstances(ModelResourceLocation model)
+    public Set<MaterialInstance> getMaterialInstances(DisplayableMesh mesh)
     {
         // This SHOULD be unmodifiable, but just in case...
-        return Multimaps.unmodifiableMultimap(
-            modelMaterialInstances.getOrDefault(model,
-                Multimaps.forMap(Map.of())));
+        return Collections.unmodifiableSet(
+            modelMaterialInstances.getOrDefault(
+                mesh,
+                Set.of()));
     }
 
     public void rebakeModels(ModelManagerAccessor manager, ProfilerFiller reloadProfiler)
@@ -194,8 +197,8 @@ public final class ModelRebaker
             this.bakedModelMeshes = Collections.unmodifiableMap(bakedModelMeshes);
 
             reloadProfiler.popPush("material_instances");
-            var modelMaterials = new HashMap<ModelResourceLocation, Multimap<MaterialParent, MaterialInstance>>();
-            for (var pair : manager.getBakedRegistry().entrySet())
+            var modelMaterials = new HashMap<DisplayableMesh, Set<MaterialInstance>>();
+            for (var pair : bakedModelMeshes.entrySet())
             {
                 if (LOGGER.isTraceEnabled())
                     LOGGER.trace("Baking material instances of model {}", pair.getKey());
@@ -203,13 +206,13 @@ public final class ModelRebaker
                 var unbakedModel = ((ModelBakeryAccessor)bakery).getTopLevelModels()
                     .get(pair.getKey());
 
-                modelMaterials.put(pair.getKey(),
-                    getMaterialInstances(bakery, pair.getKey(), unbakedModel)
-                        .stream()
-                        .collect(Multimaps.toMultimap(
-                            MaterialInstance::material,
-                            Function.identity(),
-                            HashMultimap::create)));
+                pair.getValue().allMeshes()
+                    .flatMap(it -> getMaterialInstances(
+                        bakery,
+                        pair.getKey(),
+                        unbakedModel,
+                        it))
+                    .forEach(it -> modelMaterials.put(it.getKey(), it.getValue()));
             }
 
             if (LOGGER.isDebugEnabled())
@@ -228,14 +231,16 @@ public final class ModelRebaker
     }
 
     // TODO: support custom UnbakedModel types?
-    private Set<MaterialInstance> getMaterialInstances(
-        ModelBakery bakery, ModelResourceLocation key, UnbakedModel model)
+    private Stream<Map.Entry<DisplayableMesh, Set<MaterialInstance>>> getMaterialInstances(
+        ModelBakery bakery, ModelResourceLocation key,
+        UnbakedModel model,
+        DisplayableMesh component)
     {
         switch (model)
         {
             case BlockModel block ->
             {
-                return getBlockModelMaterials(key, block);
+                return Stream.of(getBlockModelMaterials(key, block, component));
             }
             case MultiPart multiPart ->
             {
@@ -245,9 +250,7 @@ public final class ModelRebaker
                     .flatMap(List::stream)
                     .map(Variant::getModelLocation)
                     .map(bakery::getModel)
-                    .map(it -> getMaterialInstances(bakery, key, it))
-                    .flatMap(Set::stream)
-                    .collect(Collectors.toSet());
+                    .flatMap(it -> getMaterialInstances(bakery, key, it, component));
             }
             case MultiVariant multiVariant ->
             {
@@ -255,15 +258,16 @@ public final class ModelRebaker
                     .stream()
                     .map(Variant::getModelLocation)
                     .map(bakery::getModel)
-                    .map(it -> getMaterialInstances(bakery, key, it))
-                    .flatMap(Set::stream)
-                    .collect(Collectors.toSet());
+                    .flatMap(it -> getMaterialInstances(bakery, key, it, component));
             }
             default -> throw new IllegalStateException("Unexpected value: " + model);
         }
     }
 
-    private Set<MaterialInstance> getBlockModelMaterials(ModelResourceLocation name, final BlockModel model)
+    private Map.Entry<DisplayableMesh, Set<MaterialInstance>> getBlockModelMaterials(
+        ModelResourceLocation name,
+        final BlockModel model,
+        final DisplayableMesh component)
     {
         Stream<Entry<String, Either<Material, String>>> materials = Stream.of();
         for (var mdl = model; mdl != null; mdl = mdl.parent)
@@ -293,7 +297,9 @@ public final class ModelRebaker
                 }))
             .forEach(fullMaterialMap::add);
 
-        // All of the materials used in the parent meshes
+        // All of the material parents pulled from the parent meshes
+        // TODO: is .put here sane? What if two parts of an archetype use a name
+        // in different ways?
         var parentsByName = new HashMap<String, MaterialParent>();
         getArchetypes(name)
             .allMeshes()
@@ -304,7 +310,9 @@ public final class ModelRebaker
                 parentsByName.put(material.name(), material);
             });
 
-        // All of the overriden materials in this mesh
+        // All of the overriden material instances in this mesh
+        // Any missing parents will be created, and the instance will be populated
+        // based on this new parent.
         var overridenByName = new HashMap<String, MaterialInstance>();
         fullMaterialMap.stream()
             .map(it -> Pair.of(it.getKey(), it.getValue().left().orElse(null)))
@@ -313,30 +321,57 @@ public final class ModelRebaker
                 var missingFromParent = new MaterialParent(material.getFirst(),
                     material.getSecond().atlasLocation(),
                     material.getSecond().texture());
-                var parent = parentsByName.putIfAbsent(material.getFirst(), missingFromParent);
+                var parent = parentsByName.putIfAbsent(
+                    material.getFirst(),
+                    missingFromParent);
                 if (parent != null)
                 {
-                    overridenByName.put(material.getFirst(), new MaterialInstance(parent, material.getSecond().texture()));
+                    // If the parent already exists, we override it with
+                    // whatever texture we were supplied
+                    overridenByName.put(
+                        material.getFirst(),
+                        new MaterialInstance(
+                            material.getFirst(),
+                            parent,
+                            material.getSecond().texture()));
                 }
                 else
                 {
-                    overridenByName.put(missingFromParent.name(), new MaterialInstance(missingFromParent, null));
+                    // If it doesn't, we create a new material instance inheriting
+                    // from the parent we just made, using the same name.
+                    overridenByName.put(
+                        missingFromParent.name(),
+                        new MaterialInstance(
+                            missingFromParent.name(),
+                            missingFromParent,
+                            null));
                 }
             });
 
-        return fullMaterialMap.stream()
+        // Now we have enough information to build the final set of material instances
+        // from the full material map for this model
+        var allMaterials = fullMaterialMap.stream()
             .map(it -> it.getValue()
-                .map(left -> Map.entry(it.getKey(),
+                // If it's a direct material, we look for its instance in the
+                // overriden material map where we made it
+                .map(material -> Map.entry(it.getKey(),
                         overridenByName.get(it.getKey())),
+                    // If it's a reference, we look for an overriden material
+                    // by the original name, or create a new material instance
+                    // referring to the parent we're referring to
                     ref -> Map.entry(it.getKey(),
-                        overridenByName.getOrDefault(ref,
+                        overridenByName.getOrDefault(
+                            it.getKey(),
                             new MaterialInstance(
+                                it.getKey(),
                                 parentsByName.getOrDefault(ref,
                                     MaterialParent.MISSING),
                                 null)))))
             .filter(Objects::nonNull)
             .map(Map.Entry::getValue)
             .collect(Collectors.toSet());
+
+        return Map.entry(component, allMaterials);
     }
 
     private DisplayableMeshGroup getDisplayMesh(
@@ -356,9 +391,9 @@ public final class ModelRebaker
                     component.bakedMesh(),
                     // TODO: is this the correct value? (Probably not)
                     RenderType.solid(),
-                    Transformation.identity(),
+                    new Matrix4f(),
                     1,
-                    () -> getMaterialInstances(model)))
+                    this::getMaterialInstances))
                 .collect(Collectors.collectingAndThen(
                     Collectors.toList(),
                     // TODO: is All the correct value?
@@ -388,9 +423,9 @@ public final class ModelRebaker
                         component.name(),
                         component.bakedMesh(),
                         getRenderType(component.renderType(), sourceBlockState),
-                        Transformation.identity(),
+                        new Matrix4f(),
                         1,
-                        () -> getMaterialInstances(model)))
+                        this::getMaterialInstances))
                     .collect(Collectors.collectingAndThen(
                         Collectors.toList(),
                         l -> DisplayableMeshGroup.ofMeshes(Mode.All, 1, l)));
@@ -403,9 +438,9 @@ public final class ModelRebaker
                         component.name(),
                         component.bakedMesh(),
                         getRenderType(component.renderType(), sourceBlockState),
-                        Transformation.identity(),
+                        new Matrix4f(),
                         1,
-                        () -> getMaterialInstances(model)))
+                        this::getMaterialInstances))
                     .collect(Collectors.collectingAndThen(
                         Collectors.toList(),
                         l -> DisplayableMeshGroup.ofMeshes(Mode.All, 1, l)));
@@ -468,9 +503,9 @@ public final class ModelRebaker
                 component.name(),
                 component.bakedMesh(),
                 getRenderType(component.renderType(), sourceBlockState),
-                variant.getRotation(),
+                ((TransformationAccessor)(Object)variant.getRotation()).gander$matrix(),
                 variant.getWeight(),
-                () -> getMaterialInstances(model)))
+                this::getMaterialInstances))
             .collect(Collectors.collectingAndThen(
                 Collectors.toList(),
                 l -> DisplayableMeshGroup.ofMeshes(Mode.All, variant.getWeight(), l)));

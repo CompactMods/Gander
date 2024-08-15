@@ -1,12 +1,13 @@
 package dev.compactmods.gander.runtime.baked.section;
 
-import com.mojang.math.Transformation;
+import com.google.common.collect.Iterators;
+import dev.compactmods.gander.render.baked.model.material.MaterialParent;
+
 import dev.compactmods.gander.render.baked.model.BakedMesh;
-import dev.compactmods.gander.render.baked.model.DisplayableMesh;
 import dev.compactmods.gander.render.baked.model.material.MaterialInstance;
 import dev.compactmods.gander.runtime.baked.model.ModelRebaker;
 import dev.compactmods.gander.runtime.baked.texture.AtlasIndexer;
-import dev.compactmods.gander.runtime.mixin.accessor.TransformationAccessor;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -16,6 +17,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -25,24 +30,39 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class SectionBaker
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SectionBaker.class);
+
+    // TODO: these should encapsulate their details more...
     public record BakedSection(
         List<DrawCall> drawCalls,
         FloatBuffer atlas)
     { }
 
     public record DrawCall(
+        RenderType renderType,
         BakedMesh mesh,
         int instanceCount,
         FloatBuffer transforms,
         int transformCount,
         IntBuffer textures,
         int textureCount)
+    { }
+
+    private record InstanceInfo(
+        RenderType renderType,
+        BakedMesh mesh,
+        Set<MaterialInstance> materialInstances,
+        Matrix4fc transform,
+        int sectionRelativeX,
+        int sectionRelativeY,
+        int sectionRelativeZ)
     { }
 
     private SectionBaker() { }
@@ -59,8 +79,8 @@ public final class SectionBaker
         // The map of render passes, to the map of meshes
         var renderPasses = section.blocksInside()
             .flatMap(pos -> modelsAt(level, pos, rebaker, randomSource))
-            .collect(Collectors.groupingBy(DisplayableMesh::renderType,
-                Collectors.groupingBy(DisplayableMesh::mesh)));
+            .collect(Collectors.groupingBy(InstanceInfo::renderType,
+                Collectors.groupingBy(InstanceInfo::mesh)));
 
         if (renderPasses.isEmpty())
             return EMPTY;
@@ -72,12 +92,13 @@ public final class SectionBaker
             for (var mesh : renderPass.getValue().entrySet())
             {
                 drawCalls.add(buildBuffers(
+                    renderPass.getKey(),
                     mesh.getKey(),
                     mesh.getValue(),
                     rebaker,
                     instance -> {
                         var atlas = textureAtlases.computeIfAbsent(
-                            instance.material().atlas(),
+                            instance.parent().atlas(),
                             indexer::getAtlasIndexes);
 
                         var index = atlas.indexOf(
@@ -110,37 +131,27 @@ public final class SectionBaker
     }
 
     private static DrawCall buildBuffers(
+        RenderType renderType,
         BakedMesh mesh,
-        Collection<DisplayableMesh> instances,
+        Collection<InstanceInfo> instances,
         ModelRebaker rebaker,
         ToIntFunction<MaterialInstance> textureAtlasIndex)
     {
         var transforms = FloatBuffer.allocate(
             instances.size() * 4 * 4);
-        // N.B. std140 layout requires 16-byte alignment
+
+        // N.B. std140 layout requires 16 byte alignment
         var textureBuffer = IntBuffer.allocate(
             (mesh.vertexCount() * instances.size()) * 4);
 
         instances
             .forEach(it -> {
-                for (var index : it.mesh().materialIndexes())
+                for (var index : mesh.materialIndexes())
                 {
-                    var parent = it.mesh().materials().get(index);
-                    var potentials = it.materialInstances().get(parent);
-                    var iterator = potentials.iterator();
-
-                    var material = MaterialInstance.MISSING;
-                    if (iterator.hasNext())
-                    {
-                        material = iterator.next();
-                        if (iterator.hasNext())
-                        {
-                            throw new IllegalStateException(
-                                "More than one potential material instance "
-                                + "was found for "
-                                + parent.name());
-                        }
-                    }
+                    var parent = mesh.materials().get(index);
+                    var material = getMaterialInstance(
+                        it.materialInstances(),
+                        parent);
 
                     // Extra padding bytes here are necessary for std140 alignment
                     textureBuffer.put(textureAtlasIndex.applyAsInt(material));
@@ -149,11 +160,16 @@ public final class SectionBaker
                     textureBuffer.put(0);
                 }
 
-                var transform = it.transform();
+                var transform = new Matrix4f()
+                    .translate(it.sectionRelativeX(),
+                        it.sectionRelativeY(),
+                        it.sectionRelativeZ())
+                    .mul(it.transform());
                 writeTransform(transforms, transform);
             });
 
         return new DrawCall(
+            renderType,
             mesh,
             instances.size(),
             transforms.flip(),
@@ -162,15 +178,41 @@ public final class SectionBaker
             mesh.vertexCount() * instances.size());
     }
 
-    private static FloatBuffer writeTransform(FloatBuffer buffer,
-        @NotNull Transformation transformation)
+    private static MaterialInstance getMaterialInstance(
+        final Set<MaterialInstance> instances,
+        final MaterialParent meshParent)
     {
-        var result = buffer.slice();
-        buffer.position(buffer.position() + 16);
-        var accessor = (TransformationAccessor)(Object)transformation;
-        var matrix = accessor.gander$matrix();
+        var iterator = instances.stream()
+            .filter(x -> meshParent.name().equals(x.name()))
+            .iterator();
 
-        result.put(matrix.m00())
+        var material = MaterialInstance.MISSING;
+        if (iterator.hasNext())
+        {
+            material = iterator.next();
+            if (material.getEffectiveTexture().getPath().contains("dust_line1"))
+                LOGGER.warn("hi");
+
+            if (iterator.hasNext())
+            {
+                LOGGER.error("Found multiple potential parents for {}: {}",
+                    meshParent.name(),
+                    Iterators.toString(iterator));
+
+                throw new IllegalStateException(
+                    "More than one potential parent instance "
+                    + "was found for "
+                    + meshParent.name());
+            }
+        }
+
+        return material;
+    }
+
+    private static void writeTransform(FloatBuffer buffer,
+        @NotNull Matrix4fc matrix)
+    {
+        buffer.put(matrix.m00())
             .put(matrix.m01())
             .put(matrix.m02())
             .put(matrix.m03())
@@ -186,11 +228,9 @@ public final class SectionBaker
             .put(matrix.m31())
             .put(matrix.m32())
             .put(matrix.m33());
-
-        return result.flip();
     }
 
-    private static Stream<DisplayableMesh> modelsAt(
+    private static Stream<InstanceInfo> modelsAt(
         Level level,
         BlockPos pos,
         ModelRebaker rebaker,
@@ -198,15 +238,17 @@ public final class SectionBaker
     {
         var blockState = level.getBlockState(pos);
         randomSource.setSeed(blockState.getSeed(pos));
-        var modelPos = BlockModelShaper.stateToModelLocation(blockState);
-        return rebaker.getArchetypes(modelPos)
+        var modelRef = BlockModelShaper.stateToModelLocation(blockState);
+
+        return rebaker.getArchetypes(modelRef)
             .meshes(randomSource)
-            .map(it -> new DisplayableMesh(
-                it.name(),
-                it.mesh(),
+            .map(it -> new InstanceInfo(
                 it.renderType(),
+                it.mesh(),
+                it.materialInstances(),
                 it.transform(),
-                it.weight(),
-                it.materialInstanceSupplier()));
+                SectionPos.sectionRelative(pos.getX()),
+                SectionPos.sectionRelative(pos.getY()),
+                SectionPos.sectionRelative(pos.getZ())));
     }
 }

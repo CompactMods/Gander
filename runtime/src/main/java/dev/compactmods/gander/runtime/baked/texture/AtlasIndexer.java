@@ -1,7 +1,6 @@
 package dev.compactmods.gander.runtime.baked.texture;
 
 import dev.compactmods.gander.render.baked.texture.AtlasIndices;
-import dev.compactmods.gander.runtime.baked.model.ModelRebaker;
 import dev.compactmods.gander.runtime.mixin.accessor.StitchResultAccessor;
 import net.minecraft.client.resources.model.AtlasSet;
 import net.minecraft.client.resources.model.ModelManager;

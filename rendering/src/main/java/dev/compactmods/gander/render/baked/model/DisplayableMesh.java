@@ -1,12 +1,13 @@
 package dev.compactmods.gander.render.baked.model;
 
-import com.google.common.collect.Multimap;
 import com.mojang.math.Transformation;
 import dev.compactmods.gander.render.baked.model.material.MaterialInstance;
-import dev.compactmods.gander.render.baked.model.material.MaterialParent;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import org.joml.Matrix4fc;
 
+import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -16,14 +17,12 @@ public record DisplayableMesh(
     ModelResourceLocation name,
     BakedMesh mesh,
     RenderType renderType,
-    // TODO: is it worth using a Translation here, or should we extract the
-    //  components directly?
-    Transformation transform,
+    Matrix4fc transform,
     int weight,
-    Supplier<Multimap<MaterialParent, MaterialInstance>> materialInstanceSupplier)
+    Function<DisplayableMesh, Set<MaterialInstance>> materialInstanceSupplier)
 {
-    public Multimap<MaterialParent, MaterialInstance> materialInstances()
+    public Set<MaterialInstance> materialInstances()
     {
-        return materialInstanceSupplier().get();
+        return materialInstanceSupplier().apply(this);
     }
 }

@@ -16,10 +16,13 @@ import net.minecraft.client.renderer.block.model.BlockElement;
 import net.minecraft.client.renderer.block.model.BlockElementFace;
 import net.minecraft.client.renderer.block.model.BlockElementRotation;
 import net.minecraft.client.renderer.block.model.BlockModel;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.client.model.obj.ObjMaterialLibrary;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Quaternionfc;
@@ -34,6 +37,7 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static dev.compactmods.gander.render.baked.model.RotationUtil.rotate;
@@ -126,19 +130,14 @@ public final class BlockModelBaker
         var materials = Stream.concat(textureReferences.stream(), model.textureMap.keySet().stream())
             .distinct()
             .map(it -> {
-                // TODO: check if any parents contain textures?
-                var mtlOrRef = model.textureMap.getOrDefault(it, knownTextures.containsValue(it)
-                    ? Either.left(new net.minecraft.client.resources.model.Material(
-                    TextureAtlas.LOCATION_BLOCKS,
-                    knownTextures.inverse().get(it)))
-                    : Either.right(it));
-                return new MaterialParent(it,
-                    mtlOrRef.map(
-                        net.minecraft.client.resources.model.Material::atlasLocation,
-                        ref -> TextureAtlas.LOCATION_BLOCKS),
-                    mtlOrRef.map(
-                        net.minecraft.client.resources.model.Material::texture,
-                        ref -> null));
+                var mtlOrRef = model.textureMap.getOrDefault(it,
+                    knownTextures.containsValue(it)
+                        ? Either.left(new net.minecraft.client.resources.model.Material(
+                            TextureAtlas.LOCATION_BLOCKS,
+                            knownTextures.inverse().get(it)))
+                        : Either.right(it));
+
+                return getMaterialParent(it, mtlOrRef, model);
             })
             .toList();
 
@@ -165,6 +164,31 @@ public final class BlockModelBaker
                     indexBuffer.flip(),
                     materials, materialIndexes),
                 renderType, true));
+    }
+
+    private static MaterialParent getMaterialParent(
+        String key,
+        Either<Material, String> materialOrRef,
+        BlockModel model)
+    {
+        return materialOrRef.map(
+            // If it's a direct material, create a material parent for it
+            mtl -> new MaterialParent(key, mtl.atlasLocation(), mtl.texture()),
+            // If it's a reference, look further up the chain
+            ref -> key.equals(ref)
+                // If this reference is self-referential, default to missingno.
+                ? new MaterialParent(key,
+                    TextureAtlas.LOCATION_BLOCKS,
+                    MissingTextureAtlasSprite.getLocation())
+                // If it's not, get a material parent for it
+                : getMaterialParent(
+                    key,
+                    // If we can't find it in the texture map, default to missingno.
+                    model.textureMap.getOrDefault(ref,
+                        Either.left(
+                            new Material(TextureAtlas.LOCATION_BLOCKS,
+                                MissingTextureAtlasSprite.getLocation()))),
+                    model));
     }
 
     private static ModelVertices bakeElement(BlockElement element)

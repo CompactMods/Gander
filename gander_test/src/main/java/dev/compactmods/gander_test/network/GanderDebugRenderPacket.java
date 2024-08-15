@@ -454,7 +454,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
         shaders.add(vertex);
         // TODO: this requires 3.3...
         GL32.glShaderSource(vertex, """
-            #version 330
+            #version 460
             
             #define ATLAS_SIZE %d
             #define TRANSFORM_COUNT %d
@@ -537,7 +537,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                 vs_out.normal = Normal;
 
                 // Sprite bounds is the rectangle we can draw in
-                int atlasIndex = spriteIndices[SpriteOffset + gl_VertexID];
+                int atlasIndex = spriteIndices[SpriteOffset + gl_VertexID - gl_BaseVertex];
                 vec4 spriteBounds = textureAtlas[atlasIndex];
                 // Shrink it a little to avoid floating point rounding errors from sampling
                 spriteBounds.x = nextafter(nextafter(spriteBounds.x, spriteBounds.z), spriteBounds.z);
