@@ -23,7 +23,7 @@ plugins {
     id("eclipse")
     id("maven-publish")
     id("java-library")
-    alias(neoforged.plugins.userdev)
+    alias(neoforged.plugins.moddev)
     id("org.ajoberstar.grgit") version ("5.2.1")
 }
 
@@ -40,75 +40,79 @@ java {
 
 evaluationDependsOn(":rendering")
 
-minecraft {
-    modIdentifier.set(modId)
+neoForge {
+    version = neoforged.versions.neoforge
+
+    this.mods.create(modId) {
+        modSourceSets.add(sourceSets.main)
+//        modSourceSets.add(project(":levels").sourceSets.main.get())
+//        modSourceSets.add(project(":rendering").sourceSets.main.get())
+    }
+
     accessTransformers {
         file(project.project(":rendering").file("src/main/resources/META-INF/accesstransformer.cfg"))
         file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
-        expose(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
+        publish(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
     }
-}
 
-runs {
-    configureEach {
-        systemProperty("forge.logging.markers", "") // 'SCAN,REGISTRIES,REGISTRYDUMP'
-        systemProperty("forge.logging.console.level", "debug")
-        if (!System.getenv().containsKey("CI")) {
-            // JetBrains Runtime Hotswap
-            // jvmArgument("-XX:+AllowEnhancedClassRedefinition")
+    runs {
+        configureEach {
+            systemProperty("forge.logging.markers", "") // 'SCAN,REGISTRIES,REGISTRYDUMP'
+            systemProperty("forge.logging.console.level", "debug")
+            if (!System.getenv().containsKey("CI")) {
+                // JetBrains Runtime Hotswap
+                // jvmArgument("-XX:+AllowEnhancedClassRedefinition")
+            }
         }
 
-        modSource(sourceSets.main.get())
-        modSource(project(":levels").sourceSets.main.get())
-        modSource(project(":rendering").sourceSets.main.get())
-    }
+        create("client") {
+            client()
+            gameDirectory.set(file("runs/client"))
 
-    create("client") {
-        programArguments("--username", "Nano")
-        programArguments("--width", "1920")
-        programArguments("--height", "1080")
-    }
+            programArguments.addAll("--username", "Nano")
+            programArguments.addAll("--width", "1920")
+            programArguments.addAll("--height", "1080")
+        }
 
-    create("clientAuthed") {
-        this.configure("client")
-        this.workingDirectory(file("runs/client"))
-        programArguments("--width", "1920")
-        programArguments("--height", "1080")
+        create("clientAuthed") {
+            client()
 
-        // known issue with DevLogin support on kotlin
-        // need to use the FQN
-        /*devLogin {
+            gameDirectory.set(file("runs/client"))
+
+            programArguments.addAll("--width", "1920")
+            programArguments.addAll("--height", "1080")
+
+            // known issue with DevLogin support on kotlin
+            // need to use the FQN
+            /*devLogin {
             enabled = true
         }*/
 
-        configure<net.neoforged.gradle.dsl.common.runs.run.RunDevLogin> {
-            enabled(true)
+//        configure<net.neoforged.gradle.dsl.common.runs.run.RunDevLogin> {
+//            enabled(true)
+//        }
+        }
+
+        create("remoteClient") {
+            client()
+            gameDirectory.set(file("runs/client"))
+
+            programArguments.addAll("--username", "Nano")
+            programArguments.addAll("--width", "1920")
+            programArguments.addAll("--height", "1080")
+
+            jvmArgument("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005")
+        }
+
+        create("server") {
+            server()
+            gameDirectory.set(file("runs/server"))
         }
     }
-
-    create("remoteClient") {
-        this.configure("client")
-        this.workingDirectory(file("runs/client"))
-
-        programArguments("--username", "Nano")
-        programArguments("--width", "1920")
-        programArguments("--height", "1080")
-
-        jvmArgument("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005")
-    }
-
-    create("server")
 }
 
 repositories {
     mavenLocal()
-    // FIXME: Remove once PR publishing becomes available
-    maven("https://maven.apexstudios.dev/private") {
-        name = "Apex's Maven"
-        content {
-            includeGroup("net.neoforged")
-        }
-    }
 
     maven("https://maven.blamejared.com/") {
         // location of the maven that hosts JEI files since January 2023
@@ -129,8 +133,6 @@ repositories {
 
 dependencies {
     // Core Projects and Libraries
-    implementation(neoforged.neoforge)
-
     implementation(project(":levels", "default"))
     implementation(project(":rendering", "default"))
 

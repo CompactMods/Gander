@@ -22,7 +22,7 @@ plugins {
     id("eclipse")
     id("maven-publish")
     id("java-library")
-    alias(neoforged.plugins.userdev)
+    alias(neoforged.plugins.moddev)
     id("org.ajoberstar.grgit") version ("5.2.1")
 }
 
@@ -36,26 +36,13 @@ java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
-minecraft {
+neoForge {
+    version = neoforged.versions.neoforge
+
     accessTransformers {
         file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
-        expose(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
+        publish(file("src/main/resources/META-INF/accesstransformer.cfg"))
     }
-}
-
-repositories {
-    mavenLocal()
-    // FIXME: Remove once PR publishing becomes available
-    maven("https://maven.apexstudios.dev/private") {
-        name = "Apex's Maven"
-        content {
-            includeGroup("net.neoforged")
-        }
-    }
-}
-
-dependencies {
-    this.api(neoforged.neoforge)
 }
 
 tasks.withType<ProcessResources> {

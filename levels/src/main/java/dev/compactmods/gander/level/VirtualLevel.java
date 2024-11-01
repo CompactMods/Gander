@@ -99,7 +99,27 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		return PotionBrewing.EMPTY;
 	}
 
-	@Override
+    @Override
+    public void setDayTimeFraction(float v) {
+
+    }
+
+    @Override
+    public float getDayTimeFraction() {
+        return 0;
+    }
+
+    @Override
+    public float getDayTimePerTick() {
+        return 0;
+    }
+
+    @Override
+    public void setDayTimePerTick(float v) {
+
+    }
+
+    @Override
 	public MapId getFreeMapId() {
 		return new MapId(0);
 	}

@@ -1,17 +1,21 @@
 dependencyResolutionManagement {
     versionCatalogs.create("mojang") {
-        version("minecraft", "1.21.0")
+        version("minecraft", "1.21.1")
+        version("minecraftRange") {
+            this.require("[1.21, 1.21.2)")
+            this.prefer("1.21.1")
+        }
     }
 
     versionCatalogs.create("neoforged") {
-        version("neogradle", "7.0.142")
-        version("neoforge", "21.0.0-alpha.1.21-pre4.20240608.172712")
+        version("mdg", "2.0.42-beta")
+        version("neoforge", "21.1.73")
 
         library("neoforge", "net.neoforged", "neoforge")
             .versionRef("neoforge")
 
-        plugin("userdev", "net.neoforged.gradle.userdev")
-            .versionRef("neogradle")
+        plugin("moddev", "net.neoforged.moddev")
+            .versionRef("mdg")
     }
 
     versionCatalogs.create("mods") {

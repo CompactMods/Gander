@@ -3,6 +3,7 @@ package dev.compactmods.gander.render.geometry;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexBuffer;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -26,8 +27,8 @@ public final class BakedLevel {
 	private final SectionBufferBuilderPack fluidBuilders;
 	private final Map<RenderType, VertexBuffer> blockBuffers;
 	private final Map<RenderType, VertexBuffer> fluidBuffers;
-	private BufferBuilder.@Nullable SortState blockTransparencyState;
-	private BufferBuilder.@Nullable SortState fluidTransparencyState;
+	private MeshData.SortState blockTransparencyState;
+	private MeshData.SortState fluidTransparencyState;
 	private final BoundingBox blockBoundaries;
 
 	public BakedLevel(WeakReference<BlockAndTintGetter> originalLevel,
@@ -35,8 +36,8 @@ public final class BakedLevel {
 					  SectionBufferBuilderPack fluidBuilders,
 					  Map<RenderType, VertexBuffer> blockBuffers,
 					  Map<RenderType, VertexBuffer> fluidBuffers,
-					  @Nullable BufferBuilder.SortState blockTransparencyState,
-					  @Nullable BufferBuilder.SortState fluidTransparencyState,
+					  @Nullable MeshData.SortState blockTransparencyState,
+					  @Nullable MeshData.SortState fluidTransparencyState,
 					  BoundingBox blockBoundaries) {
 		this.originalLevel = originalLevel;
 		this.blockBuilders = blockBuilders;
@@ -53,18 +54,19 @@ public final class BakedLevel {
 		this.fluidTransparencyState = resortTranslucency(cameraPosition, fluidBuilders, fluidBuffers, fluidTransparencyState);
 	}
 
-	private BufferBuilder.SortState resortTranslucency(Vector3f cameraPosition, SectionBufferBuilderPack pack, Map<RenderType, VertexBuffer> blockBuffers, BufferBuilder.SortState transparencyState) {
+	private MeshData.SortState resortTranslucency(Vector3f cameraPosition, SectionBufferBuilderPack pack, Map<RenderType, VertexBuffer> blockBuffers, MeshData.SortState transparencyState) {
 		if (transparencyState != null && blockBuffers.containsKey(RenderType.translucent())) {
-			final var builder = pack.builder(RenderType.translucent());
-			builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
-			builder.restoreSortState(transparencyState);
-			builder.setQuadSorting(VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z));
-			final var newTransparencyState = builder.getSortState();
-			final var vertexBuffer = blockBuffers.get(RenderType.translucent());
-			vertexBuffer.bind();
-			vertexBuffer.upload(builder.end());
-			VertexBuffer.unbind();
-			return newTransparencyState;
+			final var builder = pack.buffer(RenderType.translucent());
+//			builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
+//			builder.restoreSortState(transparencyState);
+//			builder.setQuadSorting(VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z));
+//			final var newTransparencyState = builder.getSortState();
+//			final var vertexBuffer = blockBuffers.get(RenderType.translucent());
+//			vertexBuffer.bind();
+//			vertexBuffer.upload(builder.end());
+//			VertexBuffer.unbind();
+//			return newTransparencyState;
+            return transparencyState;
 		}
 
 		return null;
@@ -82,11 +84,11 @@ public final class BakedLevel {
 		return fluidBuffers;
 	}
 
-	public BufferBuilder.@Nullable SortState blockTransparencyState() {
+	public @Nullable MeshData.SortState blockTransparencyState() {
 		return blockTransparencyState;
 	}
 
-	public BufferBuilder.@Nullable SortState fluidTransparencyState() {
+	public @Nullable MeshData.SortState fluidTransparencyState() {
 		return fluidTransparencyState;
 	}
 
