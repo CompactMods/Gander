@@ -1,20 +1,42 @@
 package dev.compactmods.gander.render.baked;
 
 import java.lang.ref.WeakReference;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.joml.Vector3f;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexSorting;
+
+import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ChunkBufferBuilderPack;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.renderer.block.ModelBlockRenderer;
+import net.minecraft.client.renderer.chunk.RenderRegionCache;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import net.minecraft.world.level.material.FluidState;
+import net.minecraftforge.client.model.data.ModelData;
 
 public class LevelBakery {
 
 	public static BakedLevel bakeVertices(Level level, BoundingBox blockBoundaries, Vector3f cameraPosition) {
 
-		/*final Set<RenderType> visitedBlockRenderTypes = new HashSet<>();
+		final Set<RenderType> visitedBlockRenderTypes = new HashSet<>();
 		final Set<RenderType> visitedFluidRenderTypes = new HashSet<>();
 		final RenderRegionCache regionCache = new RenderRegionCache();
 		final ChunkBufferBuilderPack blockPack = new ChunkBufferBuilderPack();
@@ -66,30 +88,30 @@ public class LevelBakery {
 				});
 			}
 
-			if (!fluidState.isEmpty()) {
+			/*if (!fluidState.isEmpty()) {
 				final var fluidRenderType = ItemBlockRenderTypes.getRenderLayer(fluidState);
 				var typedVC = fluidPack.builder(fluidRenderType);
 				if (visitedFluidRenderTypes.add(fluidRenderType)) {
 					typedVC.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 				}
 
-				dispatcher.getLiquidBlockRenderer().tesselate(level, pos, new FluidVertexConsumer(typedVC, pose, pos), state, fluidState);
-			}
+				// dispatcher.getLiquidBlockRenderer().tesselate(level, pos, new FluidVertexConsumer(typedVC, pose, pos), state, fluidState);
+			}*/
 
 			 pose.popPose();
 			ModelBlockRenderer.clearCache();
 		});
 
-		final var additionalRenderers = ClientHooks.gatherAdditionalRenderers(BlockPos.ZERO, level);
+		// final var additionalRenderers = ClientHooks.gatherAdditionalRenderers(BlockPos.ZERO, level);
 
 		// TODO - Hook for multiplatform?
-		net.neoforged.neoforge.client.ClientHooks.addAdditionalGeometry(additionalRenderers, (type) -> {
+		/*net.neoforged.neoforge.client.ClientHooks.addAdditionalGeometry(additionalRenderers, (type) -> {
 			BufferBuilder builder = blockPack.builder(type);
 			if (visitedBlockRenderTypes.add(type)) {
 				builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
 			}
 			return builder;
-		}, createRegion(regionCache, additionalRenderers, level, blockBoundaries), pose);
+		}, createRegion(regionCache, additionalRenderers, level, blockBoundaries), pose);*/
 
 		BufferBuilder.SortState blockTransparencyState = null;
 		if (visitedBlockRenderTypes.contains(RenderType.translucent())) {
@@ -133,11 +155,7 @@ public class LevelBakery {
 			}
 		});
 
-		return new BakedLevel(new WeakReference<>(level), blockPack, fluidPack, blockGeometry, fluidGeometry, blockTransparencyState, fluidTransparencyState, blockBoundaries);*/
-
-		var blockBuilders = new ChunkBufferBuilderPack();
-		var fluidBuilders = new ChunkBufferBuilderPack();
-		return new BakedLevel(new WeakReference<>(level), blockBuilders, fluidBuilders, Map.of(), Map.of(), blockBuilders.builder(RenderType.cutout()).getSortState(), fluidBuilders.builder(RenderType.translucent()).getSortState(), BoundingBox.infinite());
+		return new BakedLevel(new WeakReference<>(level), blockPack, fluidPack, blockGeometry, fluidGeometry, blockTransparencyState, fluidTransparencyState, blockBoundaries);
 	}
 
 	/*private static RenderChunkRegion createRegion(RenderRegionCache cache, List<AddSectionGeometryEvent.AdditionalSectionRenderer> additionalRenderers, Level level, BoundingBox bounds) {

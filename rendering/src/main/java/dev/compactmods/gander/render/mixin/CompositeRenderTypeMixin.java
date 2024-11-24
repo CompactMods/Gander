@@ -1,6 +1,13 @@
 package dev.compactmods.gander.render.mixin;
 
-import com.mojang.blaze3d.pipeline.RenderTarget;
+import java.util.Optional;
+
+import org.spongepowered.asm.mixin.Debug;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
 
@@ -10,14 +17,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.gen.Accessor;
-
-import java.util.Optional;
-
+@Debug(export = true)
 @Mixin(RenderType.CompositeRenderType.class)
 public abstract class CompositeRenderTypeMixin extends RenderType implements GanderCompositeRenderType {
 

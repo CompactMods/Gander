@@ -33,6 +33,7 @@ tasks.withType<JavaCompile> {
 tasks.jar {
     manifest.attributes(
         "FMLModType" to "GAMELIBRARY",
-        "Automatic-Module-Name" to "ganderlevels"
+        "Automatic-Module-Name" to "ganderlevels",
+        "MixinConfigs" to "gander_levels.mixins.json"
     )
 }

@@ -27,6 +27,10 @@ minecraft {
             workingDirectory(file("run/client"))
         }
 
+        create("server") {
+            workingDirectory(file("run/server"))
+        }
+
         configureEach {
             // Recommended logging data for a userdev environment
             // The markers can be added/remove as needed separated by commas.

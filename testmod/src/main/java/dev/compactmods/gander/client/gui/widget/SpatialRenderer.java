@@ -152,38 +152,38 @@ public class SpatialRenderer extends AbstractWidget {
 				.stream()
 				.map(blockAndTints::getBlockEntity)
 				.filter(Objects::nonNull);
-		PoseStack poseStack = graphics.pose();
-		poseStack.pushPose();
+//		PoseStack poseStack = graphics.pose();
+//		poseStack.pushPose();
 		{
 			var poseStack2 = RenderSystem.getModelViewStack();
-			poseStack2.pushPose();
-			poseStack2.setIdentity();
-			RenderSystem.applyModelViewMatrix();
+//			poseStack2.pushPose();
+//			poseStack2.setIdentity();
+//			RenderSystem.applyModelViewMatrix();
 
-			poseStack.setIdentity();
-			poseStack.mulPose(camera.rotation());
+//			poseStack.setIdentity();
+//			poseStack.mulPose(camera.rotation());
 
-			translucencyChain.clear();
-			translucencyChain.prepareBackgroundColor(Minecraft.getInstance().getMainRenderTarget());
-			renderTarget.bindWrite(true);
+//			translucencyChain.clear();
+//			translucencyChain.prepareBackgroundColor(Minecraft.getInstance().getMainRenderTarget());
+//			renderTarget.bindWrite(true);
 
-			RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
-			renderScene(blockEntities, buffer, partialTicks, poseStack);
+//			RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
+			renderScene(blockEntities, buffer, partialTicks, graphics.pose());
 
 			final var mainTarget = Minecraft.getInstance().getMainRenderTarget();
 
-			mainTarget.bindWrite(true);
-			UGH(renderTarget);
+//			mainTarget.bindWrite(true);
+//			UGH(renderTarget);
 
-			RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
+//			RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
 			//renderCompass(graphics, partialTicks, poseStack);
 
-			poseStack2.popPose();
-			RenderSystem.applyModelViewMatrix();
+//			poseStack2.popPose();
+//			RenderSystem.applyModelViewMatrix();
 		}
-		poseStack.popPose();
+//		poseStack.popPose();
 
-		RenderSystem.setProjectionMatrix(originalMatrix, originalSorting);
+//		RenderSystem.setProjectionMatrix(originalMatrix, originalSorting);
 
 		// TODO Fix Particles
 		// scene.getLevel().renderParticles(pose, buffer, camera, partialTicks);
