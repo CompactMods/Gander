@@ -17,9 +17,9 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 import dev.compactmods.gander.render.FluidVertexConsumer;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ChunkBufferBuilderPack;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.SectionBufferBuilderPack;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.chunk.RenderChunkRegion;
@@ -43,8 +43,8 @@ public class LevelBakery {
 		final Set<RenderType> visitedBlockRenderTypes = new HashSet<>();
 		final Set<RenderType> visitedFluidRenderTypes = new HashSet<>();
 		final RenderRegionCache regionCache = new RenderRegionCache();
-		final SectionBufferBuilderPack blockPack = new SectionBufferBuilderPack();
-		final SectionBufferBuilderPack fluidPack = new SectionBufferBuilderPack();
+		final ChunkBufferBuilderPack blockPack = new ChunkBufferBuilderPack();
+		final ChunkBufferBuilderPack fluidPack = new ChunkBufferBuilderPack();
 
 		PoseStack pose = new PoseStack();
 

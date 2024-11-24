@@ -1,29 +1,26 @@
 package dev.compactmods.gander.render.baked;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
-
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexBuffer;
-
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexSorting;
-
-import net.minecraft.client.renderer.RenderType;
-
-import net.minecraft.client.renderer.SectionBufferBuilderPack;
-import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.levelgen.structure.BoundingBox;
+import java.lang.ref.WeakReference;
+import java.util.Map;
 
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
-import java.lang.ref.WeakReference;
-import java.util.Map;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.VertexBuffer;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexSorting;
+
+import net.minecraft.client.renderer.ChunkBufferBuilderPack;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 public final class BakedLevel {
 	private final WeakReference<BlockAndTintGetter> originalLevel;
-	private final SectionBufferBuilderPack blockBuilders;
-	private final SectionBufferBuilderPack fluidBuilders;
+	private final ChunkBufferBuilderPack blockBuilders;
+	private final ChunkBufferBuilderPack fluidBuilders;
 	private final Map<RenderType, VertexBuffer> blockBuffers;
 	private final Map<RenderType, VertexBuffer> fluidBuffers;
 	private BufferBuilder.@Nullable SortState blockTransparencyState;
@@ -31,8 +28,8 @@ public final class BakedLevel {
 	private final BoundingBox blockBoundaries;
 
 	public BakedLevel(WeakReference<BlockAndTintGetter> originalLevel,
-					  SectionBufferBuilderPack blockBuilders,
-					  SectionBufferBuilderPack fluidBuilders,
+					  ChunkBufferBuilderPack blockBuilders,
+					  ChunkBufferBuilderPack fluidBuilders,
 					  Map<RenderType, VertexBuffer> blockBuffers,
 					  Map<RenderType, VertexBuffer> fluidBuffers,
 					  @Nullable BufferBuilder.SortState blockTransparencyState,
@@ -53,7 +50,7 @@ public final class BakedLevel {
 		this.fluidTransparencyState = resortTranslucency(cameraPosition, fluidBuilders, fluidBuffers, fluidTransparencyState);
 	}
 
-	private BufferBuilder.SortState resortTranslucency(Vector3f cameraPosition, SectionBufferBuilderPack pack, Map<RenderType, VertexBuffer> blockBuffers, BufferBuilder.SortState transparencyState) {
+	private BufferBuilder.SortState resortTranslucency(Vector3f cameraPosition, ChunkBufferBuilderPack pack, Map<RenderType, VertexBuffer> blockBuffers, BufferBuilder.SortState transparencyState) {
 		if (transparencyState != null && blockBuffers.containsKey(RenderType.translucent())) {
 			final var builder = pack.builder(RenderType.translucent());
 			builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
