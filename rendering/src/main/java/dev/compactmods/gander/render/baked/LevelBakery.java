@@ -1,12 +1,17 @@
 package dev.compactmods.gander.render.baked;
 
+import java.lang.ref.WeakReference;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.joml.Vector3f;
+
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-
 import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-
 import com.mojang.blaze3d.vertex.VertexSorting;
 
 import dev.compactmods.gander.render.FluidVertexConsumer;
@@ -29,16 +34,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.material.FluidState;
-import net.neoforged.neoforge.client.ClientHooks;
-import net.neoforged.neoforge.client.event.AddSectionGeometryEvent;
-import net.neoforged.neoforge.client.model.data.ModelData;
-
-import org.joml.Vector3f;
-
-import java.lang.ref.WeakReference;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import net.minecraftforge.client.model.data.ModelData;
 
 public class LevelBakery {
 

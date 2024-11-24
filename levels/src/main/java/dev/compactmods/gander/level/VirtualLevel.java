@@ -20,12 +20,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.TickRateManager;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.flag.FeatureFlags;
-import net.minecraft.world.item.alchemy.PotionBrewing;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
@@ -47,7 +45,6 @@ import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import net.minecraft.world.level.storage.WritableLevelData;
 import net.minecraft.world.phys.Vec3;
@@ -57,7 +54,7 @@ import net.minecraft.world.ticks.LevelTickAccess;
 
 public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
-	private final TickRateManager tickManager = new TickRateManager();
+	// private final TickRateManager tickManager = new TickRateManager();
 	private final RegistryAccess access;
 	private final VirtualChunkSource chunkSource;
 	private final VirtualBlockSystem blocks;
@@ -93,15 +90,15 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		return biome;
 	}
 
-	@Override
+	/*@Override
 	public PotionBrewing potionBrewing() {
 		// Minecraft, why?
 		return PotionBrewing.EMPTY;
-	}
+	}*/
 
 	@Override
-	public MapId getFreeMapId() {
-		return new MapId(0);
+	public int getFreeMapId() {
+		return -1;
 	}
 
 	@Override
@@ -200,7 +197,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	@Override
 	protected void tickBlockEntities() {
-		if (tickRateManager().runsNormally()) {
+		if (/*tickRateManager().runsNormally()*/true) {
 			blocks.blockAndFluidStorage().streamBlockEntities()
 					.filter(this::shouldTickBlocksAt)
 					.forEach(entityPos -> {
@@ -224,11 +221,11 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	}
 
 	@Override
-	public void gameEvent(Entity pEntity, Holder<GameEvent> pEvent, BlockPos pPos) {
+	public void gameEvent(Entity pEntity, GameEvent pEvent, BlockPos pPos) {
 	}
 
 	@Override
-	public void gameEvent(Holder<GameEvent> evt, Vec3 origin, GameEvent.Context ctx) {
+	public void gameEvent(GameEvent evt, Vec3 origin, GameEvent.Context ctx) {
 	}
 
 	@Override
@@ -285,18 +282,18 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		return entities.getEntity(pId);
 	}
 
-	@Override
+	/*@Override
 	public TickRateManager tickRateManager() {
 		return tickManager;
-	}
+	}*/
 
 	@Override
-	public MapItemSavedData getMapData(MapId pMapName) {
+	public MapItemSavedData getMapData(String pMapName) {
 		return null;
 	}
 
 	@Override
-	public void setMapData(MapId pMapId, MapItemSavedData pData) {
+	public void setMapData(String pMapId, MapItemSavedData pData) {
 	}
 
 	@Override
@@ -330,12 +327,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	@Override
 	public FeatureFlagSet enabledFeatures() {
-		return FeatureFlagSet.of(
-				FeatureFlags.VANILLA,
-				FeatureFlags.UPDATE_1_21,
-				FeatureFlags.TRADE_REBALANCE,
-				FeatureFlags.BUNDLE
-		);
+		return FeatureFlags.REGISTRY.allFlags();
 	}
 
 	@Override

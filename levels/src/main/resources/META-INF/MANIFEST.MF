@@ -1,3 +1,2 @@
 FMLModType: GAMELIBRARY
 Automatic-Module-Name: ganderlevels
-MixinConfigs: gander_levels.mixins.json

@@ -1,16 +1,14 @@
 package dev.compactmods.gander;
 
+import java.util.Optional;
+
+import org.joml.Vector3f;
+
 import dev.compactmods.gander.utility.VecHelper;
 import net.minecraft.client.Camera;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
-
-import net.minecraft.world.phys.shapes.CollisionContext;
-
-import org.joml.Vector3f;
-
-import java.util.Optional;
 
 public class RaytraceHelper {
 
@@ -24,7 +22,7 @@ public class RaytraceHelper {
 		BlockHitResult rayTraceBlocks = blockGetter.clip(new ClipContext(
 				VecHelper.fromJoml(src),
 				VecHelper.fromJoml(targ),
-				ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, CollisionContext.empty()));
+				ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, null));
 
 		return Optional.of(rayTraceBlocks);
 	}

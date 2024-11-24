@@ -1,0 +1,31 @@
+modLoader="javafml"
+loaderVersion="[47,)" #mandatory
+license="MIT"
+
+[[mods]]
+modId="gander"
+version="${file.jarVersion}"
+displayName="Gander"
+authors="RobotGryphon"
+description='''Take a peek at the world and what it has to offer!'''
+
+#[[dependencies.gander]]
+#modId="forge"
+#type="required"
+#versionRange="[47,)"
+#ordering="NONE"
+#side="BOTH"
+#
+## Here's another dependency
+#[[dependencies.gander]]
+#modId="minecraft"
+#type="required"
+#versionRange="[1.20.1,1.21)"
+#ordering="NONE"
+#side="BOTH"
+
+# Features are specific properties of the game environment, that you may want to declare you require. This example declares
+# that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
+# stop your mod loading on the server for example.
+#[features.${mod_id}]
+#openGLVersion="[3.2,)"

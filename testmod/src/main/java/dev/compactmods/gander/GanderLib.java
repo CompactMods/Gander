@@ -2,21 +2,15 @@ package dev.compactmods.gander;
 
 import java.util.Random;
 
+import org.slf4j.Logger;
+
 import com.mojang.logging.LogUtils;
 
-import dev.compactmods.gander.network.StructureSceneDataRequest;
-import dev.compactmods.gander.network.OpenGanderUiForDeferredStructureRequest;
-import dev.compactmods.gander.network.OpenGanderUiForStructureRequest;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.common.Mod;
-
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.network.registration.HandlerThread;
-
-import org.slf4j.Logger;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 @Mod("gander")
 public class GanderLib {
@@ -31,15 +25,17 @@ public class GanderLib {
 	@Deprecated
 	public static final Random RANDOM = new Random();
 
-	public GanderLib(IEventBus modEventBus) {
-		modEventBus.addListener(GanderLib::onPacketRegistration);
+	public GanderLib(/*IEventBus modEventBus*/) {
+		var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+		// modEventBus.addListener(GanderLib::onPacketRegistration);
 	}
 
 	public static ResourceLocation asResource(String path) {
 		return new ResourceLocation(ID, path);
 	}
 
-	private static void onPacketRegistration(final RegisterPayloadHandlersEvent payloads) {
+	// TODO: down port this
+	/*private static void onPacketRegistration(final RegisterPayloadHandlersEvent payloads) {
 		final var main = payloads.registrar("1");
 
 		main.playToClient(OpenGanderUiForDeferredStructureRequest.ID, OpenGanderUiForDeferredStructureRequest.STREAM_CODEC, OpenGanderUiForDeferredStructureRequest.HANDLER)
@@ -50,5 +46,5 @@ public class GanderLib {
 
 		main.playToClient(OpenGanderUiForStructureRequest.ID, OpenGanderUiForStructureRequest.STREAM_CODEC, OpenGanderUiForStructureRequest.HANDLER)
 				.executesOn(HandlerThread.MAIN);
-	}
+	}*/
 }
