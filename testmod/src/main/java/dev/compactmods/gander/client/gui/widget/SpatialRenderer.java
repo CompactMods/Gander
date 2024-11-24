@@ -1,51 +1,46 @@
 package dev.compactmods.gander.client.gui.widget;
 
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.GlConst;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
-
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexSorting;
-
-import dev.compactmods.gander.GanderLib;
-import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
-import dev.compactmods.gander.render.ScreenBlockEntityRender;
-import dev.compactmods.gander.render.ScreenBlockRenderer;
-import dev.compactmods.gander.SceneCamera;
-import dev.compactmods.gander.render.baked.BakedLevel;
-import dev.compactmods.gander.render.translucency.TranslucencyChain;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
-
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-
-import net.minecraft.world.level.BlockAndTintGetter;
-
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.levelgen.structure.BoundingBox;
-
-import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
+
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.pipeline.TextureTarget;
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.vertex.VertexSorting;
+
+import dev.compactmods.gander.GanderLib;
+import dev.compactmods.gander.SceneCamera;
+import dev.compactmods.gander.render.ScreenBlockEntityRender;
+import dev.compactmods.gander.render.ScreenBlockRenderer;
+import dev.compactmods.gander.render.baked.BakedLevel;
+import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
+import dev.compactmods.gander.render.translucency.TranslucencyChain;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 public class SpatialRenderer extends AbstractWidget {
 
@@ -161,8 +156,8 @@ public class SpatialRenderer extends AbstractWidget {
 		poseStack.pushPose();
 		{
 			var poseStack2 = RenderSystem.getModelViewStack();
-			poseStack2.pushMatrix();
-			poseStack2.identity();
+			poseStack2.pushPose();
+			poseStack2.setIdentity();
 			RenderSystem.applyModelViewMatrix();
 
 			poseStack.setIdentity();
@@ -183,7 +178,7 @@ public class SpatialRenderer extends AbstractWidget {
 			RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
 			//renderCompass(graphics, partialTicks, poseStack);
 
-			poseStack2.popMatrix();
+			poseStack2.popPose();
 			RenderSystem.applyModelViewMatrix();
 		}
 		poseStack.popPose();

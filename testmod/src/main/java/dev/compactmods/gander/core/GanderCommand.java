@@ -10,6 +10,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
+import dev.compactmods.gander.GanderLib;
 import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.level.chunk.VirtualChunkGenerator;
 import dev.compactmods.gander.network.OpenGanderUiForDeferredStructureRequest;
@@ -95,7 +96,7 @@ public class GanderCommand {
 			if (player instanceof FakePlayer)
 				continue;
 
-			PacketDistributor.PLAYER.with(() -> player).send(new OpenGanderUiForDeferredStructureRequest(sceneId));
+			GanderLib.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OpenGanderUiForDeferredStructureRequest(sceneId));
 		}
 
 		return Command.SINGLE_SUCCESS;
@@ -189,7 +190,7 @@ public class GanderCommand {
 					boundingbox.minZ()
 			), boundingbox.getLength(), false, Blocks.AIR);
 
-			PacketDistributor.PLAYER.with(() -> player).send(new OpenGanderUiForStructureRequest(Component.literal("Generated: " + key.key().location()), finalStructure));
+			GanderLib.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OpenGanderUiForStructureRequest(Component.literal("Generated: " + key.key().location()), finalStructure));
 		}
 
 		return Command.SINGLE_SUCCESS;
@@ -226,7 +227,7 @@ public class GanderCommand {
 		structure.fillFromWorld(level, new BlockPos(0, 60, 0), new Vec3i(maxX, 70, maxZ), false, Blocks.AIR);
 
 		var payload = new OpenGanderUiForStructureRequest(Component.literal("Generated: minecraft:debug"), structure);
-		players.forEach(player -> PacketDistributor.PLAYER.with(() -> player).send(payload));
+		players.forEach(player -> GanderLib.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), payload));
 		return Command.SINGLE_SUCCESS;
 	}
 }

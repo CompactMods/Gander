@@ -25,6 +25,11 @@ dependencies {
     annotationProcessor("org.spongepowered:mixin:${forge.versions.mixin.get()}:processor")
 }
 
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+    options.compilerArgs.addAll(arrayOf("-Xmaxerrs", "1000"))
+}
+
 tasks.jar {
     manifest.attributes(
         "FMLModType" to "GAMELIBRARY",

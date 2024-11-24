@@ -1,32 +1,19 @@
 package dev.compactmods.gander.client.gui;
 
+import java.io.IOException;
+
 import com.mojang.blaze3d.platform.InputConstants;
 
-import dev.compactmods.gander.level.VirtualLevel;
+import dev.compactmods.gander.GanderLib;
 import dev.compactmods.gander.client.gui.widget.SpatialRenderer;
+import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.baked.BakedLevel;
-import dev.compactmods.gander.render.baked.LevelBakery;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
-
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.resources.ResourceLocation;
-
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-import net.neoforged.neoforge.network.PacketDistributor;
-
-import org.joml.Vector3f;
-
-import java.io.IOException;
 
 public class GanderUI extends Screen {
 
@@ -47,7 +34,7 @@ public class GanderUI extends Screen {
 
 	GanderUI(StructureSceneDataRequest dataRequest) {
 		this();
-		PacketDistributor.sendToServer(dataRequest);
+		GanderLib.CHANNEL.sendToServer(dataRequest);
 	}
 
 	@Override
@@ -121,10 +108,10 @@ public class GanderUI extends Screen {
 		}
 	}
 
-	@Override
+	/*@Override
 	public void renderTransparentBackground(GuiGraphics pGuiGraphics) {
 
-	}
+	}*/
 
 	@Override
 	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
@@ -152,8 +139,8 @@ public class GanderUI extends Screen {
 	}
 
 	@Override
-	public boolean mouseScrolled(double pMouseX, double pMouseY, double pScrollX, double pScrollY) {
-		this.orthoRenderer.zoom(pScrollY);
+	public boolean mouseScrolled(double pMouseX, double pMouseY, double pScroll) {
+		this.orthoRenderer.zoom(pScroll);
 		return true;
 	}
 

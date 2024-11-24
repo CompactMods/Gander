@@ -71,3 +71,8 @@ dependencies {
     implementation(project(":levels"))
     implementation(project(":rendering"))
 }
+
+tasks.withType<JavaCompile> {
+    options.encoding = "UTF-8"
+    options.compilerArgs.addAll(arrayOf("-Xmaxerrs", "1000"))
+}

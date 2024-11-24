@@ -3,7 +3,6 @@ package dev.compactmods.gander.client.gui;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.apache.commons.lang3.function.Consumers;
 import org.joml.Vector3f;
 
 import dev.compactmods.gander.level.VirtualLevel;
@@ -36,7 +35,7 @@ public class ScreenOpener {
 	}
 
 	public static void openGanderUI() {
-		openGanderUI(Consumers.nop());
+		openGanderUI(ganderUI -> { });
 	}
 
 	public static void forStructure(ResourceLocation sceneID) {

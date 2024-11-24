@@ -1,34 +1,31 @@
 package dev.compactmods.gander.network;
 
-import net.minecraft.network.RegistryFriendlyByteBuf;
+import java.util.function.Supplier;
+
+import dev.compactmods.gander.GanderLib;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.handling.IPayloadHandler;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
-public record StructureSceneDataRequest(ResourceLocation templateID) implements CustomPacketPayload {
-	public static final Type<StructureSceneDataRequest> ID = new Type<>(new ResourceLocation("gander", "scene_data"));
+public record StructureSceneDataRequest(ResourceLocation templateID) {
+	public StructureSceneDataRequest(FriendlyByteBuf buffer) {
+		this(buffer.readResourceLocation());
+	}
 
-	public static final StreamCodec<RegistryFriendlyByteBuf, StructureSceneDataRequest> STREAM_CODEC = StreamCodec.composite(
-			ResourceLocation.STREAM_CODEC, StructureSceneDataRequest::templateID,
-			StructureSceneDataRequest::new
-	);
+	public void encode(FriendlyByteBuf buffer) {
+		buffer.writeResourceLocation(templateID);
+	}
 
-
-	public static final IPayloadHandler<StructureSceneDataRequest> HANDLER = (req, ctx) -> {
-		ctx.enqueueWork(() -> {
-			final var templateManager = ServerLifecycleHooks.getCurrentServer().getStructureManager();
-			templateManager.get(req.templateID).ifPresent(t -> {
-				ctx.reply(new OpenGanderUiForStructureRequest(Component.literal(req.templateID.toString()), t));
+	public void handle(Supplier<NetworkEvent.Context> context) {
+		context.get().enqueueWork(() -> {
+			var templateManager = ServerLifecycleHooks.getCurrentServer().getStructureManager();
+			templateManager.get(templateID).ifPresent(template -> {
+				GanderLib.CHANNEL.send(PacketDistributor.PLAYER.with(() -> context.get().getSender()), new OpenGanderUiForStructureRequest(Component.literal(templateID.toString()), template));
 			});
 		});
-	};
-
-	@Override
-	public Type<? extends CustomPacketPayload> type()
-	{
-		return ID;
+		context.get().setPacketHandled(true);
 	}
 }

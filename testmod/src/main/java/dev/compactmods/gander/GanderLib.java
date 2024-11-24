@@ -6,11 +6,15 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
+import dev.compactmods.gander.network.OpenGanderUiForDeferredStructureRequest;
+import dev.compactmods.gander.network.OpenGanderUiForStructureRequest;
+import dev.compactmods.gander.network.StructureSceneDataRequest;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.simple.SimpleChannel;
 
 @Mod("gander")
 public class GanderLib {
@@ -18,6 +22,13 @@ public class GanderLib {
 	public static final String ID = "gander";
 
 	public static final Logger LOGGER = LogUtils.getLogger();
+	public static final String NET_VERSION = "1";
+	public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
+			asResource("main"),
+			() -> NET_VERSION,
+			NET_VERSION::equals,
+			NET_VERSION::equals
+	);
 
 	/**
 	 * Use the {@link Random} of a local {@link Level} or {@link Entity} or create one
@@ -26,25 +37,16 @@ public class GanderLib {
 	public static final Random RANDOM = new Random();
 
 	public GanderLib(/*IEventBus modEventBus*/) {
-		var modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-		// modEventBus.addListener(GanderLib::onPacketRegistration);
+		onPacketRegistration();
 	}
 
 	public static ResourceLocation asResource(String path) {
 		return new ResourceLocation(ID, path);
 	}
 
-	// TODO: down port this
-	/*private static void onPacketRegistration(final RegisterPayloadHandlersEvent payloads) {
-		final var main = payloads.registrar("1");
-
-		main.playToClient(OpenGanderUiForDeferredStructureRequest.ID, OpenGanderUiForDeferredStructureRequest.STREAM_CODEC, OpenGanderUiForDeferredStructureRequest.HANDLER)
-				.executesOn(HandlerThread.MAIN);
-
-		main.playToServer(StructureSceneDataRequest.ID, StructureSceneDataRequest.STREAM_CODEC, StructureSceneDataRequest.HANDLER)
-				.executesOn(HandlerThread.MAIN);
-
-		main.playToClient(OpenGanderUiForStructureRequest.ID, OpenGanderUiForStructureRequest.STREAM_CODEC, OpenGanderUiForStructureRequest.HANDLER)
-				.executesOn(HandlerThread.MAIN);
-	}*/
+	private void onPacketRegistration() {
+		CHANNEL.registerMessage(0, OpenGanderUiForDeferredStructureRequest.class, OpenGanderUiForDeferredStructureRequest::encode, OpenGanderUiForDeferredStructureRequest::new, OpenGanderUiForDeferredStructureRequest::handle);
+		CHANNEL.registerMessage(1, OpenGanderUiForStructureRequest.class, OpenGanderUiForStructureRequest::encode, OpenGanderUiForStructureRequest::new, OpenGanderUiForStructureRequest::handle);
+		CHANNEL.registerMessage(2, StructureSceneDataRequest.class, StructureSceneDataRequest::encode, StructureSceneDataRequest::new, StructureSceneDataRequest::handle);
+	}
 }
