@@ -89,7 +89,7 @@ public class SpatialRenderer extends AbstractWidget {
 	}
 
 	public void dispose() {
-		if(isDisposed) return;
+		if (isDisposed) return;
 		this.isDisposed = true;
 		renderTarget.destroyBuffers();
 		renderTypeStore.dispose();
@@ -132,8 +132,7 @@ public class SpatialRenderer extends AbstractWidget {
 
 		var width = Minecraft.getInstance().getWindow().getWidth();
 		var height = Minecraft.getInstance().getWindow().getHeight();
-		if (width != renderTarget.width || height != renderTarget.height)
-		{
+		if (width != renderTarget.width || height != renderTarget.height) {
 			renderTarget.resize(width, height, true);
 			translucencyChain.resize(renderTarget.width, renderTarget.height);
 			recalculateTranslucency();
@@ -143,8 +142,8 @@ public class SpatialRenderer extends AbstractWidget {
 		var originalSorting = RenderSystem.getVertexSorting();
 
 		var projectionMatrix = new Matrix4f().setPerspective(
-				(float)Math.PI / 2f,
-				(float)renderTarget.width / (float)renderTarget.height,
+				(float) Math.PI / 2f,
+				(float) renderTarget.width / (float) renderTarget.height,
 				0.05f,
 				10000000);
 
@@ -152,36 +151,39 @@ public class SpatialRenderer extends AbstractWidget {
 				.stream()
 				.map(blockAndTints::getBlockEntity)
 				.filter(Objects::nonNull);
-//		PoseStack poseStack = graphics.pose();
-//		poseStack.pushPose();
+
+		PoseStack poseStack = graphics.pose();
+		poseStack.pushPose();
 		{
 			var poseStack2 = RenderSystem.getModelViewStack();
-//			poseStack2.pushPose();
-//			poseStack2.setIdentity();
-//			RenderSystem.applyModelViewMatrix();
+			poseStack2.pushPose();
+			{
+				poseStack2.setIdentity();
+				RenderSystem.applyModelViewMatrix();
 
-//			poseStack.setIdentity();
-//			poseStack.mulPose(camera.rotation());
+				poseStack.setIdentity();
+				poseStack.mulPose(camera.rotation());
 
 //			translucencyChain.clear();
 //			translucencyChain.prepareBackgroundColor(Minecraft.getInstance().getMainRenderTarget());
 //			renderTarget.bindWrite(true);
 
-//			RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
-			renderScene(blockEntities, buffer, partialTicks, graphics.pose());
+				RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
+				renderScene(blockEntities, buffer, partialTicks, graphics.pose());
 
-			final var mainTarget = Minecraft.getInstance().getMainRenderTarget();
+				final var mainTarget = Minecraft.getInstance().getMainRenderTarget();
 
 //			mainTarget.bindWrite(true);
 //			UGH(renderTarget);
 
-//			RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
-			//renderCompass(graphics, partialTicks, poseStack);
+				RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
+				renderCompass(graphics, partialTicks, poseStack);
+			}
 
-//			poseStack2.popPose();
-//			RenderSystem.applyModelViewMatrix();
+			poseStack2.popPose();
+			RenderSystem.applyModelViewMatrix();
 		}
-//		poseStack.popPose();
+		poseStack.popPose();
 
 //		RenderSystem.setProjectionMatrix(originalMatrix, originalSorting);
 
@@ -192,8 +194,7 @@ public class SpatialRenderer extends AbstractWidget {
 //			ScreenEntityRenderer.renderEntities(entityGetter, poseStack, buffer, camera, partialTicks);
 	}
 
-	private void UGH(RenderTarget renderTarget)
-	{
+	private void UGH(RenderTarget renderTarget) {
 		// RenderTarget.blit disables alpha... :unamused:
 		RenderSystem.assertOnRenderThread();
 		GlStateManager._disableDepthTest();
@@ -203,7 +204,7 @@ public class SpatialRenderer extends AbstractWidget {
 		Minecraft minecraft = Minecraft.getInstance();
 		ShaderInstance shaderinstance = minecraft.gameRenderer.blitShader;
 		shaderinstance.setSampler("DiffuseSampler", renderTarget.getColorTextureId());
-		Matrix4f matrix4f = new Matrix4f().setOrtho(0.0F, (float)width, (float)height, 0.0F, 1000.0F, 3000.0F);
+		Matrix4f matrix4f = new Matrix4f().setOrtho(0.0F, (float) width, (float) height, 0.0F, 1000.0F, 3000.0F);
 		RenderSystem.setProjectionMatrix(matrix4f, VertexSorting.ORTHOGRAPHIC_Z);
 		if (shaderinstance.MODEL_VIEW_MATRIX != null) {
 			shaderinstance.MODEL_VIEW_MATRIX.set(new Matrix4f().translation(0.0F, 0.0F, -2000.0F));
@@ -214,10 +215,10 @@ public class SpatialRenderer extends AbstractWidget {
 		}
 
 		shaderinstance.apply();
-		float f = (float)width;
-		float f1 = (float)height;
-		float f2 = (float)renderTarget.viewWidth / (float)renderTarget.width;
-		float f3 = (float)renderTarget.viewHeight / (float)renderTarget.height;
+		float f = (float) width;
+		float f1 = (float) height;
+		float f2 = (float) renderTarget.viewWidth / (float) renderTarget.width;
+		float f3 = (float) renderTarget.viewHeight / (float) renderTarget.height;
 		Tesselator tesselator = RenderSystem.renderThreadTesselator();
 		BufferBuilder bufferbuilder = tesselator.getBuilder();
 		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
@@ -285,7 +286,7 @@ public class SpatialRenderer extends AbstractWidget {
 			var position = camera.getLookFrom();
 			poseStack.translate(-position.x, -position.y, -position.z);
 			poseStack.last().pose().negateY();
-			poseStack.scale(1/16f, 1/16f, 1/16f);
+			poseStack.scale(1 / 16f, 1 / 16f, 1 / 16f);
 
 			compassOverlay.render(graphics, partialTicks);
 		}
@@ -297,7 +298,7 @@ public class SpatialRenderer extends AbstractWidget {
 	}
 
 	public void zoom(double factor) {
-		camera.zoom((float)factor);
+		camera.zoom((float) factor);
 	}
 
 	@Override

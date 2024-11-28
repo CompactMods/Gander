@@ -99,7 +99,7 @@ public class GanderUI extends Screen {
 			// TODO: :)
 			var level = ((VirtualLevel)scene.originalLevel().get());
 			level.tick(minecraft.getPartialTick());
-			// level.animateTick();
+		 	level.animateTick();
 		}
 
 		if (autoRotate) {

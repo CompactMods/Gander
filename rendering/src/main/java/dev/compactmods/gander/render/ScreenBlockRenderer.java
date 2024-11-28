@@ -61,7 +61,7 @@ public class ScreenBlockRenderer {
 		}
 
 		mc.getProfiler().pop();
-		// net.neoforged.neoforge.client.ClientHooks.dispatchRenderStage(pRenderType, this, pPoseStack, pProjectionMatrix, this.ticks, mc.gameRenderer.getMainCamera(), this.getFrustum());
+		// net.minecraftforge.client.ForgeHooksClient.dispatchRenderStage(renderType, this, poseStack, pProjectionMatrix, 0, mc.gameRenderer.getMainCamera(), this.getFrustum());
 		retargetedRenderType.clearRenderState();
 	}
 }

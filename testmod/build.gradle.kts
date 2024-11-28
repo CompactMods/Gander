@@ -68,12 +68,19 @@ mixin {
     config("gander.mixins.json")
 }
 
+repositories {
+    maven("https://cursemaven.com")
+}
+
 dependencies {
     minecraft("net.minecraftforge:forge:${forge.versions.minecraft.get()}-${forge.versions.forge.get()}")
     annotationProcessor("org.spongepowered:mixin:${forge.versions.mixin.get()}:processor")
 
     implementation(project(":levels"))
     implementation(project(":rendering"))
+
+    runtimeOnly(fg.deobf("curse.maven:codechicken-lib-1-8-242818:5753868"))
+    runtimeOnly(fg.deobf("curse.maven:chicken-chunks-1-8-243883:5292574"))
 }
 
 tasks.withType<JavaCompile> {
