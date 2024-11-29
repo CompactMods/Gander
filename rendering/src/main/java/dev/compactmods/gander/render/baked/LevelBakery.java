@@ -13,9 +13,11 @@ import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexSorting;
 
+import dev.compactmods.gander.render.FluidVertexConsumer;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ChunkBufferBuilderPack;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
@@ -88,7 +90,7 @@ public class LevelBakery {
 				});
 			}
 
-			/*if (!fluidState.isEmpty()) {
+			if (!fluidState.isEmpty()) {
 				final var fluidRenderType = ItemBlockRenderTypes.getRenderLayer(fluidState);
 				var typedVC = fluidPack.builder(fluidRenderType);
 				if (visitedFluidRenderTypes.add(fluidRenderType)) {
@@ -96,7 +98,8 @@ public class LevelBakery {
 				}
 
 				// dispatcher.getLiquidBlockRenderer().tesselate(level, pos, new FluidVertexConsumer(typedVC, pose, pos), state, fluidState);
-			}*/
+				dispatcher.renderLiquid(pos, level, new FluidVertexConsumer(typedVC, pose, pos), state, fluidState);
+			}
 
 			 pose.popPose();
 			ModelBlockRenderer.clearCache();

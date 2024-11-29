@@ -133,7 +133,7 @@ public class SpatialRenderer extends AbstractWidget {
 		var width = Minecraft.getInstance().getWindow().getWidth();
 		var height = Minecraft.getInstance().getWindow().getHeight();
 		if (width != renderTarget.width || height != renderTarget.height) {
-			renderTarget.resize(width, height, true);
+			renderTarget.resize(width, height, Minecraft.ON_OSX);
 			translucencyChain.resize(renderTarget.width, renderTarget.height);
 			recalculateTranslucency();
 		}
@@ -164,17 +164,16 @@ public class SpatialRenderer extends AbstractWidget {
 				poseStack.setIdentity();
 				poseStack.mulPose(camera.rotation());
 
-//			translucencyChain.clear();
-//			translucencyChain.prepareBackgroundColor(Minecraft.getInstance().getMainRenderTarget());
-//			renderTarget.bindWrite(true);
+				var mainTarget = Minecraft.getInstance().getMainRenderTarget();
+				translucencyChain.clear();
+				translucencyChain.prepareBackgroundColor(mainTarget);
+				renderTarget.bindWrite(true);
 
 				RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
-				renderScene(blockEntities, buffer, partialTicks, graphics.pose());
+				renderScene(blockEntities, buffer, partialTicks, poseStack);
 
-				final var mainTarget = Minecraft.getInstance().getMainRenderTarget();
-
-//			mainTarget.bindWrite(true);
-//			UGH(renderTarget);
+				mainTarget.bindWrite(true);
+				UGH(renderTarget);
 
 				RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
 				renderCompass(graphics, partialTicks, poseStack);
@@ -185,7 +184,7 @@ public class SpatialRenderer extends AbstractWidget {
 		}
 		poseStack.popPose();
 
-//		RenderSystem.setProjectionMatrix(originalMatrix, originalSorting);
+		RenderSystem.setProjectionMatrix(originalMatrix, originalSorting);
 
 		// TODO Fix Particles
 		// scene.getLevel().renderParticles(pose, buffer, camera, partialTicks);
