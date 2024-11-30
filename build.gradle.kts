@@ -1,2 +1,10 @@
-group = "dev.compactmachines"
-version = "20.1.0"
+plugins {
+    id("org.jetbrains.gradle.plugin.idea-ext")
+}
+
+idea.module.excludeDirs.addAll(files(
+    ".github",
+    ".gradle",
+    ".idea",
+    "gradle"
+))
