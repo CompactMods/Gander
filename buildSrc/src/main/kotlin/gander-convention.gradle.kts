@@ -14,7 +14,11 @@ plugins {
 
 group = GanderConstants.GROUP
 version = GanderConstants.VERSION
-base.archivesName = project.name
+
+base {
+    archivesName = project.name
+    libsDirectory.convention(rootProject.layout.projectDirectory.dir("libs/${project.name}"))
+}
 
 idea.module {
     if(!GanderConstants.IS_CI) {

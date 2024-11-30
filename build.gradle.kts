@@ -6,5 +6,6 @@ idea.module.excludeDirs.addAll(files(
     ".github",
     ".gradle",
     ".idea",
-    "gradle"
+    "gradle",
+    "libs"
 ))
