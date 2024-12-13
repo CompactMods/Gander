@@ -165,9 +165,9 @@ public class SpatialRenderer extends AbstractWidget {
 				poseStack.mulPose(camera.rotation());
 
 				var mainTarget = Minecraft.getInstance().getMainRenderTarget();
-				translucencyChain.clear();
-				translucencyChain.prepareBackgroundColor(mainTarget);
-				renderTarget.bindWrite(true);
+//				translucencyChain.clear();
+//				translucencyChain.prepareBackgroundColor(mainTarget);
+//				renderTarget.bindWrite(true);
 
 				RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
 				renderScene(blockEntities, buffer, partialTicks, poseStack);
