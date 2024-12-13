@@ -3,14 +3,13 @@ plugins {
 }
 
 // sets up MDG workspace and includes all other gander modules
+val gModules = listOf(
+    project(":core"),
+    project(":levels"),
+    project(":rendering"),
+    project(":ui")
+)
 
-// 'modules' conflicts in dependencies block
-// list containing all of ganders modules
-// aka every project other than this one (testmod)
-//
-// these modules are auto included everywhere needed
-// so all thats needed to add a new one is include one in settings.gradle
-val gModules = rootProject.childProjects.map { it.value }.filter { it != project }
 gModules.map { it.path }.forEach(::evaluationDependsOn)
 
 neoForge {
@@ -44,13 +43,21 @@ neoForge {
     }
 }
 
+repositories {
+    exclusiveContent {
+        forRepository { maven("https://cursemaven.com") }
+        filter{ includeGroup("curse.maven") }
+    }
+}
+
 dependencies {
     gModules.forEach(::implementation)
+
+    modImplementation("curse.maven:chicken-chunks-1-8-243883:5292574")
+    modImplementation("curse.maven:codechicken-lib-1-8-242818:5753868")
 }
 
 mixin {
-    add(sourceSets[SourceSet.MAIN_SOURCE_SET_NAME], "gander.mixins.json")
-    config("gander.mixins.json")
     config("gander_render.mixins.json")
     config("gander_levels.mixins.json")
 }

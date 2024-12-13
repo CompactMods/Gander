@@ -2,7 +2,7 @@ package dev.compactmods.gander.network;
 
 import java.util.function.Supplier;
 
-import dev.compactmods.gander.client.gui.ScreenOpener;
+import dev.compactmods.gander.client.ClientPacketHandler;
 import net.minecraft.Util;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -25,7 +25,7 @@ public record OpenGanderUiForStructureRequest(Component sceneSource, StructureTe
 	}
 
 	public void handle(Supplier<NetworkEvent.Context> context) {
-		context.get().enqueueWork(() -> ScreenOpener.forStructureData(sceneSource, data));
+		context.get().enqueueWork(() -> ClientPacketHandler.structureDataReceived(sceneSource, data));
 		context.get().setPacketHandled(true);
 	}
 }

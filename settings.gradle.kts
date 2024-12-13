@@ -5,9 +5,11 @@ plugins {
 // include more modules here
 include("levels")
 include("rendering")
+include("ui")
 
 // project used for actual testing in dev
 // modules are auto hooked into to this project
 include("testmod")
 
 rootProject.name = "Gander"
+include("core")
