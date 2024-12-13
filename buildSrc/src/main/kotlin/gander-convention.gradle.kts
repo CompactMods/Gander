@@ -76,7 +76,7 @@ neoForge {
         //
         // adds jbr jvm args only for client/server run types
         jvmArguments.addAll(type.map {
-            if(GanderConstants.IS_CI || !it.equals("client") || !it.equals("server"))
+            if(GanderConstants.IS_CI || (it != "client" && it != "server"))
                 return@map emptyList<String>()
 
             return@map listOf(
