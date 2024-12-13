@@ -47,3 +47,10 @@ neoForge {
 dependencies {
     gModules.forEach(::implementation)
 }
+
+mixin {
+    add(sourceSets[SourceSet.MAIN_SOURCE_SET_NAME], "gander.mixins.json")
+    config("gander.mixins.json")
+    config("gander_render.mixins.json")
+    config("gander_levels.mixins.json")
+}

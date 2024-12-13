@@ -88,11 +88,17 @@ neoForge {
     }
 }
 
+tasks.jar {
+    manifest.from(file("src/main/resources/META-INF/MANIFEST.MF"))
+}
+
 dependencies {
     // not included with MDG currently
     // does not affect runtime or production
     // safe to have at compile time with no issues
     compileOnly("org.jetbrains:annotations:26.0.1")
+
+    annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
 }
 
 tasks.withType<JavaCompile> {
