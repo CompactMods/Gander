@@ -1,5 +1,4 @@
 import dev.compactmachines.GanderConstants
-import gradle.kotlin.dsl.accessors._53f21c2e2286c58eadab8fd2d7f5601a.*
 import org.slf4j.event.Level
 
 var envVersion: String = System.getenv("VERSION") ?: "9.9.9"
