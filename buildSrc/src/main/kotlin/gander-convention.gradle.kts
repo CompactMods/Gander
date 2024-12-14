@@ -1,22 +1,27 @@
 import dev.compactmachines.GanderConstants
 import org.slf4j.event.Level
 
+var envVersion: String = System.getenv("VERSION") ?: "9.9.9"
+if (envVersion.startsWith("v"))
+    envVersion = envVersion.trimStart('v')
+
 plugins {
     id("java-library")
     id("idea")
     id("org.jetbrains.gradle.plugin.idea-ext")
     id("net.neoforged.moddev.legacyforge")
+    id("maven-publish")
 }
 
 // main convention script which sets up a basic MDG workspace
 // pulling in version data from GanderConstants since version catalogs
 // from the main outer project are not accessible here
 
-group = GanderConstants.GROUP
-version = GanderConstants.VERSION
-
 base {
     archivesName = project.name
+    group = "dev.compactmods.gander"
+    version = envVersion
+
     libsDirectory.convention(rootProject.layout.projectDirectory.dir("libs/${project.name}"))
 }
 
@@ -61,31 +66,6 @@ neoForge {
             publish(atFile)
         }
     }
-
-    runs.configureEach {
-        // set up basic common run config properties
-        // due to using convention this can be override in each run config
-        logLevel.convention(Level.DEBUG)
-        sourceSet.convention(sourceSets[SourceSet.MAIN_SOURCE_SET_NAME])
-        loadedMods.convention(mods) // all registered mods
-        gameDirectory.convention(type.map { layout.projectDirectory.dir("run/$it") })
-
-        // using '.map' adds args as a 'provider'
-        // making them lazily evaluated later
-        // when 'type' actually exists
-        //
-        // adds jbr jvm args only for client/server run types
-        jvmArguments.addAll(type.map {
-            if(GanderConstants.IS_CI || (it != "client" && it != "server"))
-                return@map emptyList<String>()
-
-            return@map listOf(
-                "-XX:+AllowEnhancedClassRedefinition",
-                "-XX:+IgnoreUnrecognizedVMOptions",
-                "-XX:+AllowRedefinitionToAddDeleteMethods"
-            )
-        })
-    }
 }
 
 tasks.jar {
@@ -97,7 +77,6 @@ dependencies {
     // does not affect runtime or production
     // safe to have at compile time with no issues
     compileOnly("org.jetbrains:annotations:26.0.1")
-
     annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
 }
 
@@ -113,4 +92,22 @@ tasks.withType<JavaCompile> {
 javaToolchains.compilerFor {
     languageVersion.convention(GanderConstants.JAVA_VERSION)
     vendor.convention(GanderConstants.JAVA_VENDOR)
+}
+
+val PACKAGES_URL = System.getenv("GH_PKG_URL") ?: "https://maven.pkg.github.com/compactmods/gander"
+publishing {
+    publications.register<MavenPublication>(project.name) {
+        from(components.getByName("java"))
+    }
+
+    repositories {
+        // GitHub Packages
+        maven(PACKAGES_URL) {
+            name = "GitHubPackages"
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
 }
