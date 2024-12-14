@@ -9,3 +9,10 @@ idea.module.excludeDirs.addAll(files(
     "gradle",
     "libs"
 ))
+
+tasks.register("publish") {
+    dependsOn(project(":core").tasks.named("publish"))
+    dependsOn(project(":levels").tasks.named("publish"))
+    dependsOn(project(":rendering").tasks.named("publish"))
+    dependsOn(project(":ui").tasks.named("publish"))
+}
