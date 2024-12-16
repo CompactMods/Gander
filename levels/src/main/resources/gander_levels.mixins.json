@@ -5,5 +5,6 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "StructureTemplateAccessor"
-  ]
+  ],
+  "refmap": "gander_levels.refmap.json"
 }
