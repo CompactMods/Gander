@@ -7,13 +7,15 @@ public record MaterialInstance(
     String name,
     MaterialParent parent,
     @Nullable
-    ResourceLocation overrideTexture)
+    ResourceLocation overrideTexture,
+    boolean isUvLocked)
 {
     public static final MaterialInstance MISSING
         = new MaterialInstance(
             MaterialParent.MISSING.name(),
             MaterialParent.MISSING,
-            null);
+            null,
+            false);
 
     public ResourceLocation getEffectiveTexture()
     {

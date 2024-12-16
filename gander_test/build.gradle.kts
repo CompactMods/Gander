@@ -16,6 +16,19 @@ plugins {
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 base.archivesName = "gander_test"
 
+//...graaaadle
+evaluationDependsOn(":levels")
+evaluationDependsOn(":rendering")
+evaluationDependsOn(":runtime")
+
+minecraft {
+    accessTransformers {
+        consume(project(":levels"))
+        consume(project(":rendering"))
+        consume(project(":runtime"))
+    }
+}
+
 dependencies {
     // Core Projects and Libraries
     implementation(neoforged.neoforge)
@@ -23,14 +36,13 @@ dependencies {
     compileOnly(project(":runtime"))
 }
 
-//...graaaadle
-evaluationDependsOn(":levels")
-evaluationDependsOn(":rendering")
-evaluationDependsOn(":runtime")
-
 runs {
     configureEach {
         systemProperty("log4j2.configurationFile", file("../log4j2.xml").absolutePath)
+
+        // Workaround a Linux bug with Wayland.
+        //systemProperty("org.lwjgl.glfw.libname", "/usr/lib/x86_64-linux-gnu/libglfw.so.3")
+        environmentVariable("__GL_THREADED_OPTIMIZATIONS", "0")
 
         modSource(sourceSets["main"])
         modSources(project(":levels").sourceSets["main"])

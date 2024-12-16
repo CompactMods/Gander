@@ -19,6 +19,7 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
+import org.lwjgl.system.MemoryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +44,18 @@ public final class SectionBaker
     public record BakedSection(
         List<DrawCall> drawCalls,
         FloatBuffer atlas)
-    { }
+        implements AutoCloseable
+    {
+        @Override
+        public void close() throws Exception
+        {
+            MemoryUtil.memFree(atlas);
+            for (var call : drawCalls)
+            {
+                call.close();
+            }
+        }
+    }
 
     public record DrawCall(
         RenderType renderType,
@@ -53,7 +65,15 @@ public final class SectionBaker
         int transformCount,
         IntBuffer textures,
         int textureCount)
-    { }
+        implements AutoCloseable
+    {
+        @Override
+        public void close() throws Exception
+        {
+            MemoryUtil.memFree(transforms);
+            MemoryUtil.memFree(textures);
+        }
+    }
 
     private record InstanceInfo(
         RenderType renderType,
@@ -125,9 +145,15 @@ public final class SectionBaker
         if (atlases.size() > 1)
             throw new IllegalStateException("Not yet supported");
 
+        var readOnlyAtlas = atlases.get(TextureAtlas.LOCATION_BLOCKS);
+        var atlas = MemoryUtil.memAllocFloat(readOnlyAtlas.limit());
+        atlas.put(readOnlyAtlas);
+        atlas.flip();
+        readOnlyAtlas.rewind();
+
         return new BakedSection(
             Collections.unmodifiableList(drawCalls),
-            atlases.get(TextureAtlas.LOCATION_BLOCKS));
+            atlas);
     }
 
     private static DrawCall buildBuffers(
@@ -137,12 +163,11 @@ public final class SectionBaker
         ModelRebaker rebaker,
         ToIntFunction<MaterialInstance> textureAtlasIndex)
     {
-        var transforms = FloatBuffer.allocate(
+        var transforms = MemoryUtil.memAllocFloat(
             instances.size() * 4 * 4);
 
-        // N.B. std140 layout requires 16 byte alignment
-        var textureBuffer = IntBuffer.allocate(
-            (mesh.vertexCount() * instances.size()) * 4);
+        var textureBuffer = MemoryUtil.memAllocInt(
+            mesh.vertexCount() * instances.size());
 
         instances
             .forEach(it -> {
@@ -155,9 +180,6 @@ public final class SectionBaker
 
                     // Extra padding bytes here are necessary for std140 alignment
                     textureBuffer.put(textureAtlasIndex.applyAsInt(material));
-                    textureBuffer.put(0);
-                    textureBuffer.put(0);
-                    textureBuffer.put(0);
                 }
 
                 var transform = new Matrix4f()
@@ -165,7 +187,8 @@ public final class SectionBaker
                         it.sectionRelativeY(),
                         it.sectionRelativeZ())
                     .mul(it.transform());
-                writeTransform(transforms, transform);
+                transform.get(transforms);
+                transforms.position(transforms.position() + 16);
             });
 
         return new DrawCall(
@@ -207,27 +230,6 @@ public final class SectionBaker
         }
 
         return material;
-    }
-
-    private static void writeTransform(FloatBuffer buffer,
-        @NotNull Matrix4fc matrix)
-    {
-        buffer.put(matrix.m00())
-            .put(matrix.m01())
-            .put(matrix.m02())
-            .put(matrix.m03())
-            .put(matrix.m10())
-            .put(matrix.m11())
-            .put(matrix.m12())
-            .put(matrix.m13())
-            .put(matrix.m20())
-            .put(matrix.m21())
-            .put(matrix.m22())
-            .put(matrix.m23())
-            .put(matrix.m30())
-            .put(matrix.m31())
-            .put(matrix.m32())
-            .put(matrix.m33());
     }
 
     private static Stream<InstanceInfo> modelsAt(

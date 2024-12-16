@@ -211,7 +211,8 @@ public final class ModelRebaker
                         bakery,
                         pair.getKey(),
                         unbakedModel,
-                        it))
+                        it,
+                        false))
                     .forEach(it -> modelMaterials.put(it.getKey(), it.getValue()));
             }
 
@@ -234,13 +235,14 @@ public final class ModelRebaker
     private Stream<Map.Entry<DisplayableMesh, Set<MaterialInstance>>> getMaterialInstances(
         ModelBakery bakery, ModelResourceLocation key,
         UnbakedModel model,
-        DisplayableMesh component)
+        DisplayableMesh component,
+        boolean uvLocked)
     {
         switch (model)
         {
             case BlockModel block ->
             {
-                return Stream.of(getBlockModelMaterials(key, block, component));
+                return Stream.of(getBlockModelMaterials(key, block, component, uvLocked));
             }
             case MultiPart multiPart ->
             {
@@ -248,17 +250,13 @@ public final class ModelRebaker
                     .stream()
                     .map(MultiVariant::getVariants)
                     .flatMap(List::stream)
-                    .map(Variant::getModelLocation)
-                    .map(bakery::getModel)
-                    .flatMap(it -> getMaterialInstances(bakery, key, it, component));
+                    .flatMap(it -> getMaterialInstances(bakery, key, bakery.getModel(it.getModelLocation()), component, uvLocked || it.isUvLocked()));
             }
             case MultiVariant multiVariant ->
             {
                 return multiVariant.getVariants()
                     .stream()
-                    .map(Variant::getModelLocation)
-                    .map(bakery::getModel)
-                    .flatMap(it -> getMaterialInstances(bakery, key, it, component));
+                    .flatMap(it -> getMaterialInstances(bakery, key, bakery.getModel(it.getModelLocation()), component, uvLocked || it.isUvLocked()));
             }
             default -> throw new IllegalStateException("Unexpected value: " + model);
         }
@@ -267,7 +265,8 @@ public final class ModelRebaker
     private Map.Entry<DisplayableMesh, Set<MaterialInstance>> getBlockModelMaterials(
         ModelResourceLocation name,
         final BlockModel model,
-        final DisplayableMesh component)
+        final DisplayableMesh component,
+        boolean isUvLocked)
     {
         Stream<Entry<String, Either<Material, String>>> materials = Stream.of();
         for (var mdl = model; mdl != null; mdl = mdl.parent)
@@ -333,7 +332,8 @@ public final class ModelRebaker
                         new MaterialInstance(
                             material.getFirst(),
                             parent,
-                            material.getSecond().texture()));
+                            material.getSecond().texture(),
+                            isUvLocked));
                 }
                 else
                 {
@@ -344,7 +344,8 @@ public final class ModelRebaker
                         new MaterialInstance(
                             missingFromParent.name(),
                             missingFromParent,
-                            null));
+                            null,
+                            isUvLocked));
                 }
             });
 
@@ -366,7 +367,8 @@ public final class ModelRebaker
                                 it.getKey(),
                                 parentsByName.getOrDefault(ref,
                                     MaterialParent.MISSING),
-                                null)))))
+                                null,
+                                isUvLocked)))))
             .filter(Objects::nonNull)
             .map(Map.Entry::getValue)
             .collect(Collectors.toSet());

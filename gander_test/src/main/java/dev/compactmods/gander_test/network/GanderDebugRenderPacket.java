@@ -33,7 +33,12 @@ import org.lwjgl.opengl.GL43;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
 
@@ -68,10 +73,11 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
     private static int drawBuffer;
     private static int drawCount;
     private static int vertexArray;
-    private static int transformBuffer;
-    private static int spriteBuffer;
+    private static int transformTexture;
+    private static int spriteTexture;
     private static int atlasBuffer;
     private static final IntList buffers = new IntArrayList();
+    private static final IntList textures = new IntArrayList();
 
     private static void buildBuffers(BakedSection section)
     {
@@ -107,8 +113,8 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
         GL32.glVertexAttribIPointer(4, 1, GL32.GL_UNSIGNED_SHORT, 0, 0);
         GL32.glEnableVertexAttribArray(4);
 
-        transformBuffer = buildTransformBuffer(section);
-        spriteBuffer = buildSpriteBuffer(section);
+        transformTexture = buildTransformTexture(section);
+        spriteTexture = buildSpriteTexture(section);
         atlasBuffer = buildAtlasBuffer(section);
 
         drawBuffer = buildDrawBuffer(section);
@@ -247,7 +253,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
         return uvBuffer;
     }
 
-    private static int buildSpriteBuffer(BakedSection section)
+    private static int buildSpriteTexture(BakedSection section)
     {
         int count = 0;
         for (var call : section.drawCalls())
@@ -255,28 +261,70 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
             count += call.textures().limit();
         }
 
-        var spriteBuffer = GL32.glGenBuffers();
-        GL32.glBindBuffer(GL32.GL_UNIFORM_BUFFER, spriteBuffer);
-        GL32.glBufferData(GL32.GL_UNIFORM_BUFFER, count * 4, GL32.GL_STATIC_DRAW);
-        buffers.add(spriteBuffer);
+        var width = Math.min(count, GL32.glGetInteger(GL32.GL_MAX_TEXTURE_SIZE));
+        var height = (int)Math.ceil((double)count / width);
 
-        int index = 0;
+        var spriteTexture = GL32.glGenTextures();
+        GL32.glBindTexture(GL32.GL_TEXTURE_2D, spriteTexture);
+        GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_MIN_FILTER, GL32.GL_NEAREST);
+        GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_MAG_FILTER, GL32.GL_NEAREST);
+        GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_WRAP_S, GL32.GL_CLAMP_TO_EDGE);
+        GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_WRAP_T, GL32.GL_CLAMP_TO_EDGE);
+        GL32.glPixelStorei(GL32.GL_UNPACK_ALIGNMENT, 1);
+
+        GL32.glTexImage2D(GL32.GL_TEXTURE_2D,
+            0,
+            GL32.GL_R32I,
+            width, height,
+            0,
+            GL32.GL_RED_INTEGER,
+            GL32.GL_INT,
+            (ByteBuffer)null);
+        textures.add(spriteTexture);
+
+        // TODO: texture building should be extracted into a common function
+        int indexX = 0;
+        int indexY = 0;
         for (var call : section.drawCalls())
         {
-            try (var stack = stackPush())
+            var toWrite = call.textures().limit();
+            var valuesWritten = 0;
+            while (valuesWritten < toWrite)
             {
-                var sprites = stack.mallocInt(call.textures().limit());
-                sprites.put(call.textures());
-                sprites.flip();
+                // Values to write in *this* row
+                var inThisRow = Math.min(width - indexX, toWrite);
+
+                call.textures().position(valuesWritten);
+                GL32.glPixelStorei(GL32.GL_UNPACK_ALIGNMENT, 1);
+                GL32.glTexSubImage2D(
+                    GL32.GL_TEXTURE_2D,
+                    0,
+                    indexX,
+                    indexY,
+                    inThisRow,
+                    1,
+                    GL32.GL_RED_INTEGER,
+                    GL32.GL_INT,
+                    call.textures());
                 call.textures().rewind();
 
-                GL32.glBufferSubData(GL32.GL_UNIFORM_BUFFER, index * 4, sprites);
-            }
+                if ((valuesWritten + inThisRow) < toWrite)
+                {
+                    // If there's data remaining, that's because we overflowed.
+                    indexX = 0;
+                    indexY++;
+                }
+                else
+                {
+                    // Otherwise, add the amount we wrote now.
+                    indexX += inThisRow;
+                }
 
-            index += call.textures().limit();
+                valuesWritten += inThisRow;
+            }
         }
 
-        return spriteBuffer;
+        return spriteTexture;
     }
 
     private static int buildTransformOffsetBuffer(BakedSection section)
@@ -322,6 +370,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
             count += call.mesh().vertexCount();
         }
 
+
         var spriteIndexBuffer = GL32.glGenBuffers();
         GL32.glBindBuffer(GL32.GL_ARRAY_BUFFER, spriteIndexBuffer);
         GL32.glBufferData(GL32.GL_ARRAY_BUFFER, count * 2, GL32.GL_STATIC_DRAW);
@@ -349,7 +398,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
         return spriteIndexBuffer;
     }
 
-    private static int buildTransformBuffer(BakedSection section)
+    private static int buildTransformTexture(BakedSection section)
     {
         int count = 0;
         for (var call : section.drawCalls())
@@ -357,45 +406,85 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
             count += call.transforms().limit();
         }
 
-        var transformBuffer = GL32.glGenBuffers();
-        GL32.glBindBuffer(GL32.GL_UNIFORM_BUFFER, transformBuffer);
-        GL32.glBufferData(GL32.GL_UNIFORM_BUFFER, count * 4, GL32.GL_STATIC_DRAW);
-        buffers.add(transformBuffer);
+        // Dividing by 4 here makes sure we can always fit an integer number
+        // of matrices if we have more than one row of data.
+        var width = Math.min(count / 4, GL32.glGetInteger(GL32.GL_MAX_TEXTURE_SIZE) / 4);
+        var height = (int)Math.ceil(((double)count / 4) / width);
 
-        int index = 0;
+        var transformTexture = GL32.glGenTextures();
+        GL32.glBindTexture(GL32.GL_TEXTURE_2D, transformTexture);
+        GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_MIN_FILTER, GL32.GL_NEAREST);
+        GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_MAG_FILTER, GL32.GL_NEAREST);
+        GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_WRAP_S, GL32.GL_CLAMP_TO_EDGE);
+        GL32.glTexParameteri(GL32.GL_TEXTURE_2D, GL32.GL_TEXTURE_WRAP_T, GL32.GL_CLAMP_TO_EDGE);
+        GL32.glPixelStorei(GL32.GL_UNPACK_ALIGNMENT, 1);
+        GL32.glTexImage2D(GL32.GL_TEXTURE_2D,
+            0,
+            GL32.GL_RGBA32F,
+            width, height,
+            0,
+            GL32.GL_RGBA,
+            GL32.GL_FLOAT,
+            (ByteBuffer)null);
+        textures.add(transformTexture);
+
+        // TODO: texture building should be extracted into a common function
+        int indexX = 0;
+        int indexY = 0;
         for (var call : section.drawCalls())
         {
-            try (var stack = stackPush())
+            var toWrite = call.transforms().limit();
+            var pixelCount = toWrite / 4;
+            var valuesWritten = 0;
+            while (valuesWritten < toWrite)
             {
-                var transforms = stack.mallocFloat(call.transforms().limit());
-                transforms.put(call.transforms());
-                transforms.flip();
+                var inThisRow = Math.min(width - indexX, pixelCount);
+
+                call.transforms().position(valuesWritten);
+                GL32.glPixelStorei(GL32.GL_UNPACK_ALIGNMENT, 1);
+                GL32.glTexSubImage2D(
+                    GL32.GL_TEXTURE_2D,
+                    0,
+                    indexX,
+                    indexY,
+                    inThisRow,
+                    1,
+                    GL32.GL_RGBA,
+                    GL32.GL_FLOAT,
+                    call.transforms());
                 call.transforms().rewind();
 
-                GL32.glBufferSubData(GL32.GL_UNIFORM_BUFFER, index * 4, transforms);
-            }
+                if ((valuesWritten + inThisRow * 4) < toWrite)
+                {
+                    // If there's data remaining, that's because we overflowed.
+                    indexX = 0;
+                    indexY++;
+                }
+                else
+                {
+                    indexX += inThisRow;
+                }
 
-            index += call.transforms().limit();
+                valuesWritten += inThisRow * 4;
+            }
         }
 
-        return transformBuffer;
+        return transformTexture;
     }
 
     private static int buildAtlasBuffer(BakedSection section)
     {
+        int count = 0;
+        count += section.atlas().limit();
+
         var spriteBuffer = GL32.glGenBuffers();
         GL32.glBindBuffer(GL32.GL_UNIFORM_BUFFER, spriteBuffer);
+        GL32.glBufferData(GL32.GL_UNIFORM_BUFFER, 4 * count, GL32.GL_STATIC_DRAW);
+
         buffers.add(spriteBuffer);
-
-        try (var stack = stackPush())
-        {
-            var atlas = stack.mallocFloat(section.atlas().limit());
-            atlas.put(section.atlas());
-            atlas.flip();
-            section.atlas().rewind();
-
-            GL32.glBufferData(GL32.GL_UNIFORM_BUFFER, atlas, GL32.GL_STATIC_DRAW);
-        }
+        var index = 0;
+        GL32.glBufferSubData(GL32.GL_UNIFORM_BUFFER, index, section.atlas());
+        index += section.atlas().limit();
 
         return spriteBuffer;
     }
@@ -438,6 +527,9 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
     private static int shader;
     private static Uniform projectionMatrix;
     private static Uniform modelViewMatrix;
+    private static Uniform transformSampler;
+    private static Uniform spriteSampler;
+    private static Uniform blockAtlas;
 
     private static final IntList shaders = new IntArrayList();
 
@@ -445,10 +537,17 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
     {
         projectionMatrix = new Uniform("ProjMat", Uniform.UT_MAT4, 16, null);
         modelViewMatrix = new Uniform("ModelViewMat", Uniform.UT_MAT4, 16, null);
+        transformSampler = new Uniform("TransformSampler", Uniform.UT_INT1, 1, null);
+        spriteSampler = new Uniform("SpriteSampler", Uniform.UT_INT1, 1, null);
+        blockAtlas = new Uniform("BlockAtlas", Uniform.UT_INT1, 1, null);
 
         var atlasSize = section.atlas().limit() / 4;
-        var transformCount = section.drawCalls().stream().mapToInt(DrawCall::transformCount).sum();
-        var spriteCount = section.drawCalls().stream().mapToInt(DrawCall::textureCount).sum();
+        var transformCount = section.drawCalls().stream()
+            .mapToInt(DrawCall::transformCount)
+            .sum();
+        var spriteCount = section.drawCalls().stream()
+            .mapToInt(DrawCall::textureCount)
+            .sum();
 
         var vertex = GL32.glCreateShader(GL32.GL_VERTEX_SHADER);
         shaders.add(vertex);
@@ -469,15 +568,8 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
             uniform mat4 ModelViewMat;
             uniform mat4 ProjMat;
             
-            layout(std140) uniform Transforms
-            {
-                mat4 transforms[TRANSFORM_COUNT];
-            };
-            
-            layout(std140) uniform Sprites
-            {
-                int spriteIndices[SPRITE_COUNT];
-            };
+            uniform sampler2D TransformSampler;
+            uniform isampler2D SpriteSampler;
 
             layout(std140) uniform TextureAtlas
             {
@@ -525,8 +617,34 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                 return intBitsToFloat(bits);
             }
             
-            void main() {
-                mat4 transform = transforms[TransformOffset + gl_InstanceID];
+            mat4 getTransform()
+            {
+                ivec2 size = textureSize(TransformSampler, 0);
+                int offset = (TransformOffset + gl_InstanceID) * 4;
+                int y = offset / size.x;
+                int x = offset %% size.x;
+
+                return mat4(
+                    texelFetchOffset(TransformSampler, ivec2(x, y), 0, ivec2(0,0)),
+                    texelFetchOffset(TransformSampler, ivec2(x, y), 0, ivec2(1,0)),
+                    texelFetchOffset(TransformSampler, ivec2(x, y), 0, ivec2(2,0)),
+                    texelFetchOffset(TransformSampler, ivec2(x, y), 0, ivec2(3,0))
+                );
+            }
+            
+            int getSprite()
+            {
+                ivec2 size = textureSize(SpriteSampler, 0);
+                int offset = SpriteOffset + gl_VertexID - gl_BaseVertex;
+                int y = offset / size.x;
+                int x = offset %% size.x;
+                
+                return texelFetch(SpriteSampler, ivec2(x, y), 0).r;
+            }
+            
+            void main()
+            {
+                mat4 transform = getTransform();
                 vec4 position = vec4(Position, 1.0);
                 position -= vec4(0.5, 0.5, 0.5, 0);
                 position = transform * position;
@@ -537,7 +655,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                 vs_out.normal = Normal;
 
                 // Sprite bounds is the rectangle we can draw in
-                int atlasIndex = spriteIndices[SpriteOffset + gl_VertexID - gl_BaseVertex];
+                int atlasIndex = getSprite();
                 vec4 spriteBounds = textureAtlas[atlasIndex];
                 // Shrink it a little to avoid floating point rounding errors from sampling
                 spriteBounds.x = nextafter(nextafter(spriteBounds.x, spriteBounds.z), spriteBounds.z);
@@ -600,13 +718,12 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
 
         projectionMatrix.setLocation(Uniform.glGetUniformLocation(shader, projectionMatrix.getName()));
         modelViewMatrix.setLocation(Uniform.glGetUniformLocation(shader, modelViewMatrix.getName()));
+        transformSampler.setLocation(Uniform.glGetUniformLocation(shader, transformSampler.getName()));
+        spriteSampler.setLocation(Uniform.glGetUniformLocation(shader, spriteSampler.getName()));
+        blockAtlas.setLocation(Uniform.glGetUniformLocation(shader, blockAtlas.getName()));
 
-        int transforms = GL32.glGetUniformBlockIndex(shader, "Transforms");
-        GL32.glUniformBlockBinding(shader, transforms, 0);
-        int sprites = GL32.glGetUniformBlockIndex(shader, "Sprites");
-        GL32.glUniformBlockBinding(shader, sprites, 1);
         int textureAtlas = GL32.glGetUniformBlockIndex(shader, "TextureAtlas");
-        GL32.glUniformBlockBinding(shader, textureAtlas, 2);
+        GL32.glUniformBlockBinding(shader, textureAtlas, 1);
     }
 
 
@@ -624,6 +741,15 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                 shaders.forEach(GL32::glDeleteShader);
                 GL32.glDeleteVertexArrays(vertexArray);
                 buffers.forEach(GL32::glDeleteBuffers);
+                textures.forEach(GL32::glDeleteTextures);
+                try
+                {
+                    lastSection.close();
+                }
+                catch (Exception ex)
+                {
+                    throw new RuntimeException(ex);
+                }
                 builtBuffers = false;
             }
             lastSection = null;
@@ -641,6 +767,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
             {
                 var rebaker = ModelRebaker.of(Minecraft.getInstance().getModelManager());
                 var indexer = AtlasIndexer.of(Minecraft.getInstance().getModelManager());
+
                 var section = SectionBaker.bake(
                     Minecraft.getInstance().level,
                     SectionPos.of(0, 0, 0),
@@ -669,22 +796,30 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
             // TODO: combine these into a single uniform
             projectionMatrix.set(pMatrix);
             modelViewMatrix.set(mvMatrix);
+            blockAtlas.set(0);
+            transformSampler.set(1);
+            spriteSampler.set(2);
 
             GL32.glUseProgram(shader);
             GL32.glBindVertexArray(vertexArray);
             projectionMatrix.upload();
             modelViewMatrix.upload();
+            blockAtlas.upload();
+            transformSampler.upload();
+            spriteSampler.upload();
             var tex = Minecraft.getInstance()
                 .getTextureManager()
                 .getTexture(TextureAtlas.LOCATION_BLOCKS);
+
             GL32.glActiveTexture(GL32.GL_TEXTURE0);
             GL32.glBindTexture(GL32.GL_TEXTURE_2D, tex.getId());
-            GL32.glBindBuffer(GL32.GL_UNIFORM_BUFFER, transformBuffer);
-            GL32.glBindBufferBase(GL32.GL_UNIFORM_BUFFER, 0, transformBuffer);
-            GL32.glBindBuffer(GL32.GL_UNIFORM_BUFFER, spriteBuffer);
-            GL32.glBindBufferBase(GL32.GL_UNIFORM_BUFFER, 1, spriteBuffer);
+            GL32.glActiveTexture(GL32.GL_TEXTURE1);
+            GL32.glBindTexture(GL32.GL_TEXTURE_2D, transformTexture);
+            GL32.glActiveTexture(GL32.GL_TEXTURE2);
+            GL32.glBindTexture(GL32.GL_TEXTURE_2D, spriteTexture);
+
             GL32.glBindBuffer(GL32.GL_UNIFORM_BUFFER, atlasBuffer);
-            GL32.glBindBufferBase(GL32.GL_UNIFORM_BUFFER, 2, atlasBuffer);
+            GL32.glBindBufferBase(GL32.GL_UNIFORM_BUFFER, 1, atlasBuffer);
             // TODO: Use GL 3.2 calls
             GL32.glBindBuffer(GL40.GL_DRAW_INDIRECT_BUFFER, drawBuffer);
             GL43.glMultiDrawElementsIndirect(GL32.GL_TRIANGLES, GL32.GL_UNSIGNED_BYTE, 0, drawCount, 0);

@@ -113,7 +113,7 @@ public class SpatialRenderer extends AbstractWidget {
 
 	public void setData(BakedLevel bakedLevel) {
 		this.bakedLevel = bakedLevel;
-		this.blockAndTints = bakedLevel.originalLevel().get();
+		this.blockAndTints = bakedLevel.originalLevel();
 		this.blockBoundaries = bakedLevel.blockBoundaries();
 
 		this.blockEntityPositions = BlockPos.betweenClosedStream(blockBoundaries)

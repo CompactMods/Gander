@@ -22,7 +22,6 @@ import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.client.model.obj.ObjMaterialLibrary;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Quaternionfc;
@@ -37,7 +36,6 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import static dev.compactmods.gander.render.baked.model.RotationUtil.rotate;

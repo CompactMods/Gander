@@ -8,7 +8,6 @@ import org.joml.Vector3f;
 
 import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander_test.network.StructureSceneDataRequest;
-import dev.compactmods.gander.render.baked.LevelBakery;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
@@ -50,9 +49,9 @@ public class ScreenOpener {
 			virtualLevel.setBounds(bounds);
 			data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings().setKnownShape(true), RandomSource.create(), Block.UPDATE_CLIENTS);
 
-			var bakedLevel = LevelBakery.bakeVertices(virtualLevel, bounds, new Vector3f());
+			//var bakedLevel = LevelBakery.bakeVertices(virtualLevel, bounds, new Vector3f());
 			ui.setSceneSource(source);
-			ui.setScene(bakedLevel);
+			//ui.setScene(bakedLevel);
 		});
 	}
 }

@@ -60,11 +60,6 @@ runs {
         modSource(sourceSets["main"])
         modSource(project(":levels").sourceSets["main"])
         modSource(project(":rendering").sourceSets["main"])
-
-        // because *apparently* it can't figure out transitives properly :unamused:
-        dependencies {
-            runtime(utilities.roaringbitmap)
-        }
     }
 
     register("client") {

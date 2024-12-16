@@ -103,7 +103,7 @@ public class GanderUI extends Screen {
 		super.tick();
 		if (this.scene != null) {
 			// TODO: :)
-			var level = ((VirtualLevel)scene.originalLevel().get());
+			var level = ((VirtualLevel)scene.originalLevel());
 			//level.tick(minecraft.getPartialTick());
 			// level.animateTick();
 		}
