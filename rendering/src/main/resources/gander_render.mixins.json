@@ -6,5 +6,6 @@
   "client": [
     "CompositeRenderTypeMixin",
     "GlStateManagerAccessor"
-  ]
+  ],
+  "refmap": "gander_render.refmap.json"
 }
