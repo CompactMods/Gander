@@ -1,8 +1,14 @@
 package dev.compactmods.gander.level;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
+import it.unimi.dsi.fastutil.longs.LongArraySet;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,6 +60,8 @@ import net.minecraft.world.ticks.LevelTickAccess;
 
 public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
+	private static Logger LOGS = LogManager.getLogger();
+
 	// private final TickRateManager tickManager = new TickRateManager();
 	private final RegistryAccess access;
 	private final VirtualChunkSource chunkSource;
@@ -62,6 +70,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	private BoundingBox bounds;
 	private VirtualEntitySystem entities;
 	private final Holder<Biome> biome;
+	private final Set<Long> erroredTickingEntities;
 
 	public VirtualLevel(RegistryAccess access) {
 		this(
@@ -84,6 +93,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		this.bounds = BoundingBox.fromCorners(BlockPos.ZERO, BlockPos.ZERO);
 		this.entities = new VirtualEntitySystem();
 		this.biome = pRegistryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
+		this.erroredTickingEntities = new LongArraySet();
 	}
 
 	public Holder<Biome> getBiome() {
@@ -177,21 +187,30 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	}
 
 	protected void animateBlockTick(BlockPos pBlockPos) {
-		BlockState blockstate = this.getBlockState(pBlockPos);
-		blockstate.getBlock().animateTick(blockstate, this, pBlockPos, random);
-		FluidState fluidstate = this.getFluidState(pBlockPos);
-		if (!fluidstate.isEmpty()) {
-			fluidstate.animateTick(this, pBlockPos, random);
+		if(erroredTickingEntities.contains(pBlockPos.asLong()))
+			return;
+
+		try {
+			BlockState blockstate = this.getBlockState(pBlockPos);
+			blockstate.getBlock().animateTick(blockstate, this, pBlockPos, random);
+			FluidState fluidstate = this.getFluidState(pBlockPos);
+			if (!fluidstate.isEmpty()) {
+				fluidstate.animateTick(this, pBlockPos, random);
+			}
+
+			if (!blockstate.isCollisionShapeFullBlock(this, pBlockPos)) {
+				this.getBiome(pBlockPos)
+						.value()
+						.getAmbientParticle()
+						.filter(aps -> aps.canSpawn(random))
+						.ifPresent((p_264703_) -> {
+							this.addParticle(p_264703_.getOptions(), (double) pBlockPos.getX() + this.random.nextDouble(), (double) pBlockPos.getY() + this.random.nextDouble(), (double) pBlockPos.getZ() + this.random.nextDouble(), 0.0D, 0.0D, 0.0D);
+						});
+			}
 		}
 
-		if (!blockstate.isCollisionShapeFullBlock(this, pBlockPos)) {
-			this.getBiome(pBlockPos)
-					.value()
-					.getAmbientParticle()
-					.filter(aps -> aps.canSpawn(random))
-					.ifPresent((p_264703_) -> {
-						this.addParticle(p_264703_.getOptions(), (double) pBlockPos.getX() + this.random.nextDouble(), (double) pBlockPos.getY() + this.random.nextDouble(), (double) pBlockPos.getZ() + this.random.nextDouble(), 0.0D, 0.0D, 0.0D);
-					});
+		catch(Exception e) {
+			erroredTickingEntities.add(pBlockPos.asLong());
 		}
 	}
 
@@ -206,14 +225,24 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 							var ticker = blocks.blockAndFluidStorage().getBlockState(entityPos).getTicker(this, blockEntity.getType());
 
 							if (ticker != null)
-								tickBlockEntity(blockEntity, (BlockEntityTicker<BlockEntity>) ticker);
+								tickBlockEntity(entityPos.asLong(), blockEntity, (BlockEntityTicker<BlockEntity>) ticker);
 						}
 					});
 		}
 	}
 
-	private <T extends BlockEntity> void tickBlockEntity(T blockEntity, BlockEntityTicker<T> ticker) {
-		ticker.tick(this, blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity);
+	private <T extends BlockEntity> void tickBlockEntity(long blockPos, T blockEntity, BlockEntityTicker<T> ticker) {
+		if(erroredTickingEntities.contains(blockPos))
+			return;
+
+		try {
+			ticker.tick(this, blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity);
+		} catch (Exception e) {
+			erroredTickingEntities.add(blockPos);
+			LOGS.atFatal()
+					.withThrowable(e)
+					.log("Failed to tick block entity! Marking the ticker as errored so this does not spam. Source: {}", blockEntity.getClass().getSimpleName());
+		}
 	}
 
 	@Override

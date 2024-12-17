@@ -64,17 +64,16 @@ public class LevelBakery {
 			pose.pushPose();
 			pose.translate(pos.getX(), pos.getY(), pos.getZ());
 
-			ModelData modelData;
+			ModelData modelData = ModelData.EMPTY;
 			if (state.getRenderShape() == RenderShape.MODEL) {
 				BakedModel model = dispatcher.getBlockModel(state);
 
 				if (state.hasBlockEntity()) {
 					BlockEntity blockEntity = level.getBlockEntity(pos);
 					modelData = blockEntity != null ? blockEntity.getModelData() : ModelData.EMPTY;
-					modelData = model.getModelData(level, pos, state, modelData);
-				} else {
-					modelData = ModelData.EMPTY;
 				}
+
+				modelData = model.getModelData(level, pos, state, modelData);
 
 				long seed = state.getSeed(pos);
 				random.setSeed(seed);
