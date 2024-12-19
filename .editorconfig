@@ -2,21 +2,25 @@
 root = true
 
 [*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
 indent_style = space
 indent_size = 4
-continuation_indent_size = 8
-end_of_line = lf
-charset = utf-8
 trim_trailing_whitespace = true
-insert_final_newline = true
 
-[*.json]
-indent_style = space
+[{gradlew,gradlew.bat}]
+charset = unset
+end_of_line = unset
+insert_final_newline = unset
+indent_style = unset
+indent_size = unset
+trim_trailing_whitespace = unset
+
+[*.{json,xml,yml}]
 indent_size = 2
 
 [*.java]
-indent_style = tab
-ij_continuation_indent_size = 8
 ij_java_class_count_to_use_import_on_demand = 99
 ij_java_names_count_to_use_import_on_demand = 99
 ij_java_imports_layout = $*,|,java.**,|,javax.**,|,org.**,|,com.**,|,*

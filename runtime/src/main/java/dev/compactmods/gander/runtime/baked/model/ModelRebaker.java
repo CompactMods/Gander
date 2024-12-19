@@ -1,64 +1,21 @@
 package dev.compactmods.gander.runtime.baked.model;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.mojang.datafixers.util.Either;
-import com.mojang.datafixers.util.Pair;
-import com.mojang.math.Transformation;
-import dev.compactmods.gander.render.baked.model.BakedMesh;
+
 import dev.compactmods.gander.render.baked.model.DisplayableMesh;
 import dev.compactmods.gander.render.baked.model.DisplayableMeshGroup;
-import dev.compactmods.gander.render.baked.model.DisplayableMeshGroup.Mode;
-import dev.compactmods.gander.runtime.baked.model.archetype.ArchetypeBaker;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
 import dev.compactmods.gander.render.baked.model.material.MaterialInstance;
-import dev.compactmods.gander.render.baked.model.material.MaterialParent;
-import dev.compactmods.gander.runtime.mixin.accessor.BlockModelShaperAccessor;
-import dev.compactmods.gander.runtime.mixin.accessor.ModelBakeryAccessor;
 import dev.compactmods.gander.runtime.mixin.accessor.ModelManagerAccessor;
-import dev.compactmods.gander.runtime.mixin.accessor.MultiPartAccessor;
-import dev.compactmods.gander.runtime.mixin.accessor.TransformationAccessor;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.block.BlockModelShaper;
-import net.minecraft.client.renderer.block.model.BlockModel;
-import net.minecraft.client.renderer.block.model.MultiVariant;
-import net.minecraft.client.renderer.block.model.Variant;
-import net.minecraft.client.renderer.block.model.multipart.MultiPart;
-import net.minecraft.client.renderer.block.model.multipart.Selector;
-import net.minecraft.client.resources.model.Material;
-import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.client.resources.model.UnbakedModel;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.NamedRenderTypeManager;
-import org.joml.Matrix4f;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Rebakes meshes to not use an interleaved format for their data. Leaves the
@@ -67,7 +24,7 @@ import java.util.stream.Stream;
  */
 public final class ModelRebaker
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ModelRebaker.class);
+
 
     private static final VarHandle _rebakerField;
     static
@@ -113,34 +70,13 @@ public final class ModelRebaker
         {
             var bakery = manager.getModelBakery();
 
-            reloadProfiler.startTick();
-
-            reloadProfiler.push("archetype_discovery");
-            var archetypeSet = new HashSet<ModelResourceLocation>();
-            var modelArchetypes = new HashMap<ModelResourceLocation, BiMap<ModelResourceLocation, UnbakedModel>>();
-            for (var pair : manager.getBakedRegistry().entrySet())
-            {
-                if (LOGGER.isTraceEnabled())
-                    LOGGER.trace("Discovering archetypes of model {} ", pair.getKey());
-
-                reloadProfiler.push(pair.getKey().toString());
-                var archetypes = ArchetypeBaker.getArchetypes(pair.getKey(), manager, bakery);
-                modelArchetypes.put(pair.getKey(), archetypes);
-                archetypeSet.addAll(archetypes.keySet());
-                reloadProfiler.pop();
-            }
-
-            if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Computed {} different archetype models", archetypeSet.size());
-
             reloadProfiler.popPush("archetype_baking");
             var archetypeMeshes = LinkedHashMultimap.<ModelResourceLocation, ModelResourceLocation>create();
             var bakedComponents = LinkedHashMultimap.<ModelResourceLocation, ArchetypeComponent>create();
-            for (var archetype : archetypeSet)
+            /*for (var archetype : archetypeSet)
             {
                 var model = bakery.getModel(archetype.id());
-                if (LOGGER.isTraceEnabled())
-                    LOGGER.trace("Baking archetype model {} of model type {}", archetype, model.getClass());
+
 
                 var components = ArchetypeBaker.bakeArchetypeComponents(archetype, model)
                     .filter(Objects::nonNull)
@@ -220,16 +156,18 @@ public final class ModelRebaker
                 LOGGER.debug("Baked {} different material instances", modelMaterials.size());
 
             reloadProfiler.popPush("material_instances_cache");
-            modelMaterialInstances = Collections.unmodifiableMap(modelMaterials);
+            modelMaterialInstances = Collections.unmodifiableMap(modelMaterials);*/
 
             reloadProfiler.pop();
             reloadProfiler.endTick();
         }
         catch (Exception e)
         {
-            LOGGER.error("Failed to rebake models", e);
+            //LOGGER.error("Failed to rebake models", e);
         }
     }
+
+    /*
 
     // TODO: support custom UnbakedModel types?
     private Stream<Map.Entry<DisplayableMesh, Set<MaterialInstance>>> getMaterialInstances(
@@ -528,4 +466,6 @@ public final class ModelRebaker
 
         return group.block();
     }
+
+     */
 }

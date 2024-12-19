@@ -178,7 +178,6 @@ public final class SectionBaker
                         it.materialInstances(),
                         parent);
 
-                    // Extra padding bytes here are necessary for std140 alignment
                     textureBuffer.put(textureAtlasIndex.applyAsInt(material));
                 }
 
@@ -213,8 +212,6 @@ public final class SectionBaker
         if (iterator.hasNext())
         {
             material = iterator.next();
-            if (material.getEffectiveTexture().getPath().contains("dust_line1"))
-                LOGGER.warn("hi");
 
             if (iterator.hasNext())
             {

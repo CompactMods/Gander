@@ -1,7 +1,6 @@
 package dev.compactmods.gander.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.MeshData;
@@ -37,8 +36,8 @@ class WrappedBufferSource extends MultiBufferSource.BufferSource {
 			MeshData meshdata = bufferbuilder.build();
 			if (meshdata != null) {
 				if (renderType.sortOnUpload()) {
-					ByteBufferBuilder bytebufferbuilder = (ByteBufferBuilder)this.fixedBuffers.getOrDefault(renderType, this.sharedBuffer);
-					meshdata.sortQuads(bytebufferbuilder, RenderSystem.getVertexSorting());
+					ByteBufferBuilder bytebufferbuilder = this.fixedBuffers.getOrDefault(renderType, this.sharedBuffer);
+					meshdata.sortQuads(bytebufferbuilder, RenderSystem.getProjectionType().vertexSorting());
 				}
 
 				renderType.draw(meshdata);

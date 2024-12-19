@@ -156,10 +156,6 @@ public class VirtualChunk extends LevelChunk
 	}
 
 	@Override
-	public void setUnsaved(boolean unsaved) {
-	}
-
-	@Override
 	public boolean isUnsaved() {
 		return false;
 	}
@@ -191,8 +187,8 @@ public class VirtualChunk extends LevelChunk
 	@SuppressWarnings("removal") // The superclass has logic we don't desire here
 	public void findBlocks(BiPredicate<BlockState, BlockPos> predicate, BiConsumer<BlockPos, BlockState> consumer) {
 		BlockPos.betweenClosedStream(
-			chunkPos.getMinBlockX(), virtualLevel.getMinBuildHeight(), chunkPos.getMinBlockZ(),
-			chunkPos.getMaxBlockX(), virtualLevel.getMaxBuildHeight(), chunkPos.getMaxBlockZ())
+			chunkPos.getMinBlockX(), virtualLevel.getMinY(), chunkPos.getMinBlockZ(),
+			chunkPos.getMaxBlockX(), virtualLevel.getMaxY(), chunkPos.getMaxBlockZ())
 			.filter(pos -> predicate.test(getBlockState(pos), pos))
 			.forEach(pos -> consumer.accept(pos, getBlockState(pos)));
 	}
@@ -205,11 +201,6 @@ public class VirtualChunk extends LevelChunk
 	@Override
 	public TickContainerAccess<Fluid> getFluidTicks() {
 		return BlackholeTickAccess.emptyContainer();
-	}
-
-	@Override
-	public TicksToSave getTicksForSerialization() {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override

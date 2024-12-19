@@ -1,5 +1,7 @@
 package dev.compactmods.gander.runtime.mixin.accessor;
 
+import com.google.common.collect.Multimap;
+
 import net.minecraft.world.phys.Vec2;
 import net.neoforged.neoforge.client.model.obj.ObjModel;
 import net.neoforged.neoforge.client.model.obj.ObjModel.ModelGroup;
@@ -15,7 +17,7 @@ import java.util.Map;
 public interface ObjModelAccessor
 {
     @Accessor
-    Map<String, ModelGroup> getParts();
+    Multimap<String, ModelGroup> getParts();
 
     @Accessor
     List<Vector3f> getPositions();

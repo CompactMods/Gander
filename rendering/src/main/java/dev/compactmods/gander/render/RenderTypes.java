@@ -11,7 +11,7 @@ public class RenderTypes extends RenderStateShard {
 
 	private static final RenderType FLUID = RenderType.create("gander:fluid",
 		DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256, false, true, RenderType.CompositeState.builder()
-			.setShaderState(RenderStateShard.RENDERTYPE_ENTITY_TRANSLUCENT_CULL_SHADER)
+			.setShaderState(RenderStateShard.RENDERTYPE_ITEM_ENTITY_TRANSLUCENT_CULL_SHADER)
 			.setTextureState(RenderStateShard.BLOCK_SHEET_MIPPED)
 			.setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
 			.setLightmapState(RenderStateShard.LIGHTMAP)

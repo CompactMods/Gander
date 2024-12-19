@@ -14,10 +14,10 @@ import java.util.List;
 @Mixin(MultiPart.class)
 public interface MultiPartAccessor
 {
-    @Accessor
-    StateDefinition<Block, BlockState> getDefinition();
+    //@Accessor
+    //StateDefinition<Block, BlockState> getDefinition();
 
-    @Intrinsic
-    @Accessor
-    List<Selector> getSelectors();
+    //@Intrinsic
+    //@Accessor
+    //List<Selector> getSelectors();
 }

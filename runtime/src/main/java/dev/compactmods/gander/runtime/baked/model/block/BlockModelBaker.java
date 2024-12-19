@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
 import dev.compactmods.gander.render.baked.model.BakedMesh;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
-import dev.compactmods.gander.render.baked.model.archetype.Archetypes;
 import dev.compactmods.gander.render.baked.model.material.MaterialParent;
 import dev.compactmods.gander.runtime.baked.model.archetype.ArchetypeBaker;
 import dev.compactmods.gander.runtime.baked.model.block.ModelUvs.ModelUv;
@@ -36,6 +35,7 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static dev.compactmods.gander.render.baked.model.RotationUtil.rotate;
@@ -48,11 +48,11 @@ public final class BlockModelBaker
 
     // TODO: almost identical logic is used in ObjModelBaker, this should be deduplicated.
     public static Stream<ArchetypeComponent> bakeBlockModel(
-        ModelResourceLocation originalName,
-        BlockModel model)
+        ModelResourceLocation name,
+        BlockModel model,
+        BiFunction<ModelResourceLocation, ResourceLocation, Stream<ArchetypeComponent>> bakeComponent)
     {
         var renderType = ArchetypeBaker.getRenderType(model);
-        var name = Archetypes.computeMeshName(originalName);
 
         var allFaces = model.getElements().stream()
             .map(BlockModelBaker::bakeElement)
@@ -125,15 +125,15 @@ public final class BlockModelBaker
             indexBuffer.put((byte)deduplicatedVertices.indexOf(vertices[2]));
         }
 
-        var materials = Stream.concat(textureReferences.stream(), model.textureMap.keySet().stream())
+        var materials = textureReferences.stream()//, model.textureMap.keySet().stream())
             .distinct()
             .map(it -> {
-                var mtlOrRef = model.textureMap.getOrDefault(it,
+                Either<Material, String> mtlOrRef = Either.right(it); /* model.textureMap.getOrDefault(it,
                     knownTextures.containsValue(it)
                         ? Either.left(new net.minecraft.client.resources.model.Material(
                             TextureAtlas.LOCATION_BLOCKS,
                             knownTextures.inverse().get(it)))
-                        : Either.right(it));
+                        : Either.right(it)); */
 
                 return getMaterialParent(it, mtlOrRef, model);
             })
@@ -182,10 +182,11 @@ public final class BlockModelBaker
                 : getMaterialParent(
                     key,
                     // If we can't find it in the texture map, default to missingno.
-                    model.textureMap.getOrDefault(ref,
+                    Either.left(new Material(TextureAtlas.LOCATION_BLOCKS, MissingTextureAtlasSprite.getLocation())),
+                    /*model.textureMap.getOrDefault(ref,
                         Either.left(
                             new Material(TextureAtlas.LOCATION_BLOCKS,
-                                MissingTextureAtlasSprite.getLocation()))),
+                                MissingTextureAtlasSprite.getLocation()))), */
                     model));
     }
 
@@ -216,12 +217,12 @@ public final class BlockModelBaker
 
     private static ModelNormals computeNormals(BlockElement element, Quaternionfc rotation)
     {
-        var down = new Vector3f(Direction.DOWN.getNormal().getX(), Direction.DOWN.getNormal().getY(), Direction.DOWN.getNormal().getZ()); // -Y
-        var up = new Vector3f(Direction.UP.getNormal().getX(), Direction.UP.getNormal().getY(), Direction.UP.getNormal().getZ()); // +Y
-        var north = new Vector3f(Direction.NORTH.getNormal().getX(), Direction.NORTH.getNormal().getY(), Direction.NORTH.getNormal().getZ()); // -Z
-        var south = new Vector3f(Direction.SOUTH.getNormal().getX(), Direction.SOUTH.getNormal().getY(), Direction.SOUTH.getNormal().getZ()); // +Z
-        var west = new Vector3f(Direction.WEST.getNormal().getX(), Direction.WEST.getNormal().getY(), Direction.WEST.getNormal().getZ()); // -X
-        var east = new Vector3f(Direction.EAST.getNormal().getX(), Direction.EAST.getNormal().getY(), Direction.EAST.getNormal().getZ()); // +X
+        var down = new Vector3f(Direction.DOWN.getStepX(), Direction.DOWN.getStepY(), Direction.DOWN.getStepZ()); // -Y
+        var up = new Vector3f(Direction.UP.getStepX(), Direction.UP.getStepY(), Direction.UP.getStepZ()); // +Y
+        var north = new Vector3f(Direction.NORTH.getStepX(), Direction.NORTH.getStepY(), Direction.NORTH.getStepZ()); // -Z
+        var south = new Vector3f(Direction.SOUTH.getStepX(), Direction.SOUTH.getStepY(), Direction.SOUTH.getStepZ()); // +Z
+        var west = new Vector3f(Direction.WEST.getStepX(), Direction.WEST.getStepY(), Direction.WEST.getStepZ()); // -X
+        var east = new Vector3f(Direction.EAST.getStepX(), Direction.EAST.getStepY(), Direction.EAST.getStepZ()); // +X
 
         rotate(down, element.rotation, rotation);
         rotate(up, element.rotation, rotation);

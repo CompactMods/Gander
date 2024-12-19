@@ -1,7 +1,15 @@
 package dev.compactmods.gander.level;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
+
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.item.crafting.RecipeAccess;
+import net.minecraft.world.level.ExplosionDamageCalculator;
+import net.minecraft.world.level.block.entity.FuelValues;
+import net.neoforged.neoforge.entity.PartEntity;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -69,24 +77,22 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	public VirtualLevel(RegistryAccess access) {
 		this(
 				VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
-				access.registryOrThrow(Registries.DIMENSION_TYPE).getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
-				VirtualLevelUtils.PROFILER, true, false,
-				0, 0);
+				access.lookupOrThrow(Registries.DIMENSION_TYPE).getOrThrow(BuiltinDimensionTypes.OVERWORLD),
+				true, false, 0, 0);
 	}
 
 	private VirtualLevel(WritableLevelData pLevelData, ResourceKey<Level> pDimension,
 						 RegistryAccess pRegistryAccess, Holder<DimensionType> pDimensionTypeRegistration,
-						 Supplier<ProfilerFiller> pProfiler, boolean pIsClientSide, boolean pIsDebug, long pBiomeZoomSeed,
+						 boolean pIsClientSide, boolean pIsDebug, long pBiomeZoomSeed,
 						 int pMaxChainedNeighborUpdates) {
-		super(pLevelData, pDimension, pRegistryAccess, pDimensionTypeRegistration, pProfiler, pIsClientSide, pIsDebug,
-				pBiomeZoomSeed, pMaxChainedNeighborUpdates);
+		super(pLevelData, pDimension, pRegistryAccess, pDimensionTypeRegistration, pIsClientSide, pIsDebug, pBiomeZoomSeed, pMaxChainedNeighborUpdates);
 		this.access = pRegistryAccess;
 		this.chunkSource = new VirtualChunkSource(this);
 		this.blocks = new VirtualBlockSystem(this);
 		this.scoreboard = new Scoreboard();
 		this.bounds = BoundingBox.fromCorners(BlockPos.ZERO, BlockPos.ZERO);
 		this.entities = new VirtualEntitySystem();
-		this.biome = pRegistryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
+		this.biome = pRegistryAccess.lookupOrThrow(Registries.BIOME).getOrThrow(Biomes.PLAINS);
 	}
 
 	public Holder<Biome> getBiome() {
@@ -99,7 +105,13 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		return PotionBrewing.EMPTY;
 	}
 
-	@Override
+    @Override
+    public FuelValues fuelValues()
+    {
+        return null;
+    }
+
+    @Override
 	public void setDayTimeFraction(final float v)
 	{
 
@@ -239,7 +251,25 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		}
 	}
 
-	private <T extends BlockEntity> void tickBlockEntity(T blockEntity, BlockEntityTicker<T> ticker) {
+    @Override
+    public void explode(
+        @Nullable final Entity entity,
+        @Nullable final DamageSource damageSource,
+        @Nullable final ExplosionDamageCalculator explosionDamageCalculator,
+        final double v,
+        final double v1,
+        final double v2,
+        final float v3,
+        final boolean b,
+        final ExplosionInteraction explosionInteraction,
+        final ParticleOptions particleOptions,
+        final ParticleOptions particleOptions1,
+        final Holder<SoundEvent> holder)
+    {
+        // ???
+    }
+
+    private <T extends BlockEntity> void tickBlockEntity(T blockEntity, BlockEntityTicker<T> ticker) {
 		ticker.tick(this, blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity);
 	}
 
@@ -270,7 +300,13 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		return biome;
 	}
 
-	@Override
+    @Override
+    public int getSeaLevel()
+    {
+        return 0;
+    }
+
+    @Override
 	public float getShade(Direction pDirection, boolean pShade) {
 		return 1f;
 	}
@@ -309,7 +345,13 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		return entities.getEntity(pId);
 	}
 
-	@Override
+    @Override
+    public Collection<PartEntity<?>> dragonParts()
+    {
+        return List.of();
+    }
+
+    @Override
 	public TickRateManager tickRateManager() {
 		return tickManager;
 	}
@@ -332,12 +374,13 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		return scoreboard;
 	}
 
-	@Override
-	public RecipeManager getRecipeManager() {
-		return null;
-	}
+    @Override
+    public RecipeAccess recipeAccess()
+    {
+        return null;
+    }
 
-	@Override
+    @Override
 	protected LevelEntityGetter<Entity> getEntities() {
 		return null;
 	}

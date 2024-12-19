@@ -47,8 +47,8 @@ public class VirtualBlockGetter implements BlockGetter {
 	}
 
 	@Override
-	public int getMinBuildHeight() {
-		return heightAccessor.getMinBuildHeight();
+	public int getMinY() {
+		return heightAccessor.getMinY();
 	}
 	//endregion
 }

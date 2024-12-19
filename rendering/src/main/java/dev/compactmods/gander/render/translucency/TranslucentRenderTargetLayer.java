@@ -50,8 +50,8 @@ public class TranslucentRenderTargetLayer
 		renderTarget.unbindWrite();
 	}
 
-	public void clear(boolean clearError)
+	public void clear()
 	{
-		renderTarget.clear(layer, clearError);
+		renderTarget.clear(layer);
 	}
 }

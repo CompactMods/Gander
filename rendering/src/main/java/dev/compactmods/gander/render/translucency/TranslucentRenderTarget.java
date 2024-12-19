@@ -155,14 +155,14 @@ public class TranslucentRenderTarget
 		}
 	}
 
-	void clear(int layer, boolean clearError)
+	void clear(int layer)
 	{
 		RenderSystem.assertOnRenderThreadOrInit();
 		bindWrite(layer, true);
 		GlStateManager._clearColor(0, 0, 0, 0);
 		GlStateManager._clearDepth(1.0);
 
-		GlStateManager._clear(GlConst.GL_COLOR_BUFFER_BIT | GlConst.GL_DEPTH_BUFFER_BIT, clearError);
+		GlStateManager._clear(GlConst.GL_COLOR_BUFFER_BIT | GlConst.GL_DEPTH_BUFFER_BIT);
 		unbindWrite();
 	}
 

@@ -65,7 +65,7 @@ public final class TranslucencyChain implements AutoCloseable
 		this.shaderOrthoMatrix.setOrtho(0, (float)width, 0, (float)height, 0.1f, 1000.0f);
 
 		layeredTargets.resize(width, height, renderTargets.size(), Minecraft.ON_OSX);
-		intermediaryCopyTarget.resize(width, height, Minecraft.ON_OSX);
+		intermediaryCopyTarget.resize(width, height);
 	}
 
 	public void prepareBackgroundColor(RenderTarget copyFrom)
@@ -111,7 +111,7 @@ public final class TranslucencyChain implements AutoCloseable
 		for (int layer = 0; layer < layeredTargets.getLayerCount(); layer++)
 		{
 			var target = layeredTargets.getLayer(layer);
-			target.clear(Minecraft.ON_OSX);
+			target.clear();
 		}
 	}
 
@@ -127,7 +127,7 @@ public final class TranslucencyChain implements AutoCloseable
 		final var mc = Minecraft.getInstance();
 		this.shader.apply();
 
-		this.screenTarget.clear(Minecraft.ON_OSX);
+		this.screenTarget.clear();
 		this.screenTarget.bindWrite(false);
 
 		RenderSystem.depthFunc(GlConst.GL_ALWAYS);

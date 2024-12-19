@@ -40,6 +40,8 @@ runs {
     configureEach {
         systemProperty("log4j2.configurationFile", file("../log4j2.xml").absolutePath)
 
+        systemProperty("mixin.debug", "true")
+
         // Workaround a Linux bug with Wayland.
         //systemProperty("org.lwjgl.glfw.libname", "/usr/lib/x86_64-linux-gnu/libglfw.so.3")
         environmentVariable("__GL_THREADED_OPTIMIZATIONS", "0")

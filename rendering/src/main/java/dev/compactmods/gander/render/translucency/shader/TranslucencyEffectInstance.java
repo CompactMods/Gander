@@ -32,8 +32,8 @@ public final class TranslucencyEffectInstance implements AutoCloseable
 
 	public TranslucencyEffectInstance(final int layerCount)
 	{
-		this.projectionMatrix = new Uniform("ProjMat", Uniform.UT_MAT4, 16, null);
-		this.outSize = new Uniform("OutSize", Uniform.UT_FLOAT2, 2, null);
+		this.projectionMatrix = new Uniform("ProjMat", Uniform.UT_MAT4, 16);
+		this.outSize = new Uniform("OutSize", Uniform.UT_FLOAT2, 2);
 
 		this.vertexShader = generateShader(layerCount, GlConst.GL_VERTEX_SHADER, VertexShaderGenerator::generate);
 		this.fragmentShader = generateShader(layerCount, GlConst.GL_FRAGMENT_SHADER, FragmentShaderGenerator::generate);

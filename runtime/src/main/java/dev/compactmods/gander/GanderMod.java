@@ -8,7 +8,7 @@ import net.minecraft.client.renderer.block.model.BlockModel;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.model.CompositeModel;
+import net.neoforged.neoforge.client.model.UnbakedCompositeModel;
 import net.neoforged.neoforge.client.model.obj.ObjModel;
 
 @Mod(GanderMod.ID)
@@ -28,9 +28,15 @@ public class GanderMod
         public static void registerGeometryProviders(
             RegisterGeometryProvidersEvent e)
         {
-            e.registerUnbakedModelProvider(BlockModel.class, BlockModelBaker::bakeBlockModel);
-            e.registerUnbakedGeometryProvider(CompositeModel.class, CompositeModelBaker::bakeCompositeModel);
-            e.registerUnbakedGeometryProvider(ObjModel.class, ObjModelBaker::bakeObjModel);
+            e.registerUnbakedModelProvider(
+                BlockModel.class,
+                BlockModelBaker::bakeBlockModel);
+            e.registerUnbakedModelProvider(
+                UnbakedCompositeModel.class,
+                CompositeModelBaker::bakeCompositeModel);
+            e.registerUnbakedModelProvider(
+                ObjModel.class,
+                ObjModelBaker::bakeObjModel);
         }
     }
 }

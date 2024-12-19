@@ -44,9 +44,6 @@ repositories {
 }
 dependencies {
     compileOnly(neoforged.neoforge)
-
-    implementation(utilities.roaringbitmap)
-    jarJar(utilities.roaringbitmap)
 }
 
 tasks.withType<Jar> {

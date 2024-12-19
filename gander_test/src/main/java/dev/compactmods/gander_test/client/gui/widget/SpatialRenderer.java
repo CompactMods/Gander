@@ -25,7 +25,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
+//import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 
@@ -72,7 +72,7 @@ public class SpatialRenderer extends AbstractWidget {
 		this.blockEntityPositions = Collections.emptySet();
 
 		final var mc = Minecraft.getInstance();
-		this.renderTarget = new TextureTarget(mc.getWindow().getWidth(), mc.getWindow().getHeight(), true, Minecraft.ON_OSX);
+		this.renderTarget = new TextureTarget(mc.getWindow().getWidth(), mc.getWindow().getHeight(), true);
 		renderTarget.setClearColor(0, 0, 0, 0);
 
 		var translucencyChain = TranslucencyChain.builder()
@@ -130,7 +130,7 @@ public class SpatialRenderer extends AbstractWidget {
 		if (this.blockAndTints == null || this.blockBoundaries == null)
 			return;
 
-		var buffer = graphics.bufferSource();
+		/*var buffer = graphics.bufferSource();
 
 		var width = Minecraft.getInstance().getWindow().getWidth();
 		var height = Minecraft.getInstance().getWindow().getHeight();
@@ -185,7 +185,7 @@ public class SpatialRenderer extends AbstractWidget {
 		}
 		poseStack.popPose();
 
-		RenderSystem.setProjectionMatrix(originalMatrix, originalSorting);
+		RenderSystem.setProjectionMatrix(originalMatrix, originalSorting);*/
 
 		// TODO Fix Particles
 		// scene.getLevel().renderParticles(pose, buffer, camera, partialTicks);
@@ -194,7 +194,7 @@ public class SpatialRenderer extends AbstractWidget {
 //			ScreenEntityRenderer.renderEntities(entityGetter, poseStack, buffer, camera, partialTicks);
 	}
 
-	private void UGH(RenderTarget renderTarget)
+	/*private void UGH(RenderTarget renderTarget)
 	{
 		// RenderTarget.blit disables alpha... :unamused:
 		RenderSystem.assertOnRenderThread();
@@ -237,7 +237,7 @@ public class SpatialRenderer extends AbstractWidget {
 		BufferUploader.draw(buffer.buildOrThrow());
 		shaderinstance.clear();
 		GlStateManager._depthMask(true);
-	}
+	}*/
 
 	private void renderScene(Stream<BlockEntity> blockEntities, MultiBufferSource.BufferSource buffer, float partialTicks, PoseStack poseStack) {
 		poseStack.pushPose();

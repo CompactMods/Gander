@@ -33,12 +33,8 @@ import org.lwjgl.opengl.GL43;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import static org.lwjgl.system.MemoryStack.stackPush;
 
@@ -52,7 +48,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
     public static final StreamCodec<RegistryFriendlyByteBuf, GanderDebugRenderPacket> STREAM_CODEC
         = StreamCodec.composite(
         ResourceKey.streamCodec(Registries.BLOCK), pkt -> pkt.state().getBlockHolder().unwrapKey().get(),
-        key -> new GanderDebugRenderPacket(Objects.requireNonNull(BuiltInRegistries.BLOCK.get(key)).defaultBlockState()));
+        key -> new GanderDebugRenderPacket(Objects.requireNonNull(BuiltInRegistries.BLOCK.getValue(key)).defaultBlockState()));
 
     @Override
     public Type<? extends CustomPacketPayload> type()
@@ -292,7 +288,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
             while (valuesWritten < toWrite)
             {
                 // Values to write in *this* row
-                var inThisRow = Math.min(width - indexX, toWrite);
+                var inThisRow = Math.min(width - indexX, toWrite - valuesWritten);
 
                 call.textures().position(valuesWritten);
                 GL32.glPixelStorei(GL32.GL_UNPACK_ALIGNMENT, 1);
@@ -306,7 +302,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                     GL32.GL_RED_INTEGER,
                     GL32.GL_INT,
                     call.textures());
-                call.textures().rewind();
+                //call.textures().rewind();
 
                 if ((valuesWritten + inThisRow) < toWrite)
                 {
@@ -436,9 +432,10 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
             var toWrite = call.transforms().limit();
             var pixelCount = toWrite / 4;
             var valuesWritten = 0;
+            var pixelsWritten = 0;
             while (valuesWritten < toWrite)
             {
-                var inThisRow = Math.min(width - indexX, pixelCount);
+                var inThisRow = Math.min(width - indexX, pixelCount - pixelsWritten);
 
                 call.transforms().position(valuesWritten);
                 GL32.glPixelStorei(GL32.GL_UNPACK_ALIGNMENT, 1);
@@ -452,7 +449,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                     GL32.GL_RGBA,
                     GL32.GL_FLOAT,
                     call.transforms());
-                call.transforms().rewind();
+                //call.transforms().rewind();
 
                 if ((valuesWritten + inThisRow * 4) < toWrite)
                 {
@@ -466,6 +463,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                 }
 
                 valuesWritten += inThisRow * 4;
+                pixelsWritten += inThisRow;
             }
         }
 
@@ -535,11 +533,11 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
 
     private static void buildShader(BakedSection section)
     {
-        projectionMatrix = new Uniform("ProjMat", Uniform.UT_MAT4, 16, null);
-        modelViewMatrix = new Uniform("ModelViewMat", Uniform.UT_MAT4, 16, null);
-        transformSampler = new Uniform("TransformSampler", Uniform.UT_INT1, 1, null);
-        spriteSampler = new Uniform("SpriteSampler", Uniform.UT_INT1, 1, null);
-        blockAtlas = new Uniform("BlockAtlas", Uniform.UT_INT1, 1, null);
+        projectionMatrix = new Uniform("ProjMat", Uniform.UT_MAT4, 16);
+        modelViewMatrix = new Uniform("ModelViewMat", Uniform.UT_MAT4, 16);
+        transformSampler = new Uniform("TransformSampler", Uniform.UT_INT1, 1);
+        spriteSampler = new Uniform("SpriteSampler", Uniform.UT_INT1, 1);
+        blockAtlas = new Uniform("BlockAtlas", Uniform.UT_INT1, 1);
 
         var atlasSize = section.atlas().limit() / 4;
         var transformCount = section.drawCalls().stream()
@@ -554,7 +552,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
         // TODO: this requires 3.3...
         GL32.glShaderSource(vertex, """
             #version 460
-            
+
             #define ATLAS_SIZE %d
             #define TRANSFORM_COUNT %d
             #define SPRITE_COUNT %d
@@ -567,7 +565,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
 
             uniform mat4 ModelViewMat;
             uniform mat4 ProjMat;
-            
+
             uniform sampler2D TransformSampler;
             uniform isampler2D SpriteSampler;
 
@@ -580,11 +578,11 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                 vec3 normal;
                 vec2 texCoords;
             } vs_out;
-            
+
             float nextafter(float x, float y)
             {
                 int bits = floatBitsToInt(x);
-            
+
                 if (x == y)
                 {
                     return y;
@@ -613,10 +611,10 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                         bits++;
                     }
                 }
-            
+
                 return intBitsToFloat(bits);
             }
-            
+
             mat4 getTransform()
             {
                 ivec2 size = textureSize(TransformSampler, 0);
@@ -631,17 +629,17 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                     texelFetchOffset(TransformSampler, ivec2(x, y), 0, ivec2(3,0))
                 );
             }
-            
+
             int getSprite()
             {
                 ivec2 size = textureSize(SpriteSampler, 0);
-                int offset = SpriteOffset + gl_VertexID - gl_BaseVertex;
+                int offset = SpriteOffset + gl_InstanceID + gl_VertexID - gl_BaseVertex;
                 int y = offset / size.x;
                 int x = offset %% size.x;
-                
+
                 return texelFetch(SpriteSampler, ivec2(x, y), 0).r;
             }
-            
+
             void main()
             {
                 mat4 transform = getTransform();
@@ -650,7 +648,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                 position = transform * position;
                 position += vec4(0.5, 0.5, 0.5, 0);
 
-                position += vec4(0, 1, 0, 0);
+                position += vec4(0, 32, 0, 0);
                 gl_Position = ProjMat * ModelViewMat * position;
                 vs_out.normal = Normal;
 
@@ -680,16 +678,16 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
         shaders.add(fragment);
         GL32.glShaderSource(fragment, """
             #version 150
-            
+
             in VS_OUT {
                 vec3 normal;
                 vec2 texCoords;
             } vs_out;
-            
+
             uniform sampler2D BlockAtlas;
 
             out vec4 color;
-            
+
             void main() {
                 color = texture(BlockAtlas, vs_out.texCoords);
             }

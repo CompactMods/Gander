@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -32,10 +33,10 @@ public class ScreenEntityRenderer {
 		}
 
 		var bs = Minecraft.getInstance().renderBuffers().bufferSource();
-		bs.endBatch(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));
-		bs.endBatch(RenderType.entityCutout(InventoryMenu.BLOCK_ATLAS));
-		bs.endBatch(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS));
-		bs.endBatch(RenderType.entitySmoothCutout(InventoryMenu.BLOCK_ATLAS));
+		bs.endBatch(RenderType.entitySolid(TextureAtlas.LOCATION_BLOCKS));
+		bs.endBatch(RenderType.entityCutout(TextureAtlas.LOCATION_BLOCKS));
+		bs.endBatch(RenderType.entityCutoutNoCull(TextureAtlas.LOCATION_BLOCKS));
+		bs.endBatch(RenderType.entitySmoothCutout(TextureAtlas.LOCATION_BLOCKS));
 	}
 
 	private static void renderEntity(Entity entity, double x, double y, double z, float pt, PoseStack ms,
@@ -48,7 +49,7 @@ public class ScreenEntityRenderer {
 				.getEntityRenderDispatcher();
 		int light = renderManager.getRenderer(entity)
 				.getPackedLightCoords(entity, pt);
-		renderManager.render(entity, d0 - x, d1 - y, d2 - z, f, pt, ms, buffer, light);
+		//renderManager.render(entity, d0 - x, d1 - y, d2 - z, f, pt, ms, buffer, light);
 	}
 
 }

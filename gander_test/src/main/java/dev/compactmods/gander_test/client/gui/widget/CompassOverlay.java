@@ -144,10 +144,10 @@ public class CompassOverlay implements Renderable {
 			.setNormal(0.0F, 0.0F, 1.0F);
 
 		//RenderSystem.depthMask(false);
-		RenderSystem.disableCull();
-		RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
-		BufferUploader.drawWithShader(buffer.buildOrThrow());
-		RenderSystem.enableCull();
+		//RenderSystem.disableCull();
+		//RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
+		//BufferUploader.drawWithShader(buffer.buildOrThrow());
+		//RenderSystem.enableCull();
 		//RenderSystem.depthMask(true);
 	}
 }

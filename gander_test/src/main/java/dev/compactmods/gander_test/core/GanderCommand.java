@@ -117,16 +117,16 @@ public class GanderCommand {
 			VirtualLevel level = new VirtualLevel(regAccess);
 			var seed = level.random.nextLong();
 
-			final var biomeReg = regAccess
-					.registry(Registries.BIOME)
-					.get();
+			final var biomeReg = regAccess.lookupOrThrow(Registries.BIOME);
 
-			final var theVoid = key.value().biomes().getRandomElement(level.random).orElseGet(() -> biomeReg.getHolderOrThrow(Biomes.PLAINS));
+			final var theVoid = key.value().biomes().getRandomElement(level.random).orElseGet(() -> biomeReg.getOrThrow(Biomes.PLAINS));
 			final var biomeSource = new FixedBiomeSource(theVoid);
 			final var chunkGenerator = new VirtualChunkGenerator(biomeSource);
 
 			var pRandomState = RandomState.create(regAccess.lookupOrThrow(Registries.NOISE_SETTINGS).getOrThrow(NoiseGeneratorSettings.OVERWORLD).value(), regAccess.lookupOrThrow(Registries.NOISE), seed);
 			final var structureStart = key.value().generate(
+                    key,
+                    Level.OVERWORLD,
 					regAccess,
 					chunkGenerator,
 					biomeSource,
@@ -172,10 +172,10 @@ public class GanderCommand {
 									level.getRandom(),
 									new BoundingBox(
 											chunkPos.getMinBlockX(),
-											level.getMinBuildHeight(),
+											level.getMinY(),
 											chunkPos.getMinBlockZ(),
 											chunkPos.getMaxBlockX(),
-											level.getMaxBuildHeight(),
+											level.getMaxY(),
 											chunkPos.getMaxBlockZ()
 									),
 									chunkPos
@@ -210,7 +210,7 @@ public class GanderCommand {
 		// DebugLevelSource.initValidStates();
 		var bounds = new BoundingBox(0, 60, 0, maxX, 70, maxZ);
 		level.setBounds(bounds);
-		var generator = new DebugLevelSource(registryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.THE_VOID));
+		var generator = new DebugLevelSource(registryAccess.lookupOrThrow(Registries.BIOME).getOrThrow(Biomes.THE_VOID));
 
 		var maxChunkX = maxX / 16;
 		var maxChunkZ = maxZ / 16;

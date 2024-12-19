@@ -4,7 +4,6 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
 import com.mojang.datafixers.util.Either;
 import dev.compactmods.gander.render.baked.model.BakedMesh;
-import dev.compactmods.gander.render.baked.model.archetype.Archetypes;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
 import dev.compactmods.gander.render.baked.model.material.MaterialParent;
 import dev.compactmods.gander.render.baked.model.ModelVertices;
@@ -14,10 +13,9 @@ import dev.compactmods.gander.runtime.mixin.accessor.ObjModel$ModelGroupAccessor
 import dev.compactmods.gander.runtime.mixin.accessor.ObjModel$ModelMeshAccessor;
 import dev.compactmods.gander.runtime.mixin.accessor.ObjModel$ModelObjectAccessor;
 import dev.compactmods.gander.runtime.mixin.accessor.ObjModelAccessor;
-import net.minecraft.client.renderer.block.model.BlockModel;
 import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.model.obj.ObjModel;
 import org.joml.Vector2f;
@@ -33,6 +31,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -43,78 +42,72 @@ public final class ObjModelBaker
     private ObjModelBaker() { }
 
     public static Stream<ArchetypeComponent> bakeObjModel(
-        ModelResourceLocation originalName,
-        BlockModel model,
-        ObjModel obj)
+        ModelResourceLocation name,
+        ObjModel obj,
+        BiFunction<ModelResourceLocation, ResourceLocation, Stream<ArchetypeComponent>> bakeComponent)
     {
         var accessor = (ObjModelAccessor)obj;
 
         return accessor.getParts()
-            .entrySet()
+            .entries()
             .stream()
             .flatMap(it -> {
-                var name = it.getValue().name();
-                if (name.isBlank()) name = it.getKey();
+                var partName = it.getValue().name();
+                if (partName.isBlank()) partName = it.getKey();
 
                 return bakePart(
-                    Archetypes.computeMeshName(originalName, "obj_part/" + name),
+                    new ModelResourceLocation(name.id(), name.variant() + partName + "/"),
                     it.getValue(),
-                    obj,
-                    model);
+                    obj);
             });
     }
 
     private static Stream<ArchetypeComponent> bakePart(
-        ModelResourceLocation partName,
+        ModelResourceLocation meshName,
         ObjModel.ModelObject part,
-        ObjModel model,
-        BlockModel originalModel)
+        ObjModel model)
     {
         var accessor = (ObjModel$ModelObjectAccessor)part;
 
         var meshes = accessor.getMeshes();
         var result = IntStream.range(0, meshes.size())
             .mapToObj(it -> {
-                var name = Archetypes.computeMeshName(
-                    partName,
-                    String.valueOf(it));
-                var mesh = bakeMesh(name, meshes.get(it), accessor, model, originalModel);
+                var partName = new ModelResourceLocation(meshName.id(), meshName.variant() + it + "/");
+                var mesh = bakeMesh(partName, meshes.get(it), accessor, model);
                 if (mesh != null)
                     return mesh;
 
                 if (LOGGER.isTraceEnabled())
-                    LOGGER.trace("Failed to bake part {} mesh index {}", partName, it);
+                    LOGGER.trace("Failed to bake part {} mesh index {}", meshName, it);
 
                 return null;
             })
             .filter(Objects::nonNull);
 
         if (part instanceof ObjModel.ModelGroup group)
-            result = Stream.concat(result, bakeGroup(partName, group, model, originalModel));
+            result = Stream.concat(result, bakeGroup(meshName, group, model));
 
         return result;
     }
 
     private static Stream<ArchetypeComponent> bakeGroup(
-        ModelResourceLocation partName,
+        ModelResourceLocation meshName,
         ObjModel.ModelGroup group,
-        ObjModel model,
-        BlockModel originalModel)
+        ObjModel model)
     {
         var accessor = (ObjModel$ModelGroupAccessor)group;
 
         return accessor.getParts()
-            .entrySet()
+            .entries()
             .stream()
             .flatMap(it -> {
-                var name = it.getValue().name();
-                if (name.isBlank()) name = it.getKey();
+                var partName = it.getValue().name();
+                if (partName.isBlank()) partName = it.getKey();
 
                 return bakePart(
-                    Archetypes.computeMeshName(partName, name),
+                    new ModelResourceLocation(meshName.id(), meshName.variant() + partName + "/"),
                     it.getValue(),
-                    model,
-                    originalModel);
+                    model);
             });
     }
 
@@ -123,8 +116,7 @@ public final class ObjModelBaker
         ModelResourceLocation meshName,
         ObjModel$ModelMeshAccessor mesh,
         ObjModel$ModelObjectAccessor object,
-        ObjModel model,
-        BlockModel originalModel)
+        ObjModel model)
     {
         var accessor = (ObjModelAccessor)model;
 
@@ -181,15 +173,15 @@ public final class ObjModelBaker
             }
         }
 
-        var materials = Stream.concat(textureReferences.stream(), originalModel.textureMap.keySet().stream())
+        var materials = textureReferences.stream()//, model.textureMap.keySet().stream())
             .distinct()
             .map(it -> {
                 // TODO: check if any parents contain textures?
-                var mtlOrRef = originalModel.textureMap.getOrDefault(it, knownTextures.containsValue(it)
+                Either<Material, String> mtlOrRef = Either.right(it);/*model.textureMap.getOrDefault(it, knownTextures.containsValue(it)
                     ? Either.left(new net.minecraft.client.resources.model.Material(
                     TextureAtlas.LOCATION_BLOCKS,
                     knownTextures.inverse().get(it)))
-                    : Either.right(it));
+                    : Either.right(it))*/;
                 return new MaterialParent(it,
                     mtlOrRef.map(
                         net.minecraft.client.resources.model.Material::atlasLocation,
@@ -212,7 +204,7 @@ public final class ObjModelBaker
             materialIndexes[i++] = materials.indexOf(materialByName);
         }
 
-        var renderType = ArchetypeBaker.getRenderType(originalModel);
+        var renderType = ArchetypeBaker.getRenderType(model);
 
         return new ArchetypeComponent(
             meshName,
@@ -224,7 +216,7 @@ public final class ObjModelBaker
                 indexBuffer.flip(),
                 materials, materialIndexes),
             renderType,
-            originalModel.customData.isComponentVisible(object.getName(), true));
+            true); //originalModel.customData.isComponentVisible(object.getName(), true));
     }
 
     private static ModelVertices bakeFace(

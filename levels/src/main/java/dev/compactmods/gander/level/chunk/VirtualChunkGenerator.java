@@ -35,10 +35,17 @@ public class VirtualChunkGenerator extends ChunkGenerator {
 		return null;
 	}
 
-	@Override
-	public void applyCarvers(WorldGenRegion pLevel, long pSeed, RandomState pRandom, BiomeManager pBiomeManager, StructureManager pStructureManager, ChunkAccess pChunk, GenerationStep.Carving pStep) {
+    @Override
+    public void applyCarvers(
+        final WorldGenRegion worldGenRegion,
+        final long l,
+        final RandomState randomState,
+        final BiomeManager biomeManager,
+        final StructureManager structureManager,
+        final ChunkAccess chunkAccess)
+    {
 
-	}
+    }
 
 	@Override
 	public void buildSurface(WorldGenRegion pLevel, StructureManager pStructureManager, RandomState pRandom, ChunkAccess pChunk) {
@@ -85,7 +92,7 @@ public class VirtualChunkGenerator extends ChunkGenerator {
 	@Override
 	public NoiseColumn getBaseColumn(int pX, int pZ, LevelHeightAccessor pHeight, RandomState pRandom) {
 		return new NoiseColumn(
-				pHeight.getMinBuildHeight(),
+				pHeight.getMinY(),
 				IntStream.range(0, pHeight.getHeight())
 						.mapToObj(i -> Blocks.AIR.defaultBlockState())
 						.toArray(BlockState[]::new)

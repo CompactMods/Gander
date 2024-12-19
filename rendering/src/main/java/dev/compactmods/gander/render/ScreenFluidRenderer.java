@@ -9,6 +9,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -44,7 +45,7 @@ public class ScreenFluidRenderer {
 		IClientFluidTypeExtensions clientFluid = IClientFluidTypeExtensions.of(fluid);
 		FluidType fluidAttributes = fluid.getFluidType();
 		Function<ResourceLocation, TextureAtlasSprite> spriteAtlas = Minecraft.getInstance()
-				.getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
+				.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS);
 		TextureAtlasSprite flowTexture = spriteAtlas.apply(clientFluid.getFlowingTexture(fluidStack));
 		TextureAtlasSprite stillTexture = spriteAtlas.apply(clientFluid.getStillTexture(fluidStack));
 
@@ -101,7 +102,7 @@ public class ScreenFluidRenderer {
 		IClientFluidTypeExtensions clientFluid = IClientFluidTypeExtensions.of(fluid);
 		FluidType fluidAttributes = fluid.getFluidType();
 		TextureAtlasSprite fluidTexture = Minecraft.getInstance()
-				.getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
+				.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
 				.apply(clientFluid.getStillTexture(fluidStack));
 
 		int color = clientFluid.getTintColor(fluidStack);
@@ -218,7 +219,7 @@ public class ScreenFluidRenderer {
 	private static void putVertex(VertexConsumer builder, PoseStack ms, float x, float y, float z, int color, float u,
 								  float v, Direction face, int light) {
 
-		Vec3i normal = face.getNormal();
+		Vec3i normal = face.getUnitVec3i();
 		Pose peek = ms.last();
 		int a = color >> 24 & 0xff;
 		int r = color >> 16 & 0xff;

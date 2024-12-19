@@ -8,8 +8,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.util.profiling.InactiveProfiler;
+import net.minecraft.util.profiling.Profiler;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.Difficulty;
+import net.minecraft.world.flag.FeatureFlagSet;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
@@ -31,7 +34,7 @@ public class VirtualLevelUtils {
 					false,
 					Difficulty.PEACEFUL,
 					false,
-					new GameRules(),
+					new GameRules(FeatureFlags.VANILLA_SET),
 					WorldDataConfiguration.DEFAULT
 			),
 			WorldOptions.defaultWithRandomSeed(),
@@ -41,14 +44,8 @@ public class VirtualLevelUtils {
 
 	public static final Supplier<Holder<Biome>> PLAINS = Suppliers.memoize(() -> Minecraft.getInstance().level
 			.registryAccess()
-			.registryOrThrow(Registries.BIOME)
-			.getHolderOrThrow(Biomes.PLAINS));
+			.lookupOrThrow(Registries.BIOME)
+			.getOrThrow(Biomes.PLAINS));
 
-	public static final Supplier<ProfilerFiller> PROFILER = () -> {
-		if(FMLEnvironment.dist.isClient())
-			return Minecraft.getInstance().getProfiler();
-
-		var server = ServerLifecycleHooks.getCurrentServer();
-		return server == null ? InactiveProfiler.INSTANCE : server.getProfiler();
-	};
+	public static final Supplier<ProfilerFiller> PROFILER = Profiler::get;
 }
