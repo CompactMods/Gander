@@ -5,10 +5,13 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableBiMap;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 
 import dev.compactmods.gander.runtime.mixin.accessor.BlockModelAccessor;
 import net.minecraft.client.renderer.block.model.BlockModel;
+import net.minecraft.client.resources.model.BlockStateModelLoader;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.resources.model.ResolvableModel;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.resources.ResourceLocation;
@@ -31,14 +34,20 @@ public final class ArchetypeDiscovery
 
     private final Map<ResourceLocation, UnbakedModel> _referencedModels;
     private final UnbakedModel _missingModel;
+    private final BlockStateModelLoader.LoadedModels _blockStateModels;
 
     private final Map<ResourceLocation, UnbakedModel> _archetypes = new HashMap<>();
     private final Multimap<ResourceLocation, ResourceLocation> _referencedArchetypes = HashMultimap.create();
+    private final Multimap<ModelResourceLocation, ResourceLocation> _blockStateArchetypes = HashMultimap.create();
 
-    public ArchetypeDiscovery(Map<ResourceLocation, UnbakedModel> referencedModels, UnbakedModel missingModel)
+    public ArchetypeDiscovery(
+        Map<ResourceLocation, UnbakedModel> referencedModels,
+        UnbakedModel missingModel,
+        BlockStateModelLoader.LoadedModels blockStateModels)
     {
         _referencedModels = referencedModels;
         _missingModel = missingModel;
+        _blockStateModels = blockStateModels;
     }
 
     public Map<ResourceLocation, UnbakedModel> getArchetypes()
@@ -51,31 +60,97 @@ public final class ArchetypeDiscovery
         return _referencedArchetypes;
     }
 
+    public Multimap<ModelResourceLocation, ResourceLocation> getBlockStateArchetypes()
+    {
+        return _blockStateArchetypes;
+    }
+
     public void discoverArchetypes(ProfilerFiller profiler)
     {
+        profiler.push("archetype_discovery");
+
         if (LOGGER.isDebugEnabled())
             LOGGER.debug("Beginning archetype discovery for {} models", _referencedModels.size());
 
-        profiler.push("archetype_discovery");
         for (var pair : _referencedModels.entrySet())
         {
+            profiler.push(pair.getKey().toString());
             if (LOGGER.isTraceEnabled())
                 LOGGER.trace("Discovering archetypes of model {}", pair.getKey());
 
-            profiler.push(pair.getKey().toString());
             var discovered = getArchetypes(pair.getKey(), pair.getValue());
-            profiler.pop();
 
             if (LOGGER.isTraceEnabled())
                 LOGGER.trace("Discovered {} archetypes for model {}", discovered.size(), pair.getKey());
 
             _referencedArchetypes.putAll(pair.getKey(), discovered.keySet());
             _archetypes.putAll(discovered);
+            profiler.pop();
         }
-        profiler.pop();
 
         if (LOGGER.isDebugEnabled())
             LOGGER.debug("Computed {} different archetype models", _archetypes.size());
+
+        profiler.popPush("blockstate_archetype_mapping");
+
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("Beginning archetype discovery for {} blockstates", _blockStateModels.models().size());
+
+        for (var pair : _blockStateModels.models().entrySet())
+        {
+            profiler.push(pair.getKey().toString());
+            if (LOGGER.isTraceEnabled())
+                LOGGER.trace("Discovering archetypes of blockstate {}", pair.getValue().state());
+
+            var discovered = getBlockStateArchetypes(pair.getValue().model());
+
+            if (LOGGER.isTraceEnabled())
+                LOGGER.trace("Discovered {} archetypes of blockstate {}", discovered.size(), pair.getValue().state());
+
+            _blockStateArchetypes.putAll(pair.getKey(), discovered);
+            profiler.pop();
+        }
+
+        if (LOGGER.isDebugEnabled())
+            LOGGER.debug("Computed {} different blockstate archetype models", _blockStateArchetypes.size());
+    }
+
+    private Set<ResourceLocation> getBlockStateArchetypes(ResolvableModel model)
+    {
+        var resolver = new ResolvableModel.Resolver()
+        {
+            final ImmutableSet.Builder<ResourceLocation> result
+                = ImmutableSet.builder();
+            final Set<ResourceLocation> visited
+                = new HashSet<>();
+            final Set<ResourceLocation> known
+                = new HashSet<>();
+
+            @Override
+            public UnbakedModel resolve(ResourceLocation rl)
+            {
+                var dep = _referencedModels.getOrDefault(rl, _missingModel);
+
+                if (dep != _missingModel)
+                {
+                    if (hasGeometry(dep))
+                    {
+                        if (known.add(rl))
+                            result.add(rl);
+                    }
+                    else if (visited.add(rl))
+                    {
+                        dep.resolveDependencies(this);
+                    }
+                }
+
+                return dep;
+            }
+        };
+
+        model.resolveDependencies(resolver);
+
+        return resolver.result.build();
     }
 
     private BiMap<ResourceLocation, UnbakedModel> getArchetypes(

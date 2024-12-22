@@ -73,63 +73,7 @@ public final class ModelRebaker
             reloadProfiler.popPush("archetype_baking");
             var archetypeMeshes = LinkedHashMultimap.<ModelResourceLocation, ModelResourceLocation>create();
             var bakedComponents = LinkedHashMultimap.<ModelResourceLocation, ArchetypeComponent>create();
-            /*for (var archetype : archetypeSet)
-            {
-                var model = bakery.getModel(archetype.id());
-
-
-                var components = ArchetypeBaker.bakeArchetypeComponents(archetype, model)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toCollection(LinkedHashSet::new));
-                if (components.isEmpty())
-                {
-                    LOGGER.warn("Archetype model {} returned no archetype components?", archetype);
-                    continue;
-                }
-
-                for (var component : components)
-                {
-                    bakedComponents.put(component.name(), component);
-                    archetypeMeshes.put(archetype, component.name());
-                }
-            }
-
-            if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Baked {} different archetype meshes", archetypeMeshes.size());
-
-            reloadProfiler.popPush("archetype_association");
-
-            var reverseMap = ((BlockModelShaperAccessor)manager.getBlockModelShaper())
-                .getModelByStateCache()
-                .entrySet()
-                .stream()
-                .collect(Collectors.toMap(
-                    it -> BlockModelShaper.stateToModelLocation(it.getKey()),
-                    Entry::getKey));
-
-            var bakedModelMeshes = modelArchetypes.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                    it -> getDisplayMesh(
-                        it.getKey(),
-                        it.getValue(),
-                        reverseMap.getOrDefault(it.getKey(), null),
-                        bakery,
-                        it.getValue().keySet().stream()
-                            .map(archetypeMeshes::get)
-                            .flatMap(Set::stream)
-                            .map(bakedComponents::get)
-                            .flatMap(Set::stream)
-                            .collect(Collectors.toSet()))));
-
-            if (LOGGER.isDebugEnabled())
-                LOGGER.debug("Associated {} unique models to {} display meshes ({} min {} avg {} max display meshes per model)",
-                    bakedModelMeshes.keySet().size(),
-                    bakedModelMeshes.size(),
-                    bakedModelMeshes.values().stream().mapToLong(it -> it.allMeshes().count()).min().orElse(0),
-                    bakedModelMeshes.values().stream().mapToLong(it -> it.allMeshes().count()).average().orElse(0),
-                    bakedModelMeshes.values().stream().mapToLong(it -> it.allMeshes().count()).max().orElse(0));
-
-            reloadProfiler.popPush("archetype_cache");
+            /*reloadProfiler.popPush("archetype_cache");
             this.bakedModelMeshes = Collections.unmodifiableMap(bakedModelMeshes);
 
             reloadProfiler.popPush("material_instances");
@@ -357,18 +301,7 @@ public final class ModelRebaker
         {
             case null ->
             {
-                LOGGER.error("Failed to get unbaked model {}", model);
-                return components.stream()
-                    .map(component -> new DisplayableMesh(
-                        component.name(),
-                        component.bakedMesh(),
-                        getRenderType(component.renderType(), sourceBlockState),
-                        new Matrix4f(),
-                        1,
-                        this::getMaterialInstances))
-                    .collect(Collectors.collectingAndThen(
-                        Collectors.toList(),
-                        l -> DisplayableMeshGroup.ofMeshes(Mode.All, 1, l)));
+
             }
             case BlockModel block ->
             {

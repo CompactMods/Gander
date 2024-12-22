@@ -17,7 +17,8 @@ public interface MultiPartAccessor
     //@Accessor
     //StateDefinition<Block, BlockState> getDefinition();
 
-    //@Intrinsic
-    //@Accessor
-    //List<Selector> getSelectors();
+    @Intrinsic
+    @Accessor
+    List<MultiPart.InstantiatedSelector> getSelectors();
 }
+

@@ -1,5 +1,6 @@
 package dev.compactmods.gander.runtime.mixin;
 
+import com.google.common.collect.Multimap;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 
@@ -9,11 +10,13 @@ import com.llamalad7.mixinextras.sugar.Share;
 
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 
+import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
 import dev.compactmods.gander.runtime.baked.model.ArchetypeBakery;
 import dev.compactmods.gander.runtime.baked.model.ArchetypeDiscovery;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.model.AtlasSet;
+import net.minecraft.client.resources.model.BlockStateModelLoader;
 import net.minecraft.client.resources.model.ModelDiscovery;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.client.resources.model.UnbakedModel;
@@ -61,12 +64,10 @@ public abstract class ModelManagerMixin
         slice = @Slice(
             from = @At(
                 value = "GANDER:INDY",
-                target = "Lnet/minecraft/client/resources/model/ModelManager;lambda$reload$0(Lnet/minecraft/client/resources/model/UnbakedModel;Ljava/util/concurrent/CompletableFuture;Ljava/util/concurrent/CompletableFuture;Ljava/util/concurrent/CompletableFuture;Ljava/lang/Void;)Lnet/minecraft/client/resources/model/ModelDiscovery;",
-                args = {"log=true"}),
+                target = "Lnet/minecraft/client/resources/model/ModelManager;lambda$reload$0(Lnet/minecraft/client/resources/model/UnbakedModel;Ljava/util/concurrent/CompletableFuture;Ljava/util/concurrent/CompletableFuture;Ljava/util/concurrent/CompletableFuture;Ljava/lang/Void;)Lnet/minecraft/client/resources/model/ModelDiscovery;"),
             to = @At(
                 value = "GANDER:INDY",
-                target = "Lnet/minecraft/client/resources/model/ModelManager;lambda$reload$1(Lnet/minecraft/client/resources/model/BlockStateModelLoader$LoadedModels;)Lit/unimi/dsi/fastutil/objects/Object2IntMap;",
-                args = {"log=true"})),
+                target = "Lnet/minecraft/client/resources/model/ModelManager;lambda$reload$1(Lnet/minecraft/client/resources/model/BlockStateModelLoader$LoadedModels;)Lit/unimi/dsi/fastutil/objects/Object2IntMap;")),
         at = @At(
             value = "INVOKE_ASSIGN",
             target = "Ljava/util/concurrent/CompletableFuture;thenApplyAsync(Ljava/util/function/Function;Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;"))
@@ -74,23 +75,31 @@ public abstract class ModelManagerMixin
         PreparableReloadListener.PreparationBarrier p_249079_, ResourceManager p_251134_, Executor p_250550_, Executor p_249221_,
         CallbackInfoReturnable<CompletableFuture<Void>> ci,
         @Local UnbakedModel missingModel,
+        @Local(ordinal = 3) CompletableFuture<BlockStateModelLoader.LoadedModels> blockStates,
         @Local(ordinal = 5) CompletableFuture<ModelDiscovery> modelDiscovery,
         @Share("archetypeDiscovery") LocalRef<CompletableFuture<ArchetypeDiscovery>> archetypeDiscovery)
     {
         archetypeDiscovery.set(
-            modelDiscovery.thenApply(discovery -> {
-                return gander$collectModelArchetypes(Profiler.get(), missingModel, discovery.getReferencedModels());
-            }));
+            CompletableFuture.allOf(blockStates, modelDiscovery)
+                .thenApply(discovery -> gander$collectModelArchetypes(
+                    Profiler.get(),
+                    missingModel,
+                    modelDiscovery.join().getReferencedModels(),
+                    blockStates.join())));
     }
 
     @Unique
     private ArchetypeDiscovery gander$collectModelArchetypes(
-        ProfilerFiller filler,
+        ProfilerFiller profiler,
         UnbakedModel missingModel,
-        Map<ResourceLocation, UnbakedModel> referencedModels)
+        Map<ResourceLocation, UnbakedModel> referencedModels,
+        BlockStateModelLoader.LoadedModels loadedBlockStates)
     {
-        var archetypeDiscovery = new ArchetypeDiscovery(referencedModels, missingModel);
-        archetypeDiscovery.discoverArchetypes(filler);
+        var archetypeDiscovery = new ArchetypeDiscovery(
+            referencedModels,
+            missingModel,
+            loadedBlockStates);
+        archetypeDiscovery.discoverArchetypes(profiler);
         return archetypeDiscovery;
     }
 
@@ -154,6 +163,7 @@ public abstract class ModelManagerMixin
     private CompletableFuture<?> gander$invokeBakeArchetypes(CompletableFuture<Void> future,
         @Local(argsOnly = true, ordinal = 0) Executor backgroundExecutor,
         @Local(argsOnly = true, ordinal = 1) Executor foregroundExecutor,
+        @Local(ordinal = 3) CompletableFuture<BlockStateModelLoader.LoadedModels> blockStateModels,
         @Share("archetypeDiscovery") LocalRef<CompletableFuture<ArchetypeDiscovery>> archetypeDiscovery,
         @Share("atlasIndexing") LocalRef<Map<ResourceLocation, CompletableFuture<?>>> atlasIndexing,
         @Share("archetypeBakery") LocalRef<CompletableFuture<Void>> archetypeBakery)
@@ -166,7 +176,9 @@ public abstract class ModelManagerMixin
 
             var bakery = new ArchetypeBakery(
                 discovery.getArchetypes(),
-                discovery.getReferencedArchetypes());
+                discovery.getReferencedArchetypes(),
+                discovery.getBlockStateArchetypes(),
+                blockStateModels.join().models());
             _archetypeBakery.set(bakery);
             return gander$bakeArchetypes(Profiler.get(), indexedAtlases, bakery);
         }, backgroundExecutor)
@@ -178,13 +190,11 @@ public abstract class ModelManagerMixin
     }
 
     @Unique
-    private int gander$bakeArchetypes(ProfilerFiller filler,
+    private int gander$bakeArchetypes(ProfilerFiller profiler,
         Map<ResourceLocation, ?> indexedAtlases,
         ArchetypeBakery bakery)
     {
-        filler.push("archetype_baking");
-        var result = bakery.bakeArchetypes();
-        filler.pop();
+        var result = bakery.bakeArchetypes(profiler);
 
         return 0;
     }
