@@ -38,6 +38,11 @@ java {
 
 neoForge {
     version = neoforged.versions.neoforge
+
+    parchment {
+        minecraftVersion = libs.versions.parchmentMC
+        mappingsVersion = libs.versions.parchment
+    }
 }
 
 repositories {

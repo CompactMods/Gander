@@ -1,6 +1,5 @@
 @file:Suppress("SpellCheckingInspection")
 
-import org.ajoberstar.grgit.Grgit
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -23,7 +22,6 @@ plugins {
     id("maven-publish")
     id("java-library")
     alias(neoforged.plugins.moddev)
-    id("org.ajoberstar.grgit") version ("5.2.1")
 }
 
 base {
@@ -38,16 +36,10 @@ java {
 
 neoForge {
     version = neoforged.versions.neoforge
+}
 
-    accessTransformers {
-        file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
-        publish(file("src/main/resources/META-INF/accesstransformer.cfg"))
-    }
-
-    parchment {
-        minecraftVersion = libs.versions.parchmentMC
-        mappingsVersion = libs.versions.parchment
-    }
+repositories {
+    mavenLocal()
 }
 
 tasks.withType<ProcessResources> {
@@ -60,16 +52,16 @@ tasks.withType<JavaCompile> {
 }
 
 tasks.withType<Jar> {
-    val mainGit = Grgit.open {
-        currentDir = project.rootDir
-    }
+    val gitVersion = providers.exec {
+        commandLine("git", "rev-parse", "HEAD")
+    }.standardOutput.asText.get()
 
     manifest {
         from("src/main/resources/META-INF/MANIFEST.MF")
         val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(Date())
         val name = prop("mod_name")
 
-        attributes(
+        val attrs = mapOf<String, Any>(
             "Specification-Title" to name,
             "Specification-Vendor" to "CompactMods",
             "Specification-Version" to "1",
@@ -79,16 +71,17 @@ tasks.withType<Jar> {
             "Implementation-Timestamp" to now,
             "Minecraft-Version" to mojang.versions.minecraft.get(),
             "NeoForge-Version" to neoforged.versions.neoforge.get(),
-            "Main-Commit" to mainGit.head().id,
-            "FMLModType" to "GAMELIBRARY",
-            "Automatic-Module-Name" to "ganderlevels"
+            "Main-Commit" to gitVersion,
+            "FMLModType" to "GAMELIBRARY"
         )
+
+        attributes(attrs)
     }
 }
 
 val PACKAGES_URL = System.getenv("GH_PKG_URL") ?: "https://maven.pkg.github.com/compactmods/gander"
 publishing {
-    publications.register<MavenPublication>("rendering") {
+    publications.register<MavenPublication>("levels") {
         from(components.getByName("java"))
     }
 

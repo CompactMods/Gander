@@ -39,6 +39,9 @@ java {
 }
 
 evaluationDependsOn(":rendering")
+evaluationDependsOn(":ui")
+
+var atProjects = listOf(project(":rendering"))
 
 neoForge {
     version = neoforged.versions.neoforge
@@ -50,8 +53,13 @@ neoForge {
     }
 
     accessTransformers {
-        file(project.project(":rendering").file("src/main/resources/META-INF/accesstransformer.cfg"))
-        file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
+        atProjects.forEach {
+            val f = it.file("src/main/resources/META-INF/accesstransformer.cfg")
+            if(f.exists())
+                from(f)
+        }
+
+        from(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
         publish(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
     }
 
@@ -93,7 +101,7 @@ neoForge {
 //        }
         }
 
-        create("remoteClient") {
+        create("renderDoc") {
             client()
             gameDirectory.set(file("runs/client"))
 
@@ -101,7 +109,8 @@ neoForge {
             programArguments.addAll("--width", "1920")
             programArguments.addAll("--height", "1080")
 
-            jvmArgument("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005")
+            systemProperty("neoforge.rendernurse.renderdoc.library", "/home/nano/code/renderdoc_1.35/lib/librenderdoc.so")
+            environment("LD_PRELOAD", "/home/nano/code/renderdoc_1.35/lib/librenderdoc.so")
         }
 
         create("server") {
@@ -135,6 +144,9 @@ dependencies {
     // Core Projects and Libraries
     implementation(project(":levels", "default"))
     implementation(project(":rendering", "default"))
+    implementation(project(":ui", "default"))
+
+    runtimeOnly("net.neoforged:render-nurse:0.0.12")
 
     // Mods
     //mod(mods.bundles.jei)
