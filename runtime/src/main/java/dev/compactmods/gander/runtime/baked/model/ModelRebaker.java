@@ -1,21 +1,7 @@
 package dev.compactmods.gander.runtime.baked.model;
 
-import com.google.common.collect.LinkedHashMultimap;
-
-import dev.compactmods.gander.render.baked.model.DisplayableMesh;
-import dev.compactmods.gander.render.baked.model.DisplayableMeshGroup;
-import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
-import dev.compactmods.gander.render.baked.model.material.MaterialInstance;
 import dev.compactmods.gander.runtime.mixin.accessor.ModelManagerAccessor;
-import net.minecraft.client.resources.model.ModelManager;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.util.profiling.ProfilerFiller;
-
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Rebakes meshes to not use an interleaved format for their data. Leaves the
@@ -24,58 +10,11 @@ import java.util.Set;
  */
 public final class ModelRebaker
 {
-
-
-    private static final VarHandle _rebakerField;
-    static
-    {
-        try
-        {
-            _rebakerField = MethodHandles.lookup()
-                .findVarHandle(ModelManager.class, "modelRebaker", ModelRebaker.class);
-        }
-        catch (NoSuchFieldException | IllegalAccessException e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static ModelRebaker of(ModelManager manager)
-    {
-        return (ModelRebaker)_rebakerField.get(manager);
-    }
-
-    // Map of model -> parent instances
-    private Map<DisplayableMesh, Set<MaterialInstance>> modelMaterialInstances;
-    // Multimap of model -> baked mesh
-    private Map<ModelResourceLocation, DisplayableMeshGroup> bakedModelMeshes;
-
-    public DisplayableMeshGroup getArchetypes(ModelResourceLocation model)
-    {
-        return bakedModelMeshes.getOrDefault(model, DisplayableMeshGroup.of());
-    }
-
-    public Set<MaterialInstance> getMaterialInstances(DisplayableMesh mesh)
-    {
-        // This SHOULD be unmodifiable, but just in case...
-        return Collections.unmodifiableSet(
-            modelMaterialInstances.getOrDefault(
-                mesh,
-                Set.of()));
-    }
-
     public void rebakeModels(ModelManagerAccessor manager, ProfilerFiller reloadProfiler)
     {
         try
         {
-            var bakery = manager.getModelBakery();
-
-            reloadProfiler.popPush("archetype_baking");
-            var archetypeMeshes = LinkedHashMultimap.<ModelResourceLocation, ModelResourceLocation>create();
-            var bakedComponents = LinkedHashMultimap.<ModelResourceLocation, ArchetypeComponent>create();
-            /*reloadProfiler.popPush("archetype_cache");
-            this.bakedModelMeshes = Collections.unmodifiableMap(bakedModelMeshes);
-
+            /*
             reloadProfiler.popPush("material_instances");
             var modelMaterials = new HashMap<DisplayableMesh, Set<MaterialInstance>>();
             for (var pair : bakedModelMeshes.entrySet())
@@ -101,9 +40,6 @@ public final class ModelRebaker
 
             reloadProfiler.popPush("material_instances_cache");
             modelMaterialInstances = Collections.unmodifiableMap(modelMaterials);*/
-
-            reloadProfiler.pop();
-            reloadProfiler.endTick();
         }
         catch (Exception e)
         {
@@ -256,132 +192,6 @@ public final class ModelRebaker
             .collect(Collectors.toSet());
 
         return Map.entry(component, allMaterials);
-    }
-
-    private DisplayableMeshGroup getDisplayMesh(
-        ModelResourceLocation model,
-        BiMap<ModelResourceLocation, UnbakedModel> archetypes,
-        BlockState sourceBlockState,
-        ModelBakery bakery,
-        Set<ArchetypeComponent> components)
-    {
-        if (sourceBlockState == null)
-        {
-            LOGGER.warn("No matching blockstate for model {}", model);
-
-            return components.stream()
-                .map(component -> new DisplayableMesh(
-                    component.name(),
-                    component.bakedMesh(),
-                    // TODO: is this the correct value? (Probably not)
-                    RenderType.solid(),
-                    new Matrix4f(),
-                    1,
-                    this::getMaterialInstances))
-                .collect(Collectors.collectingAndThen(
-                    Collectors.toList(),
-                    // TODO: is All the correct value?
-                    l -> DisplayableMeshGroup.ofMeshes(Mode.All, 1, l)));
-        }
-
-        var unbakedModel = ((ModelBakeryAccessor)bakery).getTopLevelModels().get(model);
-        return getGroup(archetypes, sourceBlockState, bakery, model, unbakedModel, components);
-    }
-
-    // TODO: support custom UnbakedModel types?
-    private DisplayableMeshGroup getGroup(
-        BiMap<ModelResourceLocation, UnbakedModel> archetypes,
-        BlockState sourceBlockState,
-        ModelBakery bakery,
-        ModelResourceLocation model,
-        UnbakedModel unbakedModel,
-        Collection<ArchetypeComponent> components)
-    {
-        switch (unbakedModel)
-        {
-            case null ->
-            {
-
-            }
-            case BlockModel block ->
-            {
-                LOGGER.trace("Model {} is its own archetype?", model);
-                return components.stream()
-                    .map(component -> new DisplayableMesh(
-                        component.name(),
-                        component.bakedMesh(),
-                        getRenderType(component.renderType(), sourceBlockState),
-                        new Matrix4f(),
-                        1,
-                        this::getMaterialInstances))
-                    .collect(Collectors.collectingAndThen(
-                        Collectors.toList(),
-                        l -> DisplayableMeshGroup.ofMeshes(Mode.All, 1, l)));
-            }
-            case MultiPart multiPart ->
-            {
-                var accessor = (MultiPartAccessor)multiPart;
-                return accessor.getSelectors()
-                    .stream()
-                    .<Map.Entry<BlockState, Selector>>mapMulti((selector, consumer) -> {
-                        var predicate = selector.getPredicate(accessor.getDefinition());
-                        if (predicate.test(sourceBlockState))
-                            consumer.accept(Map.entry(sourceBlockState, selector));
-                    })
-                    .map(it -> Map.entry(it.getKey(), it.getValue().getVariant()))
-                    .map(it -> getGroup(archetypes, it.getKey(), bakery, model, it.getValue(), components))
-                    .collect(Collectors.collectingAndThen(
-                        Collectors.toList(),
-                        x -> DisplayableMeshGroup.ofGroups(Mode.All, 1, x)));
-            }
-            case MultiVariant multiVariant ->
-            {
-                var modelToArchetype = archetypes.inverse();
-                return multiVariant.getVariants()
-                    .stream()
-                    .map(it -> getVariantGroup(modelToArchetype, sourceBlockState, bakery, it, model, components))
-                    .collect(Collectors.collectingAndThen(
-                        Collectors.toList(),
-                        x -> DisplayableMeshGroup.ofGroups(Mode.Weighted, 1, x)));
-            }
-            default -> {
-                LOGGER.error("Unknown unbaked model type {}", unbakedModel.getClass());
-                return null;
-            }
-        }
-    }
-
-    private DisplayableMeshGroup getVariantGroup(
-        BiMap<UnbakedModel, ModelResourceLocation> modelToArchetype,
-        BlockState sourceBlockState,
-        ModelBakery bakery,
-        Variant variant,
-        ModelResourceLocation model,
-        Collection<ArchetypeComponent> components)
-    {
-        // TODO: as of 1.21 getModel can only return a BlockModel. This may change in the future...
-        var variantModel = (BlockModel)bakery.getModel(variant.getModelLocation());
-        while (variantModel.parent != null)
-        {
-            if (modelToArchetype.containsKey(variantModel))
-                break;
-
-            variantModel = variantModel.parent;
-        }
-
-        var archetypeModel = modelToArchetype.get(variantModel);
-        return components.stream()
-            .filter(p -> p.name().id().equals(archetypeModel.id()))
-            .map(component -> new DisplayableMesh(
-                component.name(),
-                component.bakedMesh(),
-                getRenderType(component.renderType(), sourceBlockState),
-                ((TransformationAccessor)(Object)variant.getRotation()).gander$matrix(),
-                variant.getWeight(),
-                this::getMaterialInstances))
-            .collect(Collectors.collectingAndThen(
-                Collectors.toList(),
-                l -> DisplayableMeshGroup.ofMeshes(Mode.All, variant.getWeight(), l)));
     }
 
     @SuppressWarnings("deprecation")

@@ -1,4 +1,4 @@
-package dev.compactmods.gander.runtime.baked.model;
+package dev.compactmods.gander.runtime.baked;
 
 import com.google.common.collect.BiMap;
 

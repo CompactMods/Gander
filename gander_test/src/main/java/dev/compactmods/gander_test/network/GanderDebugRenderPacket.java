@@ -3,12 +3,14 @@ package dev.compactmods.gander_test.network;
 import com.mojang.blaze3d.platform.GlConst;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.shaders.Uniform;
+
+import dev.compactmods.gander.runtime.additions.ModelManager$Gander;
+import dev.compactmods.gander.runtime.baked.AtlasIndex;
 import dev.compactmods.gander.runtime.baked.section.SectionBaker;
 import dev.compactmods.gander.runtime.baked.section.SectionBaker.BakedSection;
 import dev.compactmods.gander.runtime.baked.section.SectionBaker.DrawCall;
 import dev.compactmods.gander_test.GanderTestMod;
 import dev.compactmods.gander.runtime.baked.model.ModelRebaker;
-import dev.compactmods.gander.runtime.baked.texture.AtlasIndexer;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.client.Minecraft;
@@ -763,14 +765,14 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
         {
             if (!builtBuffers)
             {
-                var rebaker = ModelRebaker.of(Minecraft.getInstance().getModelManager());
-                var indexer = AtlasIndexer.of(Minecraft.getInstance().getModelManager());
+                var shaper = ((ModelManager$Gander)Minecraft.getInstance().getModelManager()).gander$getBlockModelShaper();
+                var index = ((ModelManager$Gander)Minecraft.getInstance().getModelManager()).gander$getAtlasIndex();
 
                 var section = SectionBaker.bake(
                     Minecraft.getInstance().level,
                     SectionPos.of(0, 0, 0),
-                    rebaker,
-                    indexer);
+                    shaper,
+                    index);
 
                 lastSection = section;
                 if (section == SectionBaker.EMPTY)

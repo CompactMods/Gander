@@ -5,8 +5,11 @@ import dev.compactmods.gander.render.baked.model.material.MaterialParent;
 
 import dev.compactmods.gander.render.baked.model.BakedMesh;
 import dev.compactmods.gander.render.baked.model.material.MaterialInstance;
+import dev.compactmods.gander.runtime.additions.BlockModelShaper$Gander;
+import dev.compactmods.gander.runtime.additions.ModelManager$Gander;
+import dev.compactmods.gander.runtime.baked.AtlasIndex;
+import dev.compactmods.gander.runtime.baked.AtlasIndex.AtlasIndices;
 import dev.compactmods.gander.runtime.baked.model.ModelRebaker;
-import dev.compactmods.gander.runtime.baked.texture.AtlasIndexer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockModelShaper;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
@@ -16,7 +19,7 @@ import net.minecraft.core.SectionPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.NotNull;
+
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 import org.lwjgl.system.MemoryUtil;
@@ -92,13 +95,13 @@ public final class SectionBaker
     public static BakedSection bake(
         Level level,
         SectionPos section,
-        ModelRebaker rebaker,
-        AtlasIndexer indexer)
+        BlockModelShaper$Gander shaper,
+        AtlasIndex index)
     {
         var randomSource = RandomSource.create();
         // The map of render passes, to the map of meshes
         var renderPasses = section.blocksInside()
-            .flatMap(pos -> modelsAt(level, pos, rebaker, randomSource))
+            .flatMap(pos -> modelsAt(level, pos, shaper, randomSource))
             .collect(Collectors.groupingBy(InstanceInfo::renderType,
                 Collectors.groupingBy(InstanceInfo::mesh)));
 
@@ -106,7 +109,7 @@ public final class SectionBaker
             return EMPTY;
 
         var drawCalls = new ArrayList<DrawCall>();
-        var textureAtlases = new HashMap<ResourceLocation, List<ResourceLocation>>();
+        var textureAtlases = new HashMap<ResourceLocation, AtlasIndices>();
         for (var renderPass : renderPasses.entrySet())
         {
             for (var mesh : renderPass.getValue().entrySet())
@@ -115,24 +118,21 @@ public final class SectionBaker
                     renderPass.getKey(),
                     mesh.getKey(),
                     mesh.getValue(),
-                    rebaker,
+                    shaper,
                     instance -> {
                         var atlas = textureAtlases.computeIfAbsent(
                             instance.parent().atlas(),
-                            indexer::getAtlasIndexes);
+                            index::getAtlasIndices);
 
-                        var index = atlas.indexOf(
+                        var spriteIndex = atlas.getIndexOf(
                             instance.getEffectiveTexture());
-                        if (index < 0)
-                            index = atlas.indexOf(
-                                MissingTextureAtlasSprite.getLocation());
 
                         // This is a bug.
-                        if (index < 0)
+                        if (spriteIndex < 0)
                             throw new IllegalStateException(
                                 "Couldn't locate missing texture in atlas");
 
-                        return index;
+                        return spriteIndex;
                     }));
             }
         }
@@ -140,7 +140,7 @@ public final class SectionBaker
         var atlases = textureAtlases.entrySet().stream()
             .collect(Collectors.toUnmodifiableMap(
                 Map.Entry::getKey,
-                it -> indexer.getAtlasBuffer(it.getKey())));
+                it -> it.getValue().acquire()));
 
         if (atlases.size() > 1)
             throw new IllegalStateException("Not yet supported");
@@ -160,7 +160,7 @@ public final class SectionBaker
         RenderType renderType,
         BakedMesh mesh,
         Collection<InstanceInfo> instances,
-        ModelRebaker rebaker,
+        BlockModelShaper$Gander shaper,
         ToIntFunction<MaterialInstance> textureAtlasIndex)
     {
         var transforms = MemoryUtil.memAllocFloat(
@@ -232,14 +232,12 @@ public final class SectionBaker
     private static Stream<InstanceInfo> modelsAt(
         Level level,
         BlockPos pos,
-        ModelRebaker rebaker,
+        BlockModelShaper$Gander shaper,
         RandomSource randomSource)
     {
         var blockState = level.getBlockState(pos);
         randomSource.setSeed(blockState.getSeed(pos));
-        var modelRef = BlockModelShaper.stateToModelLocation(blockState);
-
-        return rebaker.getArchetypes(modelRef)
+        return shaper.gander$getDisplayableMesh(blockState)
             .meshes(randomSource)
             .map(it -> new InstanceInfo(
                 it.renderType(),

@@ -1,4 +1,4 @@
-package dev.compactmods.gander.runtime.baked.model;
+package dev.compactmods.gander.runtime.baked;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
@@ -12,13 +12,11 @@ import dev.compactmods.gander.runtime.baked.model.archetype.ArchetypeBaker;
 import dev.compactmods.gander.runtime.mixin.accessor.MultiPartAccessor;
 import dev.compactmods.gander.runtime.mixin.accessor.TransformationAccessor;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.block.model.BlockModel;
 import net.minecraft.client.renderer.block.model.MultiVariant;
 import net.minecraft.client.renderer.block.model.UnbakedBlockStateModel;
 import net.minecraft.client.renderer.block.model.Variant;
 import net.minecraft.client.renderer.block.model.multipart.MultiPart;
 import net.minecraft.client.resources.model.BlockStateModelLoader;
-import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.resources.ResourceLocation;
@@ -63,8 +61,6 @@ public final class ArchetypeBakery
 
     public BakingResult bakeArchetypes(ProfilerFiller profiler)
     {
-        profiler.push("archetype_baking");
-
         Multimap<ResourceLocation, ArchetypeComponent> bakedComponents = HashMultimap.create();
         for (var pair : _unbakedArchetypes.entrySet())
         {
@@ -94,7 +90,6 @@ public final class ArchetypeBakery
         if (LOGGER.isDebugEnabled())
             LOGGER.debug("Baked {} different archetype components", bakedComponents.size());
 
-        profiler.popPush("archetype_association");
         Map<ModelResourceLocation, DisplayableMeshGroup> bakedBlockStates =
             Maps.transformEntries(_blockStateModels,
                 (key, value) -> getMeshGroup(key,
@@ -112,7 +107,6 @@ public final class ArchetypeBakery
                 bakedBlockStates.values().stream().mapToLong(it -> it.allMeshes().count()).average().orElse(0),
                 bakedBlockStates.values().stream().mapToLong(it -> it.allMeshes().count()).max().orElse(0));
 
-        profiler.pop();
         return new BakingResult(bakedComponents, bakedBlockStates);
     }
 
@@ -226,6 +220,6 @@ public final class ArchetypeBakery
 
     public record BakingResult(
         Multimap<ResourceLocation, ArchetypeComponent> bakedArchetypes,
-        Map<ModelResourceLocation, DisplayableMeshGroup> bakedBlockStates)
+        Map<ModelResourceLocation, DisplayableMeshGroup> blockStateArchetypes)
     { }
 }
