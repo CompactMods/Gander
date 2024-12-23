@@ -53,10 +53,11 @@ tasks.withType<Jar> {
     }.standardOutput.asText.get().trimEnd()
 
     manifest {
-        from("src/main/resources/META-INF/MANIFEST.MF")
+//        from("src/main/resources/META-INF/MANIFEST.MF")
         val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(Date())
 
         val attrs = mapOf<String, Any>(
+            "Manifest-Version" to "1.0",
             "Specification-Title" to name,
             "Specification-Vendor" to "CompactMods",
             "Specification-Version" to "1",
@@ -68,9 +69,8 @@ tasks.withType<Jar> {
             "NeoForge-Version" to neoforged.versions.neoforge.get(),
             "Main-Commit" to gitVersion,
             "FMLModType" to "GAMELIBRARY",
-            "Automatic-Module-Name" to "ganderrendering",
-            "MixinConfigs" to "gander_render.mixins.json"
-
+            "Automatic-Module-Name" to "ganderlevels",
+            "MixinConfigs" to "gander_levels.mixins.json"
         )
 
         attributes(attrs)
