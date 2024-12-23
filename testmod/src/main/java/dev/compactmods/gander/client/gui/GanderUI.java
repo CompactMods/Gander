@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import com.mojang.blaze3d.platform.InputConstants;
 
-import dev.compactmods.gander.client.gui.widget.SpatialRenderer;
+import dev.compactmods.gander.ui.widget.SpatialRenderer;
 import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.geometry.BakedLevel;
@@ -45,32 +45,12 @@ public class GanderUI extends Screen {
 		int totalHeight = 320;
 
 		this.renderableArea = new ScreenRectangle((width - totalWidth) / 2, (height - totalHeight) / 2, totalWidth, totalHeight);
+        
+        this.orthoRenderer = this.addRenderableWidget(new SpatialRenderer(
+                0, 0,
+                width, height));
 
-		int runningY = renderableArea.top();
-
-		try {
-//			this.topRenderer = this.addRenderableWidget(new SpatialRenderer(renderableArea.left(), runningY, 120, 100));
-			//		this.topRenderer.camera().lookDirection(Direction.DOWN);
-			runningY += 110;
-
-//			this.frontRenderer = this.addRenderableWidget(new SpatialRenderer(renderableArea.left(), runningY, 120, 100));
-			//		this.frontRenderer.camera().lookDirection(Direction.NORTH);
-			runningY += 110;
-
-//			this.leftRenderer = this.addRenderableWidget(new SpatialRenderer(renderableArea.left(), runningY, 120, 100));
-
-//			this.orthoRenderer = this.addRenderableWidget(new SpatialRenderer(
-//					renderableArea.left() + 120 + 10, renderableArea.top(),
-//					400, 320));
-
-			this.orthoRenderer = this.addRenderableWidget(new SpatialRenderer(
-					0, 0,
-					width, height));
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-
-		updateSceneRenderers();
+        updateSceneRenderers();
 	}
 
 	private void updateSceneRenderers() {

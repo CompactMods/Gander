@@ -48,8 +48,6 @@ neoForge {
 
     this.mods.create(modId) {
         modSourceSets.add(sourceSets.main)
-//        modSourceSets.add(project(":levels").sourceSets.main.get())
-//        modSourceSets.add(project(":rendering").sourceSets.main.get())
     }
 
     accessTransformers {
@@ -142,9 +140,9 @@ repositories {
 
 dependencies {
     // Core Projects and Libraries
-    implementation(project(":levels", "default"))
-    implementation(project(":rendering", "default"))
-    implementation(project(":ui", "default"))
+    implementation(project(":levels"))
+    implementation(project(":rendering"))
+    implementation(project(":ui"))
 
     runtimeOnly("net.neoforged:render-nurse:0.0.12")
 
@@ -163,9 +161,9 @@ tasks.withType<JavaCompile> {
 }
 
 tasks.withType<Jar> {
-    val mainGit = Grgit.open {
-        currentDir = project.rootDir
-    }
+    val gitVersion = providers.exec {
+        commandLine("git", "rev-parse", "HEAD")
+    }.standardOutput.asText.get()
 
     manifest {
         val now = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").format(Date())
@@ -180,7 +178,7 @@ tasks.withType<Jar> {
             "Implementation-Timestamp" to now,
             "Minecraft-Version" to mojang.versions.minecraft.get(),
             "NeoForge-Version" to neoforged.versions.neoforge.get(),
-            "Main-Commit" to mainGit.head().id
+            "Main-Commit" to gitVersion
         )
     }
 }

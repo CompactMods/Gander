@@ -42,6 +42,11 @@ repositories {
     mavenLocal()
 }
 
+dependencies {
+    implementation(project(":core", "default"))
+    implementation(project(":rendering", "default"))
+}
+
 tasks.withType<ProcessResources> {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

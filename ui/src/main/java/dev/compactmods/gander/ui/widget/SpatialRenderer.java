@@ -1,6 +1,5 @@
 package dev.compactmods.gander.ui.widget;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
@@ -8,6 +7,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import dev.compactmods.gander.core.Gander;
+import dev.compactmods.gander.render.geometry.BakedLevel;
+import dev.compactmods.gander.render.toolkit.BlockEntityRender;
+import dev.compactmods.gander.render.toolkit.BlockRenderer;
 import net.minecraft.client.GraphicsStatus;
 
 import org.jetbrains.annotations.Nullable;
@@ -26,9 +28,6 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexSorting;
 
 import dev.compactmods.gander.ui.camera.SceneCamera;
-import dev.compactmods.gander.render.ScreenBlockEntityRender;
-import dev.compactmods.gander.render.ScreenBlockRenderer;
-import dev.compactmods.gander.render.baked.BakedLevel;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import dev.compactmods.gander.render.translucency.TranslucencyChain;
 import net.minecraft.client.Minecraft;
@@ -171,9 +170,9 @@ public class SpatialRenderer extends AbstractWidget {
 		poseStack.pushPose();
 		{
 			var poseStack2 = RenderSystem.getModelViewStack();
-			poseStack2.pushPose();
+			poseStack2.pushMatrix();
 			{
-				poseStack2.setIdentity();
+				poseStack2.identity();
 				RenderSystem.applyModelViewMatrix();
 
 				poseStack.setIdentity();
@@ -194,7 +193,7 @@ public class SpatialRenderer extends AbstractWidget {
 //				renderCompass(graphics, partialTicks, poseStack);
 			}
 
-			poseStack2.popPose();
+			poseStack2.popMatrix();
 			RenderSystem.applyModelViewMatrix();
 		}
 		poseStack.popPose();
@@ -234,13 +233,24 @@ public class SpatialRenderer extends AbstractWidget {
 		float f2 = (float) renderTarget.viewWidth / (float) renderTarget.width;
 		float f3 = (float) renderTarget.viewHeight / (float) renderTarget.height;
 		Tesselator tesselator = RenderSystem.renderThreadTesselator();
-		BufferBuilder bufferbuilder = tesselator.getBuilder();
-		bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-		bufferbuilder.vertex(0.0, f1, 0.0).uv(0.0F, 0.0F).color(255, 255, 255, 255).endVertex();
-		bufferbuilder.vertex(f, f1, 0.0).uv(f2, 0.0F).color(255, 255, 255, 255).endVertex();
-		bufferbuilder.vertex(f, 0.0, 0.0).uv(f2, f3).color(255, 255, 255, 255).endVertex();
-		bufferbuilder.vertex(0.0, 0.0, 0.0).uv(0.0F, f3).color(255, 255, 255, 255).endVertex();
-		BufferUploader.draw(bufferbuilder.end());
+		BufferBuilder bufferbuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+		bufferbuilder.addVertex(0f, f1, 0f)
+            .setUv(0.0F, 0.0F)
+            .setColor(255, 255, 255, 255);
+
+		bufferbuilder.addVertex(f, f1, 0f)
+            .setUv(f2, 0.0F)
+            .setColor(255, 255, 255, 255);
+
+		bufferbuilder.addVertex(f, 0f, 0f)
+            .setUv(f2, f3)
+            .setColor(255, 255, 255, 255);
+
+		bufferbuilder.addVertex(0f, 0f, 0f)
+            .setUv(0.0F, f3)
+            .setColor(255, 255, 255, 255);
+
+		BufferUploader.draw(bufferbuilder.build());
 		shaderinstance.clear();
 		GlStateManager._depthMask(true);
 	}
@@ -260,22 +270,22 @@ public class SpatialRenderer extends AbstractWidget {
 				var projectionMatrix = RenderSystem.getProjectionMatrix();
 
 				translucencyChain.prepareLayer(Gander.asResource("main"));
-				ScreenBlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
-				ScreenBlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
 
-				ScreenBlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
-				ScreenBlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
 
-				ScreenBlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
-				ScreenBlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
 
 				translucencyChain.prepareLayer(Gander.asResource("entity"));
-				ScreenBlockEntityRender.render(blockAndTints, blockEntities, poseStack, lookFrom, renderTypeStore, buffer, partialTicks);
+				BlockEntityRender.render(blockAndTints, blockEntities, poseStack, lookFrom, renderTypeStore, buffer, partialTicks);
 
 				translucencyChain.prepareLayer(Gander.asResource("water"));
 				translucencyChain.prepareLayer(Gander.asResource("translucent"));
-				ScreenBlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
-				ScreenBlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
+				BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
 
 				translucencyChain.prepareLayer(Gander.asResource("item_entity"));
 				translucencyChain.prepareLayer(Gander.asResource("particles"));

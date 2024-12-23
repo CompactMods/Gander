@@ -1,6 +1,7 @@
 package dev.compactmods.gander.ui.widget;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
@@ -121,21 +122,38 @@ public class CompassOverlay implements Renderable {
 		var pose = graphics.pose().last().pose();
 
 		var tesselator = RenderSystem.renderThreadTesselator();
-		var buffer = tesselator.getBuilder();
-		buffer.begin(Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
-		buffer.vertex(pose, 0.0f, 0.0f, 0.0f).color(255, 0, 0, 255).normal(1.0F, 0.0F, 0.0F).endVertex();
-		buffer.vertex(pose, pLineLength, 0.0f, 0.0f).color(255, 0, 0, 255).normal(1.0F, 0.0F, 0.0F).endVertex();
+		var buffer = tesselator.begin(Mode.LINES, DefaultVertexFormat.POSITION_COLOR_NORMAL);
+        // RED
+		buffer.addVertex(pose, 0.0f, 0.0f, 0.0f)
+            .setColor(255, 0, 0, 255)
+            .setNormal(1.0F, 0.0F, 0.0F);
 
-		buffer.vertex(pose, 0.0f, 0.0f, 0.0f).color(0, 255, 0, 255).normal(0.0F, 1.0F, 0.0F).endVertex();
-		buffer.vertex(pose, 0.0f, -pLineLength, 0.0f).color(0, 255, 0, 255).normal(0.0F, 1.0F, 0.0F).endVertex();
+		buffer.addVertex(pose, pLineLength, 0.0f, 0.0f)
+            .setColor(255, 0, 0, 255)
+            .setNormal(1.0F, 0.0F, 0.0F);
 
-		buffer.vertex(pose, 0.0f, 0.0f, 0.0f).color(127, 127, 255, 255).normal(0.0F, 0.0F, 1.0F).endVertex();
-		buffer.vertex(pose, 0.0f, 0.0f, pLineLength).color(127, 127, 255, 255).normal(0.0F, 0.0F, 1.0F).endVertex();
+        // GREEN
+		buffer.addVertex(pose, 0.0f, 0.0f, 0.0f)
+            .setColor(0, 255, 0, 255)
+            .setNormal(0.0F, 1.0F, 0.0F);
+
+		buffer.addVertex(pose, 0.0f, -pLineLength, 0.0f)
+            .setColor(0, 255, 0, 255)
+            .setNormal(0.0F, 1.0F, 0.0F);
+
+        // BLUE
+		buffer.addVertex(pose, 0.0f, 0.0f, 0.0f)
+            .setColor(127, 127, 255, 255)
+            .setNormal(0.0F, 0.0F, 1.0F);
+
+		buffer.addVertex(pose, 0.0f, 0.0f, pLineLength)
+            .setColor(127, 127, 255, 255)
+            .setNormal(0.0F, 0.0F, 1.0F);
 
 		//RenderSystem.depthMask(false);
 		RenderSystem.disableCull();
 		RenderSystem.setShader(GameRenderer::getRendertypeLinesShader);
-		tesselator.end();
+        BufferUploader.drawWithShader(buffer.build());
 		RenderSystem.enableCull();
 		//RenderSystem.depthMask(true);
 	}
