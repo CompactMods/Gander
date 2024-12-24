@@ -45,7 +45,7 @@ public class GanderUI extends Screen {
 		int totalHeight = 320;
 
 		this.renderableArea = new ScreenRectangle((width - totalWidth) / 2, (height - totalHeight) / 2, totalWidth, totalHeight);
-        
+
         this.orthoRenderer = this.addRenderableWidget(new SpatialRenderer(
                 0, 0,
                 width, height));
@@ -77,7 +77,7 @@ public class GanderUI extends Screen {
 		super.tick();
 		if (this.scene != null) {
 			// TODO: :)
-			var level = ((VirtualLevel)scene.originalLevel().get());
+			var level = ((VirtualLevel)scene.originalLevel());
 			level.tick(minecraft.getTimer().getRealtimeDeltaTicks());
 			// level.animateTick();
 		}

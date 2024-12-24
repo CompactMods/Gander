@@ -115,7 +115,7 @@ public class SpatialRenderer extends AbstractWidget {
 
 	public void setData(BakedLevel bakedLevel) {
 		this.bakedLevel = bakedLevel;
-		this.blockAndTints = bakedLevel.originalLevel().get();
+		this.blockAndTints = bakedLevel.originalLevel();
 		this.blockBoundaries = bakedLevel.blockBoundaries();
 
 		this.blockEntityPositions = BlockPos.betweenClosedStream(blockBoundaries)
@@ -187,7 +187,7 @@ public class SpatialRenderer extends AbstractWidget {
 				renderScene(blockEntities, buffer, partialTicks, poseStack);
 
 				mainTarget.bindWrite(true);
-				UGH(renderTarget);
+				copyRenderToWidgetSpace(renderTarget);
 
 				RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
 //				renderCompass(graphics, partialTicks, poseStack);
@@ -207,7 +207,7 @@ public class SpatialRenderer extends AbstractWidget {
 //			ScreenEntityRenderer.renderEntities(entityGetter, poseStack, buffer, camera, partialTicks);
 	}
 
-	private void UGH(RenderTarget renderTarget) {
+	private void copyRenderToWidgetSpace(RenderTarget renderTarget) {
 		// RenderTarget.blit disables alpha... :unamused:
 		RenderSystem.assertOnRenderThread();
 		GlStateManager._disableDepthTest();
@@ -250,7 +250,7 @@ public class SpatialRenderer extends AbstractWidget {
             .setUv(0.0F, f3)
             .setColor(255, 255, 255, 255);
 
-		BufferUploader.draw(bufferbuilder.build());
+		BufferUploader.draw(bufferbuilder.buildOrThrow());
 		shaderinstance.clear();
 		GlStateManager._depthMask(true);
 	}

@@ -18,12 +18,9 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.SectionBufferBuilderPack;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
-import net.minecraft.client.renderer.chunk.RenderChunkRegion;
-import net.minecraft.client.renderer.chunk.RenderRegionCache;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.SectionPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RenderShape;
@@ -31,146 +28,129 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.material.FluidState;
-import net.neoforged.neoforge.client.ClientHooks;
-import net.neoforged.neoforge.client.event.AddSectionGeometryEvent;
+
 import net.neoforged.neoforge.client.model.data.ModelData;
 
 import org.joml.Vector3f;
 
-import java.lang.ref.WeakReference;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 public class LevelBakery {
 
     public static BakedLevel bakeVertices(Level level, BoundingBox blockBoundaries, Vector3f cameraPosition) {
-
-        final Set<RenderType> visitedBlockRenderTypes = new HashSet<>();
-        final Set<RenderType> visitedFluidRenderTypes = new HashSet<>();
-        final RenderRegionCache regionCache = new RenderRegionCache();
         final SectionBufferBuilderPack blockPack = new SectionBufferBuilderPack();
         final SectionBufferBuilderPack fluidPack = new SectionBufferBuilderPack();
 
-        PoseStack pose = new PoseStack();
+        final Map<RenderType, BufferBuilder> blockBufferBuilders = new HashMap<>();
+        final Map<RenderType, BufferBuilder> fluidBufferBuilders = new HashMap<>();
 
+        final Reference2ObjectArrayMap<RenderType, VertexBuffer> blockGeometry = new Reference2ObjectArrayMap<>();
+        final Reference2ObjectArrayMap<RenderType, VertexBuffer> fluidGeometry = new Reference2ObjectArrayMap<>();
+
+        final Reference2ObjectArrayMap<RenderType, MeshData.SortState> blockRenderSortStates = new Reference2ObjectArrayMap<>();
+        final Reference2ObjectArrayMap<RenderType, MeshData.SortState> fluidRenderSortStates = new Reference2ObjectArrayMap<>();
+
+        final var SORTING = VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+        PoseStack pose = new PoseStack();
+        RandomSource random = RandomSource.createNewThreadLocalInstance();
         BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
         ModelBlockRenderer renderer = dispatcher.getModelRenderer();
 
-        RandomSource random = RandomSource.createNewThreadLocalInstance();
-
-        // pose.mulPoseMatrix(new Matrix4f().scaling(1, 1, -1));
-        // pose.scale(1 / 24f, 1 / 24f, 1 / 24f);
-
-        var center = blockBoundaries.getCenter().getCenter();
-
         ModelBlockRenderer.enableCaching();
         BlockPos.betweenClosedStream(blockBoundaries).forEach(pos -> {
-            BlockState state = level.getBlockState(pos);
-            FluidState fluidState = level.getFluidState(pos);
-
-            pose.pushPose();
-            pose.translate(pos.getX(), pos.getY(), pos.getZ());
-
-            ModelData modelData;
-            if (state.getRenderShape() == RenderShape.MODEL) {
-                BakedModel model = dispatcher.getBlockModel(state);
-
-                if (state.hasBlockEntity()) {
-                    BlockEntity blockEntity = level.getBlockEntity(pos);
-                    modelData = blockEntity != null ? blockEntity.getModelData() : ModelData.EMPTY;
-                    modelData = model.getModelData(level, pos, state, modelData);
-                } else {
-                    modelData = ModelData.EMPTY;
-                }
-
-                long seed = state.getSeed(pos);
-                random.setSeed(seed);
-
-                ModelData finalModelData = modelData;
-                model.getRenderTypes(state, random, modelData).forEach(type -> {
-                    var typedVC = blockPack.buffer(type);
-                    if (visitedBlockRenderTypes.add(type)) {
-                        // typedVC.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
-                    }
-
-                    // FIXME renderer.tesselateBlock(level, model, state, pos, pose, typedVC, true, random, seed, OverlayTexture.NO_OVERLAY, finalModelData, type);
-                });
-            }
-
-            if (!fluidState.isEmpty()) {
-                final var fluidRenderType = ItemBlockRenderTypes.getRenderLayer(fluidState);
-                var typedVC = fluidPack.buffer(fluidRenderType);
-                if (visitedFluidRenderTypes.add(fluidRenderType)) {
-                    // typedVC.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
-                }
-
-                // FIXME dispatcher.getLiquidBlockRenderer()
-//                    .tesselate(level, pos, new FluidVertexConsumer(typedVC, pose, pos), state, fluidState);
-            }
-
-            pose.popPose();
-            ModelBlockRenderer.clearCache();
+            createBlockGeometry(level, pos, pose, dispatcher, random, blockBufferBuilders, blockPack, renderer, fluidBufferBuilders);
         });
 
-        final var additionalRenderers = ClientHooks.gatherAdditionalRenderers(BlockPos.ZERO, level);
+        sortGeometry(blockBufferBuilders, blockPack, SORTING, blockRenderSortStates, blockGeometry, fluidBufferBuilders,
+            fluidRenderSortStates, fluidGeometry);
 
-        // TODO - Hook for multiplatform?
-//		net.neoforged.neoforge.client.ClientHooks.addAdditionalGeometry(additionalRenderers, (type) -> {
-//			var builder = blockPack.buffer(type);
-//			if (visitedBlockRenderTypes.add(type)) {
-//				// builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
-//			}
-//			return builder;
-//		},
-        createRegion(regionCache, additionalRenderers, level, blockBoundaries); //, pose);
-
-        MeshData.SortState blockTransparencyState = null;
-//		if (visitedBlockRenderTypes.contains(RenderType.translucent())) {
-//			final var builder = blockPack.buffer(RenderType.translucent());
-//			builder.setQuadSorting(VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z));
-//			blockTransparencyState = builder.getSortState();
-//		}
-
-        MeshData.SortState fluidTransparencyState = null;
-//		if (visitedFluidRenderTypes.contains(RenderType.translucent())) {
-//			final var builder = fluidPack.builder(RenderType.translucent());
-//			builder.setQuadSorting(VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z));
-//			fluidTransparencyState = builder.getSortState();
-//		}
-
-        Reference2ObjectArrayMap<RenderType, VertexBuffer> blockGeometry = new Reference2ObjectArrayMap<>();
-        Reference2ObjectArrayMap<RenderType, VertexBuffer> fluidGeometry = new Reference2ObjectArrayMap<>();
-//		visitedBlockRenderTypes.forEach(renderType -> {
-//			final var builder = blockPack.buffer(renderType);
-//			final var buffer = builder.build();
-//
-//			if(buffer != null) {
-//				var vb = new VertexBuffer(VertexBuffer.Usage.STATIC);
-//				vb.bind();
-//				vb.upload(buffer);
-//				VertexBuffer.unbind();
-//				blockGeometry.put(renderType, vb);
-//			}
-//		});
-//
-//		visitedFluidRenderTypes.forEach(renderType -> {
-//			final var builder = fluidPack.builder(renderType);
-//			final var buffer = builder.endOrDiscardIfEmpty();
-//
-//			if(buffer != null) {
-//				var vb = new VertexBuffer(VertexBuffer.Usage.STATIC);
-//				vb.bind();
-//				vb.upload(buffer);
-//				VertexBuffer.unbind();
-//				fluidGeometry.put(renderType, vb);
-//			}
-//		});
-
-        return new BakedLevel(new WeakReference<>(level), blockPack, fluidPack, blockGeometry, fluidGeometry, blockTransparencyState, fluidTransparencyState, blockBoundaries);
+        return new BakedLevel(level, blockPack, fluidPack, blockGeometry, fluidGeometry,
+            blockRenderSortStates, fluidRenderSortStates, blockBoundaries);
     }
 
-    private static RenderChunkRegion createRegion(RenderRegionCache cache, List<AddSectionGeometryEvent.AdditionalSectionRenderer> additionalRenderers, Level level, BoundingBox bounds) {
-        return cache.createRegion(level, SectionPos.of(new BlockPos(bounds.minX(), bounds.minY(), bounds.minZ())), additionalRenderers.isEmpty());
+    private static void createBlockGeometry(Level level, BlockPos pos, PoseStack pose, BlockRenderDispatcher dispatcher,
+                                            RandomSource random, Map<RenderType, BufferBuilder> blockBufferBuilders,
+                                            SectionBufferBuilderPack blockPack, ModelBlockRenderer renderer,
+                                            Map<RenderType, BufferBuilder> fluidBufferBuilders) {
+
+        BlockState state = level.getBlockState(pos);
+        FluidState fluidState = level.getFluidState(pos);
+
+        pose.pushPose();
+        pose.translate(pos.getX(), pos.getY(), pos.getZ());
+
+        ModelData modelData = ModelData.EMPTY;
+        if (state.getRenderShape() == RenderShape.MODEL) {
+            BakedModel model = dispatcher.getBlockModel(state);
+
+            if (state.hasBlockEntity()) {
+                BlockEntity blockEntity = level.getBlockEntity(pos);
+                modelData = blockEntity != null ? blockEntity.getModelData() : ModelData.EMPTY;
+            }
+
+            modelData = model.getModelData(level, pos, state, modelData);
+
+            long seed = state.getSeed(pos);
+            random.setSeed(seed);
+
+            ModelData finalModelData = modelData;
+            model.getRenderTypes(state, random, modelData).forEach(type -> {
+                var vertexBuilder = blockBufferBuilders.computeIfAbsent(type, t -> {
+                    var typedVC = blockPack.buffer(t);
+                    return new BufferBuilder(typedVC, VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
+                });
+
+                renderer.tesselateBlock(level, model, state, pos, pose, vertexBuilder, true, random, seed, OverlayTexture.NO_OVERLAY, finalModelData, type);
+            });
+        }
+
+        if (!fluidState.isEmpty()) {
+            final var fluidRenderType = ItemBlockRenderTypes.getRenderLayer(fluidState);
+            var vertexBuilder = fluidBufferBuilders.computeIfAbsent(fluidRenderType, t -> {
+                var typedFluidVC = blockPack.buffer(t);
+                return new BufferBuilder(typedFluidVC, VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
+            });
+
+            dispatcher.getLiquidBlockRenderer().tesselate(level, pos, new FluidVertexConsumer(vertexBuilder, pose, pos), state, fluidState);
+        }
+
+        pose.popPose();
+        ModelBlockRenderer.clearCache();
+    }
+
+    private static void sortGeometry(Map<RenderType, BufferBuilder> blockBufferBuilders, SectionBufferBuilderPack blockPack, VertexSorting SORTING, Reference2ObjectArrayMap<RenderType, MeshData.SortState> blockRenderSortStates, Reference2ObjectArrayMap<RenderType, VertexBuffer> blockGeometry, Map<RenderType, BufferBuilder> fluidBufferBuilders, Reference2ObjectArrayMap<RenderType, MeshData.SortState> fluidRenderSortStates, Reference2ObjectArrayMap<RenderType, VertexBuffer> fluidGeometry) {
+        blockBufferBuilders.forEach((renderType, builder) -> {
+            final var buffer = builder.build();
+            if(buffer == null) return;
+
+            if (renderType.sortOnUpload()) {
+                var state = buffer.sortQuads(blockPack.buffer(renderType), SORTING);
+                blockRenderSortStates.put(renderType, state);
+            }
+
+            var vb = new VertexBuffer(VertexBuffer.Usage.STATIC);
+            vb.bind();
+            vb.upload(buffer);
+            VertexBuffer.unbind();
+            blockGeometry.put(renderType, vb);
+        });
+
+        fluidBufferBuilders.forEach((renderType, builder) -> {
+            final var buffer = builder.build();
+            if(buffer == null) return;
+
+            if (renderType.sortOnUpload()) {
+                var state = buffer.sortQuads(blockPack.buffer(renderType), SORTING);
+                fluidRenderSortStates.put(renderType, state);
+            }
+
+            var vb = new VertexBuffer(VertexBuffer.Usage.STATIC);
+            vb.bind();
+            vb.upload(buffer);
+            VertexBuffer.unbind();
+            fluidGeometry.put(renderType, vb);
+        });
     }
 }
