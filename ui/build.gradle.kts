@@ -25,7 +25,7 @@ plugins {
 }
 
 base {
-    archivesName.set("levels")
+    archivesName.set("ui")
     group = "dev.compactmods.gander"
     version = envVersion
 }
@@ -59,7 +59,7 @@ tasks.withType<JavaCompile> {
 tasks.withType<Jar> {
     val gitVersion = providers.exec {
         commandLine("git", "rev-parse", "HEAD")
-    }.standardOutput.asText.get()
+    }.standardOutput.asText.get().trimEnd()
 
     manifest {
         from("src/main/resources/META-INF/MANIFEST.MF")

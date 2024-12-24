@@ -1,6 +1,5 @@
 @file:Suppress("SpellCheckingInspection")
 
-import org.ajoberstar.grgit.Grgit
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -42,6 +41,8 @@ evaluationDependsOn(":rendering")
 evaluationDependsOn(":ui")
 
 var atProjects = listOf(project(":rendering"))
+
+val renderNurseCfg by configurations.creating
 
 neoForge {
     version = neoforged.versions.neoforge
@@ -99,16 +100,28 @@ neoForge {
 //        }
         }
 
-        create("renderDoc") {
-            client()
-            gameDirectory.set(file("runs/client"))
+        if(System.getenv("RENDERDOC_LIB") != null) {
+            create("renderDoc") {
+                client()
+                gameDirectory.set(file("runs/client"))
 
-            programArguments.addAll("--username", "Nano")
-            programArguments.addAll("--width", "1920")
-            programArguments.addAll("--height", "1080")
+                programArguments.addAll("--username", "Nano")
+                programArguments.addAll("--width", "1920")
+                programArguments.addAll("--height", "1080")
 
-            systemProperty("neoforge.rendernurse.renderdoc.library", "/home/nano/code/renderdoc_1.35/lib/librenderdoc.so")
-            environment("LD_PRELOAD", "/home/nano/code/renderdoc_1.35/lib/librenderdoc.so")
+                systemProperty("neoforge.rendernurse.renderdoc.library", System.getenv("RENDERDOC_LIB"))
+
+                if(org.gradle.internal.os.OperatingSystem.current().isLinux) {
+                    environment("LD_PRELOAD", System.getenv("RENDERDOC_LIB"))
+                } else {
+                    // parses out the render nurse jar path and adds as `-javaagent:${path}`
+                    jvmArguments.addAll(renderNurseCfg.incoming.files.elements.map { it.map { "-javaagent:${it.asFile.absolutePath}" } })
+                    jvmArguments.addAll(
+                        "--enable-preview",
+                        "--enable-native-access=ALL-UNNAMED"
+                    )
+                }
+            }
         }
 
         create("server") {
@@ -144,7 +157,7 @@ dependencies {
     implementation(project(":rendering"))
     implementation(project(":ui"))
 
-    runtimeOnly("net.neoforged:render-nurse:0.0.12")
+    renderNurseCfg("net.neoforged:render-nurse:0.0.12")
 
     // Mods
     //mod(mods.bundles.jei)

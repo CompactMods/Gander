@@ -1,6 +1,5 @@
 @file:Suppress("SpellCheckingInspection")
 
-import org.ajoberstar.grgit.Grgit
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -27,7 +26,7 @@ plugins {
 }
 
 base {
-    archivesName.set("levels")
+    archivesName.set("rendering")
     group = "dev.compactmods.gander"
     version = envVersion
 }
@@ -60,9 +59,9 @@ tasks.withType<JavaCompile> {
 }
 
 tasks.withType<Jar> {
-    val mainGit = Grgit.open {
-        currentDir = project.rootDir
-    }
+    val gitVersion = providers.exec {
+        commandLine("git", "rev-parse", "HEAD")
+    }.standardOutput.asText.get().trimEnd()
 
     manifest {
         from("src/main/resources/META-INF/MANIFEST.MF")
@@ -79,7 +78,7 @@ tasks.withType<Jar> {
             "Implementation-Timestamp" to now,
             "Minecraft-Version" to mojang.versions.minecraft.get(),
             "NeoForge-Version" to neoforged.versions.neoforge.get(),
-            "Main-Commit" to mainGit.head().id,
+            "Main-Commit" to gitVersion,
             "FMLModType" to "GAMELIBRARY",
             "Automatic-Module-Name" to "ganderlevels"
         )
