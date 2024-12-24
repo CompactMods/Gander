@@ -52,16 +52,16 @@ runs {
         modSource(project(":runtime").sourceSets["main"])
     }
 
-    create("client") {
-        programArguments("--width", "1920")
-        programArguments("--height", "1080")
+    register("client") {
+        arguments("--width", "1920")
+        arguments("--height", "1080")
     }
 
-    create("clientRenderDoc") {
-        configure("client")
+    register("clientRenderDoc") {
+        runType("client")
         workingDirectory(runs["client"].workingDirectory)
-        programArguments("--width", "1920")
-        programArguments("--height", "1080")
+        arguments("--width", "1920")
+        arguments("--height", "1080")
 
         renderDoc.enabled = true
     }

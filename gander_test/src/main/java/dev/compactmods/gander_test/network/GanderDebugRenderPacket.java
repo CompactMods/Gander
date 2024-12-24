@@ -304,7 +304,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                     GL32.GL_RED_INTEGER,
                     GL32.GL_INT,
                     call.textures());
-                //call.textures().rewind();
+                call.textures().rewind();
 
                 if ((valuesWritten + inThisRow) < toWrite)
                 {
@@ -451,7 +451,7 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
                     GL32.GL_RGBA,
                     GL32.GL_FLOAT,
                     call.transforms());
-                //call.transforms().rewind();
+                call.transforms().rewind();
 
                 if ((valuesWritten + inThisRow * 4) < toWrite)
                 {
@@ -739,9 +739,12 @@ public record GanderDebugRenderPacket(BlockState state) implements CustomPacketP
             {
                 GL32.glDeleteProgram(shader);
                 shaders.forEach(GL32::glDeleteShader);
+                shaders.clear();
                 GL32.glDeleteVertexArrays(vertexArray);
                 buffers.forEach(GL32::glDeleteBuffers);
+                buffers.clear();
                 textures.forEach(GL32::glDeleteTextures);
+                textures.clear();
                 try
                 {
                     lastSection.close();
