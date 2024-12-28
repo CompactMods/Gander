@@ -49,6 +49,10 @@ neoForge {
     }
 }
 
+dependencies {
+    implementation(project(":core"))
+}
+
 tasks.withType<ProcessResources> {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

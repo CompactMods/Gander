@@ -2,6 +2,7 @@ package dev.compactmods.gander.render.pipeline.context;
 
 import com.mojang.blaze3d.vertex.VertexBuffer;
 
+import dev.compactmods.gander.render.geometry.BakedLevel;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -18,11 +19,10 @@ import java.util.stream.Stream;
  * @param blockBuffers  Baked level geometry - block buffer information.
  * @param fluidBuffers  Baked level geometry - fluid buffer information.
  * @param blockEntities Supplier for the block entity information.
- * @param <T>           Level type.
  */
-public record BakedDirectLevelRenderingContext<T extends Level>(T level,
-                                                                Map<RenderType, VertexBuffer> blockBuffers,
-                                                                Map<RenderType, VertexBuffer> fluidBuffers,
-                                                                Supplier<Stream<BlockEntity>> blockEntities)
-    implements LevelRenderingContext<T> {
+public record BakedDirectLevelRenderingContext(BakedLevel level,
+                                               Map<RenderType, VertexBuffer> blockBuffers,
+                                               Map<RenderType, VertexBuffer> fluidBuffers,
+                                               Supplier<Stream<BlockEntity>> blockEntities)
+    implements LevelRenderingContext {
 }

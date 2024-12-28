@@ -27,7 +27,7 @@ import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexSorting;
 
-import dev.compactmods.gander.ui.camera.SceneCamera;
+import dev.compactmods.gander.core.camera.SceneCamera;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import dev.compactmods.gander.render.translucency.TranslucencyChain;
 import net.minecraft.client.Minecraft;

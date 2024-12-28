@@ -2,13 +2,13 @@ package dev.compactmods.gander.render.pipeline;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import dev.compactmods.gander.core.camera.MovableCamera;
 import dev.compactmods.gander.render.RenderPipeline;
 import dev.compactmods.gander.render.pipeline.context.BakedDirectLevelRenderingContext;
-import dev.compactmods.gander.render.toolkit.BlockEntityRender;
 import dev.compactmods.gander.render.toolkit.BlockRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ItemInHandRenderer;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
@@ -17,7 +17,6 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
@@ -29,7 +28,7 @@ import org.joml.Vector3fc;
 
 import java.util.function.Function;
 
-public final class BakedLevelOverlayPipeline<T extends Level> implements RenderPipeline<T, BakedDirectLevelRenderingContext<T>> {
+public final class BakedLevelOverlayPipeline implements RenderPipeline<BakedDirectLevelRenderingContext> {
 
     private final EntityRenderDispatcher entityRenderDispatcher
         = new WrappedEntityRenderDispatcher(Minecraft.getInstance(), Minecraft.getInstance().getEntityRenderDispatcher());
@@ -40,7 +39,7 @@ public final class BakedLevelOverlayPipeline<T extends Level> implements RenderP
     private final MovableCamera movableCamera = new MovableCamera();
 
     @Override
-    public void staticGeometryPass(BakedDirectLevelRenderingContext<T> ctx, float partialTick, RenderType renderType, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix, Vector3fc origin) {
+    public void staticGeometryPass(BakedDirectLevelRenderingContext ctx, GuiGraphics graphics, float partialTick, RenderType renderType, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix, Vector3fc origin) {
         // Rebase the camera so that blocks get coordinates relative to their inner level, rather than the real level
         movableCamera.setup(camera.getEntity().level(), camera.getEntity(), camera.isDetached(), false, partialTick);
         movableCamera.moveWorldSpace(-origin.x(), -origin.y(), -origin.z());
@@ -65,7 +64,7 @@ public final class BakedLevelOverlayPipeline<T extends Level> implements RenderP
     }
 
     @Override
-    public void blockEntitiesPass(BakedDirectLevelRenderingContext<T> ctx, float partialTick, PoseStack poseStack, Camera camera, Frustum frustum, MultiBufferSource.BufferSource bufferSource, Vector3fc origin) {
+    public void blockEntitiesPass(BakedDirectLevelRenderingContext ctx, GuiGraphics graphics, float partialTick, PoseStack poseStack, Camera camera, Frustum frustum, MultiBufferSource.BufferSource bufferSource, Vector3fc origin) {
         // Rebase the camera so that block entities get coordinates relative to their inner level, rather than the real level
         movableCamera.setup(camera.getEntity().level(), camera.getEntity(), camera.isDetached(), false, partialTick);
         movableCamera.moveWorldSpace(-origin.x(), -origin.y(), -origin.z());
@@ -98,26 +97,6 @@ public final class BakedLevelOverlayPipeline<T extends Level> implements RenderP
     private boolean isBlockEntityRendererVisible(BlockEntityRenderDispatcher dispatcher, BlockEntity blockEntity, Frustum frustum, Vector3fc origin) {
         var renderer = dispatcher.getRenderer(blockEntity);
         return renderer != null && frustum.isVisible(renderer.getRenderBoundingBox(blockEntity).move(origin.x(), origin.y(), origin.z()));
-    }
-
-    // These following classes exist because we need to re-base the world based on a passed-in origin, rather than the typical (0, 0, 0) origin.
-    private static class MovableCamera extends Camera
-    {
-        @Override
-        public void setup(
-            final BlockGetter pLevel,
-            final Entity pEntity,
-            final boolean pDetached,
-            final boolean pThirdPersonReverse,
-            final float pPartialTick)
-        {
-            tick();
-            super.setup(pLevel, pEntity, pDetached, pThirdPersonReverse, pPartialTick);
-        }
-
-        public void moveWorldSpace(double x, double y, double z) {
-            super.setPosition(super.getPosition().x + x, super.getPosition().y + y, super.getPosition().z + z);
-        }
     }
 
     private static class WrappedEntityRenderDispatcher extends EntityRenderDispatcher

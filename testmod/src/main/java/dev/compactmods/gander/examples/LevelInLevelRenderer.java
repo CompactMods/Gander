@@ -3,6 +3,9 @@ package dev.compactmods.gander.examples;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import dev.compactmods.gander.level.TickingLevel;
+import net.minecraft.client.gui.GuiGraphics;
+
 import org.joml.Vector3f;
 
 import com.google.common.base.Suppliers;
@@ -23,8 +26,8 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 /**
  * Serves as a reference implementation of a level-in-level renderer, using a pre-built rendering pipeline.
  */
-public record LevelInLevelRenderer(UUID id, BakedDirectLevelRenderingContext<VirtualLevel> ctx, Vector3f renderOffset) {
-    private static final Supplier<RenderPipeline<VirtualLevel, BakedDirectLevelRenderingContext<VirtualLevel>>> PIPELINE = Suppliers.memoize(BakedLevelOverlayPipeline::new);
+public record LevelInLevelRenderer(UUID id, BakedDirectLevelRenderingContext ctx, Vector3f renderOffset) {
+    private static final Supplier<RenderPipeline<BakedDirectLevelRenderingContext>> PIPELINE = Suppliers.memoize(BakedLevelOverlayPipeline::new);
 
     public static LevelInLevelRenderer create(BakedLevel level, VirtualLevel virtualLevel) {
         BoundingBox bounds = virtualLevel.getBounds();
@@ -40,8 +43,8 @@ public record LevelInLevelRenderer(UUID id, BakedDirectLevelRenderingContext<Vir
     }
 
     public static LevelInLevelRenderer create(BakedLevel level, VirtualLevel virtualLevel, Vector3f renderLocation) {
-        final var ctx = new BakedDirectLevelRenderingContext<>(
-            virtualLevel,
+        final var ctx = new BakedDirectLevelRenderingContext(
+            level,
             level.blockRenderBuffers(), level.fluidRenderBuffers(),
             virtualLevel.blockSystem().blockAndFluidStorage()::blockEntities
         );
@@ -53,15 +56,17 @@ public record LevelInLevelRenderer(UUID id, BakedDirectLevelRenderingContext<Vir
         final var pipeline = PIPELINE.get();
         if (pipeline == null) return;
 
+        final var graphics = new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().renderBuffers().bufferSource());
+
         var chunkRenderType = RenderTypes.renderTypeForStage(evt.getStage());
         var partialTick = evt.getPartialTick().getGameTimeDeltaPartialTick(true);
         if (chunkRenderType != null) {
             var stack = new PoseStack();
             stack.mulPose(evt.getModelViewMatrix());
 
-            pipeline.staticGeometryPass(ctx, partialTick, chunkRenderType, stack, evt.getCamera(), evt.getProjectionMatrix(), renderOffset);
+            pipeline.staticGeometryPass(ctx, graphics, partialTick, chunkRenderType, stack, evt.getCamera(), evt.getProjectionMatrix(), renderOffset);
         } else if (evt.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES) {
-            pipeline.blockEntitiesPass(ctx, partialTick,
+            pipeline.blockEntitiesPass(ctx, graphics, partialTick,
                 evt.getPoseStack(),
                 evt.getCamera(),
                 evt.getFrustum(),
@@ -71,6 +76,7 @@ public record LevelInLevelRenderer(UUID id, BakedDirectLevelRenderingContext<Vir
     }
 
     public void onClientTick(ClientTickEvent.Post event) {
-        ctx.level().tick(Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true));
+        if(ctx.level().originalLevel() instanceof TickingLevel vl)
+            vl.tick(Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true));
     }
 }

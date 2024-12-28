@@ -36,6 +36,11 @@ java {
 
 neoForge {
     version = neoforged.versions.neoforge
+
+    parchment {
+        minecraftVersion = libs.versions.parchmentMC
+        mappingsVersion = libs.versions.parchment
+    }
 }
 
 repositories {
@@ -43,8 +48,9 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":core", "default"))
-    implementation(project(":rendering", "default"))
+    implementation(project(":core"))
+    implementation(project(":levels"))
+    implementation(project(":rendering"))
 }
 
 tasks.withType<ProcessResources> {

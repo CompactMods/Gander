@@ -62,6 +62,11 @@ neoForge {
         publish(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
     }
 
+    parchment {
+        minecraftVersion = libs.versions.parchmentMC
+        mappingsVersion = libs.versions.parchment
+    }
+
     runs {
         configureEach {
             systemProperty("forge.logging.markers", "") // 'SCAN,REGISTRIES,REGISTRYDUMP'
@@ -153,9 +158,9 @@ repositories {
 
 dependencies {
     // Core Projects and Libraries
-    implementation(project(":levels"))
-    implementation(project(":rendering"))
-    implementation(project(":ui"))
+    implementation(project(":levels", "default"))
+    implementation(project(":rendering", "default"))
+    implementation(project(":ui", "default"))
 
     renderNurseCfg("net.neoforged:render-nurse:0.0.12")
 

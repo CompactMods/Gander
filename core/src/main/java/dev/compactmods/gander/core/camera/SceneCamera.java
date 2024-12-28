@@ -1,4 +1,4 @@
-package dev.compactmods.gander.ui.camera;
+package dev.compactmods.gander.core.camera;
 
 import net.minecraft.client.Camera;
 

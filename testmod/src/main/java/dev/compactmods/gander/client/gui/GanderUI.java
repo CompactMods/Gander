@@ -1,187 +1,199 @@
 package dev.compactmods.gander.client.gui;
 
-import java.io.IOException;
-
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.platform.InputConstants;
 
-import dev.compactmods.gander.ui.widget.SpatialRenderer;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+
+import dev.compactmods.gander.render.RenderTypes;
+import dev.compactmods.gander.ui.pipeline.BakedVirtualLevelScreenPipeline;
+import dev.compactmods.gander.ui.pipeline.context.BakedLevelScreenLevelRenderingContext;
 import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.DyeColor;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
+
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 public class GanderUI extends Screen {
 
-	protected boolean autoRotate = false;
+    protected boolean autoRotate = false;
 
-	private BakedLevel scene;
-	//	private SpatialRenderer topRenderer;
-//	private SpatialRenderer frontRenderer;
-//	private SpatialRenderer leftRenderer;
-	private SpatialRenderer orthoRenderer;
+    private BakedLevel scene;
+    private final Supplier<BakedVirtualLevelScreenPipeline> pipeline = Suppliers.memoize(BakedVirtualLevelScreenPipeline::new);
 
-	private Component sceneSource;
-	private ScreenRectangle renderableArea;
+    private BakedLevelScreenLevelRenderingContext renderingContext;
 
-	GanderUI() {
-		super(Component.empty());
-	}
+    private Component sceneSource;
 
-	GanderUI(StructureSceneDataRequest dataRequest) {
-		this();
-		PacketDistributor.sendToServer(dataRequest);
-	}
+    GanderUI() {
+        super(Component.empty());
+    }
 
-	@Override
-	protected void init() {
-		super.init();
+    GanderUI(StructureSceneDataRequest dataRequest) {
+        this();
+        PacketDistributor.sendToServer(dataRequest);
+    }
 
-		int totalWidth = 400 + 10 + 120;
-		int totalHeight = 320;
-
-		this.renderableArea = new ScreenRectangle((width - totalWidth) / 2, (height - totalHeight) / 2, totalWidth, totalHeight);
-
-        this.orthoRenderer = this.addRenderableWidget(new SpatialRenderer(
-                0, 0,
-                width, height));
-
+    @Override
+    protected void init() {
+        super.init();
         updateSceneRenderers();
-	}
+    }
 
-	private void updateSceneRenderers() {
-		if (this.scene != null) {
-//			topRenderer.setData(scene);
-//			frontRenderer.setData(scene);
-//			leftRenderer.setData(scene);
-			orthoRenderer.setData(scene);
-		}
-	}
+    private void updateSceneRenderers() {
+        if (renderingContext != null)
+            renderingContext.dispose();
 
-	private void disposeSceneRenderers() {
-		if (this.scene != null) {
-//			topRenderer.setData(scene);
-//			frontRenderer.setData(scene);
-//			leftRenderer.setData(scene);
-			orthoRenderer.dispose();
-			renderables.remove(orthoRenderer);
-		}
-	}
+        if (this.scene != null) {
+            renderingContext = new BakedLevelScreenLevelRenderingContext(this.scene, width, height);
+        }
+    }
 
-	@Override
-	public void tick() {
-		super.tick();
-		if (this.scene != null) {
-			// TODO: :)
-			var level = ((VirtualLevel)scene.originalLevel());
-			level.tick(minecraft.getTimer().getRealtimeDeltaTicks());
-			// level.animateTick();
-		}
+    private void disposeSceneRenderers() {
+        if (renderingContext != null)
+            renderingContext.dispose();
+    }
 
-		if (autoRotate) {
-			this.orthoRenderer.camera().lookLeft((float) Math.toRadians(2.5));
-			this.orthoRenderer.recalculateTranslucency();
-		}
-	}
+    @Override
+    public void tick() {
+        super.tick();
+        if (this.scene != null) {
+            // TODO: :)
+            var level = ((VirtualLevel) scene.originalLevel());
+            level.tick(minecraft.getTimer().getRealtimeDeltaTicks());
+            // level.animateTick();
+        }
 
-	@Override
-	public void renderTransparentBackground(GuiGraphics pGuiGraphics) {
+        if (autoRotate) {
+//			this.orthoRenderer.camera().lookLeft((float) Math.toRadians(2.5));
+//			this.orthoRenderer.recalculateTranslucency();
+        }
+    }
 
-	}
+    @Override
+    public void renderTransparentBackground(GuiGraphics pGuiGraphics) {
 
-	@Override
-	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		super.render(graphics, mouseX, mouseY, partialTicks);
+    }
 
-		if (this.sceneSource != null) {
-			graphics.pose().pushPose();
-			// graphics.pose().translate(getRectangle().left(), );
-			graphics.drawCenteredString(font, sceneSource, width / 2, 10, DyeColor.WHITE.getFireworkColor());
-			graphics.pose().popPose();
-		}
-		var poseStack = graphics.pose();
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        super.render(graphics, mouseX, mouseY, partialTicks);
 
-		poseStack.pushPose();
-		{
-//			graphics.drawCenteredString(font, frontRenderer.getRectangle().toString(), width / 2, 20, DyeColor.WHITE.getFireworkColor());
+        renderSceneSourceLabel(graphics);
 
-//			graphics.fill(topRenderer.getX(), topRenderer.getY(), topRenderer.getX() + topRenderer.getWidth(), topRenderer.getY() + topRenderer.getHeight(), CommonColors.WHITE);
-//			graphics.fill(leftRenderer.getX(), leftRenderer.getY(), leftRenderer.getX() + leftRenderer.getWidth(), leftRenderer.getY() + leftRenderer.getHeight(), CommonColors.SOFT_RED);
-//			graphics.fill(frontRenderer.getX(), frontRenderer.getY(), frontRenderer.getX() + frontRenderer.getWidth(), frontRenderer.getY() + frontRenderer.getHeight(), CommonColors.SOFT_YELLOW);
-//			graphics.fill(orthoRenderer.getX(), orthoRenderer.getY(), orthoRenderer.getX() + orthoRenderer.getWidth(), orthoRenderer.getY() + orthoRenderer.getHeight(), CommonColors.BLACK);
-		}
-		poseStack.popPose();
+        if (this.scene == null || this.renderingContext == null)
+            return;
 
-	}
+        final var pipe = pipeline.get();
 
-	@Override
-	public boolean mouseScrolled(double pMouseX, double pMouseY, double pScrollX, double pScrollY) {
-		this.orthoRenderer.zoom(pScrollY);
-		return true;
-	}
+        var stack = graphics.pose();
+        final var projMatrix = RenderSystem.getProjectionMatrix();
 
-	@Override
-	public boolean keyPressed(int code, int scanCode, int modifiers) {
-		final float rotateSpeed = 1 / 12f;
+        pipe.setup(renderingContext, graphics, stack, renderingContext.camera, projMatrix);
 
-		if (code == InputConstants.KEY_A) {
-			this.autoRotate = !autoRotate;
-			return true;
-		}
+        pipe.staticGeometryPass(renderingContext, graphics, partialTicks,
+            RenderTypes.renderTypeForStage(RenderLevelStageEvent.Stage.AFTER_SOLID_BLOCKS),
+            stack, renderingContext.camera, projMatrix);
 
-		if (code == InputConstants.KEY_R) {
-			orthoRenderer.camera().resetLook();
-			this.orthoRenderer.recalculateTranslucency();
-			return true;
-		}
+//        for (var chunkRenderType : RenderTypes.GEOMETRY_STAGES.values()) {
+//            // stack.mulPose(evt.getModelViewMatrix());
+//            pipe.staticGeometryPass(renderingContext, graphics, partialTicks, chunkRenderType, stack, renderingContext.camera, projMatrix, new Vector3f());
+//
+////            if (chunkRenderType == G {
+////            pipe.blockEntitiesPass(renderingContext, graphics, partialTicks,
+////                evt.getPoseStack(),
+////                evt.getCamera(),
+////                evt.getFrustum(),
+////                Minecraft.getInstance().renderBuffers().bufferSource(),
+////                new Vector3f());
+////        }
+//        }
 
-		if (code == InputConstants.KEY_UP) {
-			orthoRenderer.camera().lookUp(rotateSpeed);
-			this.orthoRenderer.recalculateTranslucency();
-			return true;
-		}
+        pipe.teardown(renderingContext, graphics, stack, renderingContext.camera, projMatrix);
+    }
 
-		if (code == InputConstants.KEY_DOWN) {
-			orthoRenderer.camera().lookDown(rotateSpeed);
-			this.orthoRenderer.recalculateTranslucency();
-			return true;
-		}
+    private void renderSceneSourceLabel(GuiGraphics graphics) {
+        if (this.sceneSource != null) {
+            graphics.pose().pushPose();
+            // graphics.pose().translate(getRectangle().left(), );
+            graphics.drawCenteredString(font, sceneSource, width / 2, 10, DyeColor.WHITE.getFireworkColor());
+            graphics.pose().popPose();
+        }
+    }
 
-		if (code == InputConstants.KEY_LEFT) {
-			orthoRenderer.camera().lookLeft(rotateSpeed);
-			this.orthoRenderer.recalculateTranslucency();
-			return true;
-		}
+    @Override
+    public boolean mouseScrolled(double pMouseX, double pMouseY, double pScrollX, double pScrollY) {
+        // this.orthoRenderer.zoom(pScrollY);
+        return true;
+    }
 
-		if (code == InputConstants.KEY_RIGHT) {
-			orthoRenderer.camera().lookRight(rotateSpeed);
-			this.orthoRenderer.recalculateTranslucency();
-			return true;
-		}
+    @Override
+    public boolean keyPressed(int code, int scanCode, int modifiers) {
+        final float rotateSpeed = 1 / 12f;
 
-		return super.keyPressed(code, scanCode, modifiers);
-	}
+        if (code == InputConstants.KEY_A) {
+            this.autoRotate = !autoRotate;
+            return true;
+        }
 
-	@Override
-	public boolean isPauseScreen() {
-		return false;
-	}
+        if (code == InputConstants.KEY_R) {
+//			orthoRenderer.camera().resetLook();
+//			this.orthoRenderer.recalculateTranslucency();
+            return true;
+        }
 
-	@Override
-	public void removed() {
-		this.disposeSceneRenderers();
-	}
+        if (code == InputConstants.KEY_UP) {
+//			orthoRenderer.camera().lookUp(rotateSpeed);
+//			this.orthoRenderer.recalculateTranslucency();
+            return true;
+        }
 
-	public void setSceneSource(Component src) {
-		this.sceneSource = src;
-	}
+        if (code == InputConstants.KEY_DOWN) {
+//			orthoRenderer.camera().lookDown(rotateSpeed);
+//			this.orthoRenderer.recalculateTranslucency();
+            return true;
+        }
 
-	public void setScene(BakedLevel scene) {
-		this.scene = scene;
-		updateSceneRenderers();
-	}
+        if (code == InputConstants.KEY_LEFT) {
+//			orthoRenderer.camera().lookLeft(rotateSpeed);
+//			this.orthoRenderer.recalculateTranslucency();
+            return true;
+        }
+
+        if (code == InputConstants.KEY_RIGHT) {
+//			orthoRenderer.camera().lookRight(rotateSpeed);
+//			this.orthoRenderer.recalculateTranslucency();
+            return true;
+        }
+
+        return super.keyPressed(code, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+
+    @Override
+    public void removed() {
+        this.disposeSceneRenderers();
+    }
+
+    public void setSceneSource(Component src) {
+        this.sceneSource = src;
+    }
+
+    public void setScene(BakedLevel scene) {
+        this.scene = scene;
+        updateSceneRenderers();
+    }
 }

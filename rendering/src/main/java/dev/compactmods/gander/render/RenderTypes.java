@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 // TODO 1.17: use custom shaders instead of vanilla ones
 public class RenderTypes extends RenderStateShard {
 
-    private static final Map<RenderLevelStageEvent.Stage, RenderType> GEOMETRY_STAGES
+    public static final Map<RenderLevelStageEvent.Stage, RenderType> GEOMETRY_STAGES
         = RenderType.chunkBufferLayers()
         .stream()
         .collect(Collectors.toMap(RenderLevelStageEvent.Stage::fromRenderType, Function.identity()));
