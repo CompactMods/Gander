@@ -12,7 +12,7 @@ import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import dev.compactmods.gander.level.VirtualLevel;
-import dev.compactmods.gander.render.RenderPipeline;
+import dev.compactmods.gander.render.pipeline.RenderPipeline;
 import dev.compactmods.gander.render.RenderTypes;
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.pipeline.BakedLevelOverlayPipeline;

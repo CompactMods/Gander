@@ -3,7 +3,6 @@ package dev.compactmods.gander.render.pipeline;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import dev.compactmods.gander.core.camera.MovableCamera;
-import dev.compactmods.gander.render.RenderPipeline;
 import dev.compactmods.gander.render.pipeline.context.BakedDirectLevelRenderingContext;
 import dev.compactmods.gander.render.toolkit.BlockRenderer;
 import net.minecraft.client.Camera;
@@ -17,7 +16,6 @@ import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 

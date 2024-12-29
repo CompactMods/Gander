@@ -1,6 +1,7 @@
 package dev.compactmods.gander.render.translucency;
 
 import java.util.List;
+import java.util.Set;
 
 import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL32;
@@ -154,4 +155,8 @@ public final class TranslucencyChain implements AutoCloseable
 
 		return layeredTargets.getLayer(layer);
 	}
+
+    public Set<ResourceLocation> layers() {
+        return Set.copyOf(renderTargets);
+    }
 }

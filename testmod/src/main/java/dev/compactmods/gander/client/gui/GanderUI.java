@@ -5,37 +5,41 @@ import com.google.common.base.Suppliers;
 import com.mojang.blaze3d.platform.InputConstants;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 
+import dev.compactmods.gander.core.Gander;
+import dev.compactmods.gander.core.camera.SceneCamera;
 import dev.compactmods.gander.render.RenderTypes;
 import dev.compactmods.gander.ui.pipeline.BakedVirtualLevelScreenPipeline;
 import dev.compactmods.gander.ui.pipeline.context.BakedLevelScreenLevelRenderingContext;
 import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.geometry.BakedLevel;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.DyeColor;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
+import org.joml.Quaternionf;
 
 public class GanderUI extends Screen {
-
-    protected boolean autoRotate = false;
 
     private BakedLevel scene;
     private final Supplier<BakedVirtualLevelScreenPipeline> pipeline = Suppliers.memoize(BakedVirtualLevelScreenPipeline::new);
 
+    private final SceneCamera camera;
     private BakedLevelScreenLevelRenderingContext renderingContext;
 
     private Component sceneSource;
 
     GanderUI() {
         super(Component.empty());
+        this.camera = new SceneCamera();
     }
 
     GanderUI(StructureSceneDataRequest dataRequest) {
@@ -72,11 +76,6 @@ public class GanderUI extends Screen {
             level.tick(minecraft.getTimer().getRealtimeDeltaTicks());
             // level.animateTick();
         }
-
-        if (autoRotate) {
-//			this.orthoRenderer.camera().lookLeft((float) Math.toRadians(2.5));
-//			this.orthoRenderer.recalculateTranslucency();
-        }
     }
 
     @Override
@@ -98,27 +97,26 @@ public class GanderUI extends Screen {
         var stack = graphics.pose();
         final var projMatrix = RenderSystem.getProjectionMatrix();
 
-        pipe.setup(renderingContext, graphics, stack, renderingContext.camera, projMatrix);
+        final var frustum = new Frustum(new Matrix4f().rotate(camera.rotation().conjugate(new Quaternionf())),
+            projMatrix);
 
-        pipe.staticGeometryPass(renderingContext, graphics, partialTicks,
-            RenderTypes.renderTypeForStage(RenderLevelStageEvent.Stage.AFTER_SOLID_BLOCKS),
-            stack, renderingContext.camera, projMatrix);
+        final var manager = pipe.createLifecycleManager();
 
-//        for (var chunkRenderType : RenderTypes.GEOMETRY_STAGES.values()) {
-//            // stack.mulPose(evt.getModelViewMatrix());
-//            pipe.staticGeometryPass(renderingContext, graphics, partialTicks, chunkRenderType, stack, renderingContext.camera, projMatrix, new Vector3f());
-//
-////            if (chunkRenderType == G {
-////            pipe.blockEntitiesPass(renderingContext, graphics, partialTicks,
-////                evt.getPoseStack(),
-////                evt.getCamera(),
-////                evt.getFrustum(),
-////                Minecraft.getInstance().renderBuffers().bufferSource(),
-////                new Vector3f());
-////        }
-//        }
+        manager.setup(renderingContext, graphics, stack, camera, projMatrix);
 
-        pipe.teardown(renderingContext, graphics, stack, renderingContext.camera, projMatrix);
+        // TODO: Map layers somewhere - renderingContext.translucencyChain.layers()
+        renderingContext.translucencyChain.prepareLayer(Gander.asResource("main"));
+
+        // pipe.staticGeometryPass(renderingContext, graphics, partialTicks, RenderType.solid(), stack, renderingContext.camera, projMatrix);
+        // pipe.staticGeometryPass(renderingContext, graphics, partialTicks, RenderType.cutoutMipped(), stack, renderingContext.camera, projMatrix);
+        // pipe.staticGeometryPass(renderingContext, graphics, partialTicks, RenderType.cutout(), stack, renderingContext.camera, projMatrix);
+
+        renderingContext.translucencyChain.prepareLayer(Gander.asResource("entity"));
+        // pipe.blockEntitiesPass(renderingContext, graphics, partialTicks, stack, renderingContext.camera, frustum, graphics.bufferSource());
+
+        renderingContext.translucencyChain.process();
+
+//         manager.teardown(renderingContext, graphics, stack, renderingContext.camera, projMatrix);
     }
 
     private void renderSceneSourceLabel(GuiGraphics graphics) {
@@ -132,7 +130,7 @@ public class GanderUI extends Screen {
 
     @Override
     public boolean mouseScrolled(double pMouseX, double pMouseY, double pScrollX, double pScrollY) {
-        // this.orthoRenderer.zoom(pScrollY);
+        camera.zoom((float) pScrollY);
         return true;
     }
 
@@ -140,38 +138,33 @@ public class GanderUI extends Screen {
     public boolean keyPressed(int code, int scanCode, int modifiers) {
         final float rotateSpeed = 1 / 12f;
 
-        if (code == InputConstants.KEY_A) {
-            this.autoRotate = !autoRotate;
-            return true;
-        }
-
         if (code == InputConstants.KEY_R) {
-//			orthoRenderer.camera().resetLook();
-//			this.orthoRenderer.recalculateTranslucency();
+            camera.resetLook();
+            renderingContext.recalculateTranslucency(camera);
             return true;
         }
 
         if (code == InputConstants.KEY_UP) {
-//			orthoRenderer.camera().lookUp(rotateSpeed);
-//			this.orthoRenderer.recalculateTranslucency();
+            camera.lookUp(rotateSpeed);
+            renderingContext.recalculateTranslucency(camera);
             return true;
         }
 
         if (code == InputConstants.KEY_DOWN) {
-//			orthoRenderer.camera().lookDown(rotateSpeed);
-//			this.orthoRenderer.recalculateTranslucency();
+            camera.lookDown(rotateSpeed);
+            renderingContext.recalculateTranslucency(camera);
             return true;
         }
 
         if (code == InputConstants.KEY_LEFT) {
-//			orthoRenderer.camera().lookLeft(rotateSpeed);
-//			this.orthoRenderer.recalculateTranslucency();
+            camera.lookLeft(rotateSpeed);
+            renderingContext.recalculateTranslucency(camera);
             return true;
         }
 
         if (code == InputConstants.KEY_RIGHT) {
-//			orthoRenderer.camera().lookRight(rotateSpeed);
-//			this.orthoRenderer.recalculateTranslucency();
+            camera.lookRight(rotateSpeed);
+            renderingContext.recalculateTranslucency(camera);
             return true;
         }
 
@@ -185,7 +178,7 @@ public class GanderUI extends Screen {
 
     @Override
     public void removed() {
-        this.disposeSceneRenderers();
+        disposeSceneRenderers();
     }
 
     public void setSceneSource(Component src) {
