@@ -13,6 +13,11 @@ import dev.compactmods.gander.runtime.mixin.accessor.ObjModel$ModelGroupAccessor
 import dev.compactmods.gander.runtime.mixin.accessor.ObjModel$ModelMeshAccessor;
 import dev.compactmods.gander.runtime.mixin.accessor.ObjModel$ModelObjectAccessor;
 import dev.compactmods.gander.runtime.mixin.accessor.ObjModelAccessor;
+import net.minecraft.client.renderer.block.model.BlockModel;
+import net.minecraft.client.renderer.block.model.TextureSlots;
+import net.minecraft.client.renderer.block.model.TextureSlots.Reference;
+import net.minecraft.client.renderer.block.model.TextureSlots.Value;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.ModelResourceLocation;
@@ -173,22 +178,18 @@ public final class ObjModelBaker
             }
         }
 
-        var materials = textureReferences.stream()//, model.textureMap.keySet().stream())
+        var materials = Stream.concat(textureReferences.stream(), model.getTextureSlots().values().keySet().stream())
             .distinct()
             .map(it -> {
-                // TODO: check if any parents contain textures?
-                Either<Material, String> mtlOrRef = Either.right(it);/*model.textureMap.getOrDefault(it, knownTextures.containsValue(it)
-                    ? Either.left(new net.minecraft.client.resources.model.Material(
-                    TextureAtlas.LOCATION_BLOCKS,
-                    knownTextures.inverse().get(it)))
-                    : Either.right(it))*/;
-                return new MaterialParent(it,
-                    mtlOrRef.map(
-                        net.minecraft.client.resources.model.Material::atlasLocation,
-                        ref -> TextureAtlas.LOCATION_BLOCKS),
-                    mtlOrRef.map(
-                        net.minecraft.client.resources.model.Material::texture,
-                        ref -> null));
+                var contents = model.getTextureSlots()
+                    .values()
+                    .getOrDefault(it, knownTextures.containsValue(it)
+                        ? new Value(new Material(
+                        TextureAtlas.LOCATION_BLOCKS,
+                        knownTextures.inverse().get(it)))
+                        : new Reference(it));
+
+                return getMaterialParent(it, contents, model);
             })
             .toList();
 
@@ -217,6 +218,38 @@ public final class ObjModelBaker
                 materials, materialIndexes),
             renderType,
             true); //originalModel.customData.isComponentVisible(object.getName(), true));
+    }
+
+    private static MaterialParent getMaterialParent(
+        String key,
+        TextureSlots.SlotContents slotContents,
+        ObjModel model)
+    {
+        return switch (slotContents)
+        {
+            case TextureSlots.Reference(String target)
+                -> key.equals(target)
+                // If the reference is self-referential, return missingno
+                ? new MaterialParent(key,
+                TextureAtlas.LOCATION_BLOCKS,
+                MissingTextureAtlasSprite.getLocation())
+                // Look further in the chain
+                : getMaterialParent(key,
+                    model.getTextureSlots()
+                        .values()
+                        .get(target),
+                    model);
+            case TextureSlots.Value(Material material)
+                -> new MaterialParent(key,
+                material.atlasLocation(),
+                material.texture());
+
+            // If the slot is null, it means we failed to find something at some point.
+            case null
+                -> new MaterialParent(key,
+                TextureAtlas.LOCATION_BLOCKS,
+                MissingTextureAtlasSprite.getLocation());
+        };
     }
 
     private static ModelVertices bakeFace(

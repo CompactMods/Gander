@@ -6,13 +6,28 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableBiMap;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.Multimap;
 
+import com.mojang.datafixers.util.Either;
+
+import dev.compactmods.gander.render.baked.model.DisplayableMesh;
+import dev.compactmods.gander.render.baked.model.material.MaterialInstance;
+import dev.compactmods.gander.render.baked.model.material.MaterialParent;
 import dev.compactmods.gander.runtime.mixin.accessor.BlockModelAccessor;
 import net.minecraft.client.renderer.block.model.BlockModel;
+import net.minecraft.client.renderer.block.model.MultiVariant;
+import net.minecraft.client.renderer.block.model.TextureSlots;
+import net.minecraft.client.renderer.block.model.multipart.MultiPart;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.BlockStateModelLoader;
+import net.minecraft.client.resources.model.BlockStateModelLoader.LoadedModels;
+import net.minecraft.client.resources.model.Material;
+import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.resources.model.ResolvableModel;
+import net.minecraft.client.resources.model.ResolvableModel.Resolver;
 import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -23,7 +38,10 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Discovers archetypes as part of model rebaking.
@@ -34,7 +52,7 @@ public final class ArchetypeDiscovery
 
     private final Map<ResourceLocation, UnbakedModel> _referencedModels;
     private final UnbakedModel _missingModel;
-    private final BlockStateModelLoader.LoadedModels _blockStateModels;
+    private final LoadedModels _blockStateModels;
 
     private final Map<ResourceLocation, UnbakedModel> _archetypes = new HashMap<>();
     private final Multimap<ResourceLocation, ResourceLocation> _referencedArchetypes = HashMultimap.create();
@@ -43,7 +61,7 @@ public final class ArchetypeDiscovery
     public ArchetypeDiscovery(
         Map<ResourceLocation, UnbakedModel> referencedModels,
         UnbakedModel missingModel,
-        BlockStateModelLoader.LoadedModels blockStateModels)
+        LoadedModels blockStateModels)
     {
         _referencedModels = referencedModels;
         _missingModel = missingModel;
@@ -113,13 +131,15 @@ public final class ArchetypeDiscovery
 
         if (LOGGER.isDebugEnabled())
             LOGGER.debug("Computed {} different blockstate archetype models", _blockStateArchetypes.size());
+
+        profiler.pop();
     }
 
     private Set<ResourceLocation> getBlockStateArchetypes(ResolvableModel model)
     {
-        var resolver = new ResolvableModel.Resolver()
+        var resolver = new Resolver()
         {
-            final ImmutableSet.Builder<ResourceLocation> result
+            final Builder<ResourceLocation> result
                 = ImmutableSet.builder();
             final Set<ResourceLocation> visited
                 = new HashSet<>();
@@ -163,7 +183,7 @@ public final class ArchetypeDiscovery
             return ImmutableBiMap.of(location, model);
         }
 
-        var resolver = new ResolvableModel.Resolver()
+        var resolver = new Resolver()
         {
             final ImmutableBiMap.Builder<ResourceLocation, UnbakedModel> result
                 = ImmutableBiMap.builder();

@@ -199,6 +199,7 @@ public class ModelManagerMixin implements ModelManager$Gander
         @Local(argsOnly = true, ordinal = 1) Executor foregroundExecutor,
         @Local(argsOnly = true) PreparableReloadListener.PreparationBarrier preparationBarrier,
         @Local(ordinal = 3) CompletableFuture<BlockStateModelLoader.LoadedModels> blockStateModels,
+        @Local(ordinal = 5) CompletableFuture<ModelDiscovery> modelDiscovery,
         @Share("archetypeDiscovery") LocalRef<CompletableFuture<ArchetypeDiscovery>> archetypeDiscovery,
         @Share("atlasIndexing") LocalRef<Map<ResourceLocation, CompletableFuture<IndexResult>>> atlasIndexing,
         @Share("archetypeBakery") LocalRef<CompletableFuture<Void>> archetypeBakery)
@@ -213,7 +214,8 @@ public class ModelManagerMixin implements ModelManager$Gander
                 discovery.getArchetypes(),
                 discovery.getReferencedArchetypes(),
                 discovery.getBlockStateArchetypes(),
-                blockStateModels.join().models());
+                blockStateModels.join().models(),
+                modelDiscovery.join().getReferencedModels());
             gander$archetypeBakery.set(bakery);
             return gander$bakeArchetypes(Profiler.get(), indexedAtlases, bakery);
         }, backgroundExecutor)

@@ -11,10 +11,15 @@ import dev.compactmods.gander.runtime.baked.model.block.ModelUvs.ModelUv;
 import dev.compactmods.gander.runtime.baked.model.block.ModelUvs.UvIndex;
 import dev.compactmods.gander.render.baked.model.ModelVertices;
 import dev.compactmods.gander.render.baked.model.ModelVertices.ModelVertex;
+import net.minecraft.client.data.models.model.TextureSlot;
 import net.minecraft.client.renderer.block.model.BlockElement;
 import net.minecraft.client.renderer.block.model.BlockElementFace;
 import net.minecraft.client.renderer.block.model.BlockElementRotation;
 import net.minecraft.client.renderer.block.model.BlockModel;
+import net.minecraft.client.renderer.block.model.TextureSlots;
+import net.minecraft.client.renderer.block.model.TextureSlots.Reference;
+import net.minecraft.client.renderer.block.model.TextureSlots.SlotContents;
+import net.minecraft.client.renderer.block.model.TextureSlots.Value;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.Material;
@@ -125,17 +130,18 @@ public final class BlockModelBaker
             indexBuffer.put((byte)deduplicatedVertices.indexOf(vertices[2]));
         }
 
-        var materials = textureReferences.stream()//, model.textureMap.keySet().stream())
+        var materials = Stream.concat(textureReferences.stream(), model.getTextureSlots().values().keySet().stream())
             .distinct()
             .map(it -> {
-                Either<Material, String> mtlOrRef = Either.right(it); /* model.textureMap.getOrDefault(it,
-                    knownTextures.containsValue(it)
-                        ? Either.left(new net.minecraft.client.resources.model.Material(
+                var contents = model.getTextureSlots()
+                    .values()
+                    .getOrDefault(it, knownTextures.containsValue(it)
+                        ? new Value(new Material(
                             TextureAtlas.LOCATION_BLOCKS,
                             knownTextures.inverse().get(it)))
-                        : Either.right(it)); */
+                        : new Reference(it));
 
-                return getMaterialParent(it, mtlOrRef, model);
+                return getMaterialParent(it, contents, model);
             })
             .toList();
 
@@ -166,28 +172,34 @@ public final class BlockModelBaker
 
     private static MaterialParent getMaterialParent(
         String key,
-        Either<Material, String> materialOrRef,
+        TextureSlots.SlotContents slotContents,
         BlockModel model)
     {
-        return materialOrRef.map(
-            // If it's a direct material, create a material parent for it
-            mtl -> new MaterialParent(key, mtl.atlasLocation(), mtl.texture()),
-            // If it's a reference, look further up the chain
-            ref -> key.equals(ref)
-                // If this reference is self-referential, default to missingno.
-                ? new MaterialParent(key,
+        return switch (slotContents)
+        {
+            case TextureSlots.Reference(String target)
+                -> key.equals(target)
+                    // If the reference is self-referential, return missingno
+                    ? new MaterialParent(key,
+                        TextureAtlas.LOCATION_BLOCKS,
+                        MissingTextureAtlasSprite.getLocation())
+                    // Look further in the chain
+                    : getMaterialParent(key,
+                        model.getTextureSlots()
+                            .values()
+                            .get(target),
+                        model);
+            case TextureSlots.Value(Material material)
+                -> new MaterialParent(key,
+                    material.atlasLocation(),
+                    material.texture());
+
+            // If the slot is null, it means we failed to find something at some point.
+            case null
+                -> new MaterialParent(key,
                     TextureAtlas.LOCATION_BLOCKS,
-                    MissingTextureAtlasSprite.getLocation())
-                // If it's not, get a material parent for it
-                : getMaterialParent(
-                    key,
-                    // If we can't find it in the texture map, default to missingno.
-                    Either.left(new Material(TextureAtlas.LOCATION_BLOCKS, MissingTextureAtlasSprite.getLocation())),
-                    /*model.textureMap.getOrDefault(ref,
-                        Either.left(
-                            new Material(TextureAtlas.LOCATION_BLOCKS,
-                                MissingTextureAtlasSprite.getLocation()))), */
-                    model));
+                    MissingTextureAtlasSprite.getLocation());
+        };
     }
 
     private static ModelVertices bakeElement(BlockElement element)

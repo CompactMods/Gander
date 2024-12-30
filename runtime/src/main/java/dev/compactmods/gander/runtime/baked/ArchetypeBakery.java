@@ -8,11 +8,14 @@ import dev.compactmods.gander.render.baked.model.DisplayableMesh;
 import dev.compactmods.gander.render.baked.model.DisplayableMeshGroup;
 import dev.compactmods.gander.render.baked.model.DisplayableMeshGroup.Mode;
 import dev.compactmods.gander.render.baked.model.archetype.ArchetypeComponent;
+import dev.compactmods.gander.render.baked.model.material.MaterialInstance;
+import dev.compactmods.gander.render.baked.model.material.MaterialParent;
 import dev.compactmods.gander.runtime.baked.model.archetype.ArchetypeBaker;
 import dev.compactmods.gander.runtime.mixin.accessor.MultiPartAccessor;
 import dev.compactmods.gander.runtime.mixin.accessor.TransformationAccessor;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.MultiVariant;
+import net.minecraft.client.renderer.block.model.TextureSlots;
 import net.minecraft.client.renderer.block.model.UnbakedBlockStateModel;
 import net.minecraft.client.renderer.block.model.Variant;
 import net.minecraft.client.renderer.block.model.multipart.MultiPart;
@@ -47,16 +50,20 @@ public final class ArchetypeBakery
     private final Multimap<ModelResourceLocation, ResourceLocation> _blockStateArchetypes;
     private final Map<ModelResourceLocation, BlockStateModelLoader.LoadedModel> _blockStateModels;
 
+    private final Map<ResourceLocation, UnbakedModel> _referencedModels;
+
     public ArchetypeBakery(
         Map<ResourceLocation, UnbakedModel> unbakedArchetypes,
         Multimap<ResourceLocation, ResourceLocation> referencedArchetypes,
         Multimap<ModelResourceLocation, ResourceLocation> blockStateArchetypes,
-        Map<ModelResourceLocation, BlockStateModelLoader.LoadedModel> blockStateModels)
+        Map<ModelResourceLocation, BlockStateModelLoader.LoadedModel> blockStateModels,
+        Map<ResourceLocation, UnbakedModel> referencedModels)
     {
         _unbakedArchetypes = unbakedArchetypes;
         _referencedArchetypes = referencedArchetypes;
         _blockStateArchetypes = blockStateArchetypes;
         _blockStateModels = blockStateModels;
+        _referencedModels = referencedModels;
     }
 
     public BakingResult bakeArchetypes(ProfilerFiller profiler)
@@ -149,7 +156,7 @@ public final class ArchetypeBakery
                         //getRenderType(component.renderType(), sourceBlockState),
                         new Matrix4f(),
                         1,
-                        x -> Set.of()))
+                        getMaterialInstances(null, component, componentReferences)))
                     .collect(Collectors.collectingAndThen(
                         Collectors.toList(),
                         l -> DisplayableMeshGroup.ofMeshes(Mode.All, 1, l)));
@@ -179,7 +186,6 @@ public final class ArchetypeBakery
                         name,
                         state,
                         it,
-                        componentReferences,
                         getArchetypes,
                         getComponent))
                     .collect(Collectors.collectingAndThen(
@@ -197,7 +203,6 @@ public final class ArchetypeBakery
         ModelResourceLocation model,
         BlockState state,
         Variant variant,
-        Collection<ResourceLocation> componentReferences,
         Function<ResourceLocation, Collection<ResourceLocation>> getArchetypes,
         Function<ResourceLocation, Collection<ArchetypeComponent>> getComponent)
     {
@@ -205,17 +210,49 @@ public final class ArchetypeBakery
             .stream()
             .map(getComponent)
             .flatMap(Collection::stream)
-            .map(it -> new DisplayableMesh(
-                it.name(),
-                it.bakedMesh(),
+            .map(component -> new DisplayableMesh(
+                component.name(),
+                component.bakedMesh(),
                 //it.renderType(),
                 RenderType.solid(),
                 ((TransformationAccessor)(Object)variant.getRotation()).gander$matrix(),
                 1,
-                x -> Set.of()))
+                getMaterialInstances(_referencedModels.get(variant.modelLocation()), component, getArchetypes.apply(variant.modelLocation()))))
             .collect(Collectors.collectingAndThen(
                 Collectors.toList(),
                 l -> DisplayableMeshGroup.ofMeshes(Mode.All, variant.weight(), l)));
+    }
+
+    private Set<MaterialInstance> getMaterialInstances(
+        UnbakedModel instance,
+        ArchetypeComponent component,
+        Collection<ResourceLocation> archetypes)
+    {
+        var resolver = new TextureSlots.Resolver();
+        Stream.concat(Stream.of(instance), archetypes.stream().map(_unbakedArchetypes::get))
+            .filter(Objects::nonNull)
+            .<UnbakedModel>mapMulti((model, consumer) -> {
+                while (model != null)
+                {
+                    consumer.accept(model);
+                    model = model.getParent();
+                }
+            })
+            .map(UnbakedModel::getTextureSlots)
+            .distinct()
+            .forEach(resolver::addLast);
+
+        var result = resolver.resolve(component.name()::toString);
+
+        return component.bakedMesh().materials()
+            .stream()
+            .map(it -> {
+                var material = result.getMaterial(it.name());
+                return material != null
+                    ? new MaterialInstance(it, material.texture(), false)
+                    : new MaterialInstance(it, null, false);
+            })
+            .collect(Collectors.toSet());
     }
 
     public record BakingResult(

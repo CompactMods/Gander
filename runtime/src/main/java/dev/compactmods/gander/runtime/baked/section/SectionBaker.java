@@ -65,7 +65,6 @@ public final class SectionBaker
         BakedMesh mesh,
         int instanceCount,
         FloatBuffer transforms,
-        int transformCount,
         IntBuffer textures,
         int textureCount)
         implements AutoCloseable
@@ -195,9 +194,8 @@ public final class SectionBaker
             mesh,
             instances.size(),
             transforms.flip(),
-            instances.size(),
             textureBuffer.flip(),
-            mesh.vertexCount() * instances.size());
+            mesh.materialIndexes().length);
     }
 
     private static MaterialInstance getMaterialInstance(
@@ -205,7 +203,7 @@ public final class SectionBaker
         final MaterialParent meshParent)
     {
         var iterator = instances.stream()
-            .filter(x -> meshParent.name().equals(x.name()))
+            .filter(x -> x.parent().name().equals(meshParent.name()))
             .iterator();
 
         var material = MaterialInstance.MISSING;
@@ -224,6 +222,10 @@ public final class SectionBaker
                     + "was found for "
                     + meshParent.name());
             }
+        }
+        else
+        {
+            LOGGER.warn("Unable to find material instance for {}", meshParent.name());
         }
 
         return material;
