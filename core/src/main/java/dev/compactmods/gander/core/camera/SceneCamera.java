@@ -70,9 +70,6 @@ public class SceneCamera extends Camera {
 		lookFrom.rotateY(cameraRotation.y);
 		lookFrom.mul(zoomFactor);
 
-//		if (lookFrom.distance(newLookFrom) > 1 && bakedLevel != null)
-//			bakedLevel.resortTranslucency(newLookFrom);
-
 		var forward = new Vector3f(lookTarget).sub(lookFrom);
 		forward.normalize();
 

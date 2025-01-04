@@ -10,7 +10,7 @@ import org.joml.Matrix4f;
 
 public interface RenderPipelineLifecycleManager<TCtx extends LevelRenderingContext> {
 
-    default void setup(TCtx ctx, GuiGraphics graphics, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix) {}
+    default void setup(TCtx ctx, GuiGraphics graphics, Camera camera) {}
 
-    default void teardown(TCtx ctx, GuiGraphics graphics, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix) {}
+    default void teardown(TCtx ctx, GuiGraphics graphics) {}
 }

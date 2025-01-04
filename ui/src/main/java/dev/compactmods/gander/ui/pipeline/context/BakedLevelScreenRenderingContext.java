@@ -3,33 +3,20 @@ package dev.compactmods.gander.ui.pipeline.context;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-
-import com.mojang.blaze3d.vertex.VertexSorting;
-
 import dev.compactmods.gander.core.Gander;
-import dev.compactmods.gander.core.camera.SceneCamera;
-import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import dev.compactmods.gander.render.translucency.TranslucencyChain;
 import net.minecraft.client.Camera;
-import net.minecraft.client.GraphicsStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
-import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
-
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class BakedLevelScreenLevelRenderingContext implements ScreenLevelRenderingContext {
-    public int width;
-    public int height;
-
+public class BakedLevelScreenRenderingContext implements ScreenLevelRenderingContext {
     public BakedLevel bakedLevel;
     public BlockAndTintGetter blockAndTints;
     public BoundingBox blockBoundaries;
@@ -40,10 +27,7 @@ public class BakedLevelScreenLevelRenderingContext implements ScreenLevelRenderi
     public final RenderTypeStore renderTypeStore;
     private boolean isDisposed;
 
-    public BakedLevelScreenLevelRenderingContext(BakedLevel bakedLevel, int width, int height) {
-        this.width = width;
-        this.height = height;
-
+    public BakedLevelScreenRenderingContext(BakedLevel bakedLevel) {
         this.bakedLevel = bakedLevel;
         this.blockAndTints = bakedLevel.originalLevel();
         this.blockBoundaries = bakedLevel.blockBoundaries();
@@ -81,7 +65,7 @@ public class BakedLevelScreenLevelRenderingContext implements ScreenLevelRenderi
 
     public void recalculateTranslucency(Camera camera) {
         if(bakedLevel != null) {
-            bakedLevel.resortTranslucency(camera.getLookVector());
+            bakedLevel.resortTranslucency(camera.getPosition().toVector3f());
         }
     }
 }

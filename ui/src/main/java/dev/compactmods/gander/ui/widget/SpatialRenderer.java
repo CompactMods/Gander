@@ -1,311 +1,122 @@
 package dev.compactmods.gander.ui.widget;
 
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 import dev.compactmods.gander.core.Gander;
 import dev.compactmods.gander.render.geometry.BakedLevel;
-import dev.compactmods.gander.render.toolkit.BlockEntityRender;
-import dev.compactmods.gander.render.toolkit.BlockRenderer;
-import net.minecraft.client.GraphicsStatus;
+import dev.compactmods.gander.ui.pipeline.BakedVirtualLevelScreenPipeline;
+import dev.compactmods.gander.ui.pipeline.context.BakedLevelScreenRenderingContext;
+import dev.compactmods.gander.ui.toolkit.GanderScreenRenderHelper;
 
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.renderer.culling.Frustum;
+
 import org.joml.Matrix4f;
 
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.blaze3d.vertex.VertexSorting;
 
 import dev.compactmods.gander.core.camera.SceneCamera;
-import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
-import dev.compactmods.gander.render.translucency.TranslucencyChain;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.level.BlockAndTintGetter;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
-public class SpatialRenderer extends AbstractWidget {
+import org.joml.Quaternionf;
 
-	private @Nullable BlockAndTintGetter blockAndTints;
-	private @Nullable BakedLevel bakedLevel;
-	private @Nullable BoundingBox blockBoundaries;
-	private Set<BlockPos> blockEntityPositions;
+public class SpatialRenderer implements Renderable {
+    private final Supplier<BakedVirtualLevelScreenPipeline> pipeline = Suppliers.memoize(BakedVirtualLevelScreenPipeline::new);
+    private final BakedLevelScreenRenderingContext renderingContext;
+    private final GanderScreenRenderHelper renderHelper;
 
 	private final CompassOverlay compassOverlay;
+	private boolean shouldRenderCompass;
 
 	private final SceneCamera camera;
 
-	private boolean shouldRenderCompass;
-
-	private final RenderTarget renderTarget;
-	private final TranslucencyChain translucencyChain;
-	private final RenderTypeStore renderTypeStore;
-
 	private boolean isDisposed = false;
 
-	public SpatialRenderer(int width, int height) {
-		this(0, 0, width, height);
-	}
+	public SpatialRenderer(BakedLevel bakedLevel) {
+        this.compassOverlay = new CompassOverlay();
+        this.shouldRenderCompass = false;
+        this.camera = new SceneCamera();
+        this.renderingContext = new BakedLevelScreenRenderingContext(bakedLevel);
 
-	public SpatialRenderer(int x, int y, int width, int height) {
-		super(x, y, width, height, Component.empty());
-
-		this.compassOverlay = new CompassOverlay();
-		this.camera = new SceneCamera();
-		this.shouldRenderCompass = false;
-		this.blockEntityPositions = Collections.emptySet();
-
-		final var mc = Minecraft.getInstance();
-		this.renderTarget = new TextureTarget(mc.getWindow().getWidth(), mc.getWindow().getHeight(), true, Minecraft.ON_OSX);
-		renderTarget.setClearColor(0, 0, 0, 0);
-
-		this.translucencyChain = TranslucencyChain.builder()
-				.addLayer(Gander.asResource("main"))
-				.addLayer(Gander.asResource("entity"))
-				.addLayer(Gander.asResource("water"))
-				.addLayer(Gander.asResource("translucent"))
-				.addLayer(Gander.asResource("item_entity"))
-				.addLayer(Gander.asResource("particles"))
-				.addLayer(Gander.asResource("clouds"))
-				.addLayer(Gander.asResource("weather"))
-				.build(renderTarget);
-
-		this.renderTypeStore = new RenderTypeStore(this.translucencyChain);
+        final var mc = Minecraft.getInstance();
+        this.renderHelper = new GanderScreenRenderHelper(mc.getWindow().getWidth(), mc.getWindow().getHeight());
 	}
 
 	public void dispose() {
 		if (isDisposed) return;
 		this.isDisposed = true;
-		renderTarget.destroyBuffers();
-		renderTypeStore.dispose();
+		this.renderingContext.dispose();
 	}
 
 	public SceneCamera camera() {
 		return camera;
 	}
 
-	public void recalculateTranslucency() {
-		if (bakedLevel != null) {
-			bakedLevel.resortTranslucency(camera.getLookFrom());
-		}
-	}
+    // FIXME
+//	public void recalculateTranslucency() {
+//        renderingContext.bakedLevel.resortTranslucency(camera.getPosition().toVector3f());
+//    }
 
 	public void shouldRenderCompass(boolean render) {
 		this.shouldRenderCompass = render;
 	}
 
-	public void setData(BakedLevel bakedLevel) {
-		this.bakedLevel = bakedLevel;
-		this.blockAndTints = bakedLevel.originalLevel();
-		this.blockBoundaries = bakedLevel.blockBoundaries();
-
-		this.blockEntityPositions = BlockPos.betweenClosedStream(blockBoundaries)
-				.filter(p -> blockAndTints.getBlockState(p).hasBlockEntity())
-				.map(BlockPos::immutable)
-				.collect(Collectors.toUnmodifiableSet());
-
-		this.shouldRenderCompass = true;
-		this.compassOverlay.setBounds(blockBoundaries);
-	}
-
 	@Override
-	public void renderWidget(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		final var opts = Minecraft.getInstance().options;
-		GraphicsStatus prevGraphicsMode = opts.graphicsMode().get();
-		opts.graphicsMode().set(GraphicsStatus.FABULOUS);
+	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+        final var pipe = pipeline.get();
 
-		renderForReal(graphics, partialTicks);
+        final var frustum = new Frustum(new Matrix4f().rotate(camera.rotation().conjugate(new Quaternionf())),
+            renderHelper.projectionMatrix());
 
-		opts.graphicsMode().set(prevGraphicsMode);
-	}
+        final var manager = pipe.createLifecycleManager();
 
-	private void renderForReal(GuiGraphics graphics, float partialTicks) {
-		if (this.blockAndTints == null || this.blockBoundaries == null)
-			return;
+        manager.setup(renderingContext, graphics, camera);
 
-		var buffer = graphics.bufferSource();
+        renderHelper.renderInScreenSpace(graphics, camera, (projMatrix, poseStack) -> {
+            poseStack.translate(
+                renderingContext.bakedLevel.blockBoundaries().getXSpan() / -2f,
+                renderingContext.bakedLevel.blockBoundaries().getYSpan() / -2f,
+                renderingContext.bakedLevel.blockBoundaries().getZSpan() / -2f);
 
-		var width = Minecraft.getInstance().getWindow().getWidth();
-		var height = Minecraft.getInstance().getWindow().getHeight();
-		if (width != renderTarget.width || height != renderTarget.height) {
-			renderTarget.resize(width, height, Minecraft.ON_OSX);
-			translucencyChain.resize(renderTarget.width, renderTarget.height);
-			recalculateTranslucency();
-		}
+            // RENDER SCENE
 
-		var originalMatrix = RenderSystem.getProjectionMatrix();
-		var originalSorting = RenderSystem.getVertexSorting();
+            // TODO: Map layers somewhere - renderingContext.translucencyChain.layers()
+            renderingContext.translucencyChain.prepareLayer(Gander.asResource("main"));
 
-		var projectionMatrix = new Matrix4f().setPerspective(
-				(float) Math.PI / 2f,
-				(float) renderTarget.width / (float) renderTarget.height,
-				0.05f,
-				10000000);
+            pipe.staticGeometryPass(renderingContext, graphics, partialTicks, RenderType.solid(), poseStack, camera, projMatrix);
+            pipe.staticGeometryPass(renderingContext, graphics, partialTicks, RenderType.cutoutMipped(), poseStack, camera, projMatrix);
+            pipe.staticGeometryPass(renderingContext, graphics, partialTicks, RenderType.cutout(), poseStack, camera, projMatrix);
 
-		final var blockEntities = blockEntityPositions
-				.stream()
-				.map(blockAndTints::getBlockEntity)
-				.filter(Objects::nonNull);
+            renderingContext.translucencyChain.prepareLayer(Gander.asResource("entity"));
+            pipe.blockEntitiesPass(renderingContext, graphics, partialTicks, poseStack, camera, frustum, graphics.bufferSource());
 
-		PoseStack poseStack = graphics.pose();
-		poseStack.pushPose();
-		{
-			var poseStack2 = RenderSystem.getModelViewStack();
-			poseStack2.pushMatrix();
-			{
-				poseStack2.identity();
-				RenderSystem.applyModelViewMatrix();
 
-				poseStack.setIdentity();
-				poseStack.mulPose(camera.rotation());
+            renderingContext.translucencyChain.prepareLayer(Gander.asResource("water"));
+            renderingContext.translucencyChain.prepareLayer(Gander.asResource("translucent"));
+            pipe.staticGeometryPass(renderingContext, graphics, partialTicks, RenderType.translucent(), poseStack, camera, projMatrix);
 
-				var mainTarget = Minecraft.getInstance().getMainRenderTarget();
-				translucencyChain.clear();
-				translucencyChain.prepareBackgroundColor(mainTarget);
-				renderTarget.bindWrite(true);
+            renderingContext.translucencyChain.prepareLayer(Gander.asResource("item_entity"));
+            renderingContext.translucencyChain.prepareLayer(Gander.asResource("particles"));
+            renderingContext.translucencyChain.prepareLayer(Gander.asResource("clouds"));
+            renderingContext.translucencyChain.prepareLayer(Gander.asResource("weather"));
 
-				RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
-				renderScene(blockEntities, buffer, partialTicks, poseStack);
+            renderingContext.translucencyChain.process();
+            // END RENDER SCENE
+        });
 
-				mainTarget.bindWrite(true);
-				copyRenderToWidgetSpace(renderTarget);
-
-				RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.byDistance(camera.getLookFrom()));
-//				renderCompass(graphics, partialTicks, poseStack);
-			}
-
-			poseStack2.popMatrix();
-			RenderSystem.applyModelViewMatrix();
-		}
-		poseStack.popPose();
-
-		RenderSystem.setProjectionMatrix(originalMatrix, originalSorting);
-
-		// TODO Fix Particles
-		// scene.getLevel().renderParticles(pose, buffer, camera, partialTicks);
-
-//			var entityGetter = scene.getLevel().getEntities(EntityTypeTest.forClass(Entity.class), AABB.of(scene.getBounds()), e -> true);
-//			ScreenEntityRenderer.renderEntities(entityGetter, poseStack, buffer, camera, partialTicks);
-	}
-
-	private void copyRenderToWidgetSpace(RenderTarget renderTarget) {
-		// RenderTarget.blit disables alpha... :unamused:
-		RenderSystem.assertOnRenderThread();
-		GlStateManager._disableDepthTest();
-		GlStateManager._depthMask(false);
-		GlStateManager._viewport(0, 0, renderTarget.width, renderTarget.height);
-
-		Minecraft minecraft = Minecraft.getInstance();
-		ShaderInstance shaderinstance = minecraft.gameRenderer.blitShader;
-		shaderinstance.setSampler("DiffuseSampler", renderTarget.getColorTextureId());
-		Matrix4f matrix4f = new Matrix4f().setOrtho(0.0F, (float) width, (float) height, 0.0F, 1000.0F, 3000.0F);
-		RenderSystem.setProjectionMatrix(matrix4f, VertexSorting.ORTHOGRAPHIC_Z);
-		if (shaderinstance.MODEL_VIEW_MATRIX != null) {
-			shaderinstance.MODEL_VIEW_MATRIX.set(new Matrix4f().translation(0.0F, 0.0F, -2000.0F));
-		}
-
-		if (shaderinstance.PROJECTION_MATRIX != null) {
-			shaderinstance.PROJECTION_MATRIX.set(matrix4f);
-		}
-
-		shaderinstance.apply();
-		float f = (float) width;
-		float f1 = (float) height;
-		float f2 = (float) renderTarget.viewWidth / (float) renderTarget.width;
-		float f3 = (float) renderTarget.viewHeight / (float) renderTarget.height;
-		Tesselator tesselator = RenderSystem.renderThreadTesselator();
-		BufferBuilder bufferbuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
-		bufferbuilder.addVertex(0f, f1, 0f)
-            .setUv(0.0F, 0.0F)
-            .setColor(255, 255, 255, 255);
-
-		bufferbuilder.addVertex(f, f1, 0f)
-            .setUv(f2, 0.0F)
-            .setColor(255, 255, 255, 255);
-
-		bufferbuilder.addVertex(f, 0f, 0f)
-            .setUv(f2, f3)
-            .setColor(255, 255, 255, 255);
-
-		bufferbuilder.addVertex(0f, 0f, 0f)
-            .setUv(0.0F, f3)
-            .setColor(255, 255, 255, 255);
-
-		BufferUploader.draw(bufferbuilder.buildOrThrow());
-		shaderinstance.clear();
-		GlStateManager._depthMask(true);
-	}
-
-	private void renderScene(Stream<BlockEntity> blockEntities, MultiBufferSource.BufferSource buffer, float partialTicks, PoseStack poseStack) {
-		poseStack.pushPose();
-		{
-			poseStack.scale(16, 16, 16);
-			poseStack.translate(
-					blockBoundaries.getXSpan() / -2f,
-					blockBoundaries.getYSpan() / -2f,
-					blockBoundaries.getZSpan() / -2f);
-
-			final var lookFrom = camera.getLookFrom();
-
-			if (bakedLevel != null) {
-				var projectionMatrix = RenderSystem.getProjectionMatrix();
-
-				translucencyChain.prepareLayer(Gander.asResource("main"));
-				BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
-				BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.solid(), poseStack, lookFrom, projectionMatrix);
-
-				BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
-				BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), poseStack, lookFrom, projectionMatrix);
-
-				BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
-				BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutout(), poseStack, lookFrom, projectionMatrix);
-
-				translucencyChain.prepareLayer(Gander.asResource("entity"));
-				BlockEntityRender.render(blockAndTints, blockEntities, poseStack, lookFrom, renderTypeStore, buffer, partialTicks);
-
-				translucencyChain.prepareLayer(Gander.asResource("water"));
-				translucencyChain.prepareLayer(Gander.asResource("translucent"));
-				BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
-				BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.translucent(), poseStack, lookFrom, projectionMatrix);
-
-				translucencyChain.prepareLayer(Gander.asResource("item_entity"));
-				translucencyChain.prepareLayer(Gander.asResource("particles"));
-				translucencyChain.prepareLayer(Gander.asResource("clouds"));
-				translucencyChain.prepareLayer(Gander.asResource("weather"));
-
-				translucencyChain.process();
-			}
-		}
-
-		poseStack.popPose();
+        manager.teardown(renderingContext, graphics);
 	}
 
 	private void renderCompass(GuiGraphics graphics, float partialTicks, PoseStack poseStack) {
 		poseStack.pushPose();
 		{
 			poseStack.translate(
-					blockBoundaries.getXSpan() / -2f,
-					blockBoundaries.getYSpan() / -2f,
-					blockBoundaries.getZSpan() / -2f);
+					renderingContext.blockBoundaries.getXSpan() / -2f,
+					renderingContext.blockBoundaries.getYSpan() / -2f,
+					renderingContext.blockBoundaries.getZSpan() / -2f);
 
 			var position = camera.getLookFrom();
 			poseStack.translate(-position.x, -position.y, -position.z);
@@ -317,16 +128,7 @@ public class SpatialRenderer extends AbstractWidget {
 		poseStack.popPose();
 	}
 
-	@Override
-	protected void updateWidgetNarration(NarrationElementOutput narrator) {
-	}
-
 	public void zoom(double factor) {
 		camera.zoom((float) factor);
-	}
-
-	@Override
-	protected boolean isValidClickButton(int pButton) {
-		return false;
 	}
 }

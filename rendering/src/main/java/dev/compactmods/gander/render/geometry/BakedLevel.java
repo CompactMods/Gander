@@ -43,6 +43,7 @@ public final class BakedLevel {
     }
 
     public void resortTranslucency(Vector3f cameraPosition) {
+        // FIXME - This is broken somehow, causes a black screen
         var vertexSorting = VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z);
         resortTranslucency(vertexSorting, blockBuilders, blockBuffers, blockSortStates);
         resortTranslucency(vertexSorting, fluidBuilders, fluidBuffers, fluidSortStates);
