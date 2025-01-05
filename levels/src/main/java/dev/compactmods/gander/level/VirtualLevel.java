@@ -1,7 +1,11 @@
 package dev.compactmods.gander.level;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import net.neoforged.neoforge.client.model.data.ModelData;
+import net.neoforged.neoforge.client.model.data.ModelDataManager;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -65,35 +69,53 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	private BoundingBox bounds;
 	private VirtualEntitySystem entities;
 	private final Holder<Biome> biome;
+    private final Consumer<VirtualLevel> onBlockUpdate;
+    private final ModelDataManager modelDataManager;
 
-	public VirtualLevel(RegistryAccess access, boolean isClientside) {
+    public VirtualLevel(RegistryAccess access, boolean isClientside) {
+        this(access, isClientside, newLevel -> {});
+    }
+
+	public VirtualLevel(RegistryAccess access, boolean isClientside, Consumer<VirtualLevel> onBlockUpdate) {
 		this(
 				VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
 				access.registryOrThrow(Registries.DIMENSION_TYPE).getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
 				VirtualLevelUtils.PROFILER, isClientside, false,
-				0, 0);
+				0, 0, onBlockUpdate);
 	}
 
 	private VirtualLevel(WritableLevelData pLevelData, ResourceKey<Level> pDimension,
-						 RegistryAccess pRegistryAccess, Holder<DimensionType> pDimensionTypeRegistration,
-						 Supplier<ProfilerFiller> pProfiler, boolean pIsClientSide, boolean pIsDebug, long pBiomeZoomSeed,
-						 int pMaxChainedNeighborUpdates) {
+                         RegistryAccess pRegistryAccess, Holder<DimensionType> pDimensionTypeRegistration,
+                         Supplier<ProfilerFiller> pProfiler, boolean pIsClientSide, boolean pIsDebug, long pBiomeZoomSeed,
+                         int pMaxChainedNeighborUpdates, Consumer<VirtualLevel> onBlockUpdate) {
 		super(pLevelData, pDimension, pRegistryAccess, pDimensionTypeRegistration, pProfiler, pIsClientSide, pIsDebug,
 				pBiomeZoomSeed, pMaxChainedNeighborUpdates);
 		this.access = pRegistryAccess;
-		this.chunkSource = new VirtualChunkSource(this);
+        this.onBlockUpdate = onBlockUpdate;
+        this.chunkSource = new VirtualChunkSource(this);
 		this.blocks = new VirtualBlockSystem(this);
 		this.scoreboard = new Scoreboard();
 		this.bounds = BoundingBox.fromCorners(BlockPos.ZERO, BlockPos.ZERO);
 		this.entities = new VirtualEntitySystem();
 		this.biome = pRegistryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
+        this.modelDataManager = new ModelDataManager(this);
 	}
 
 	public Holder<Biome> getBiome() {
 		return biome;
 	}
 
-	@Override
+    @Override
+    public ModelData getModelData(BlockPos pos) {
+        return modelDataManager.getAt(pos);
+    }
+
+    @Override
+    public @Nullable ModelDataManager getModelDataManager() {
+        return modelDataManager;
+    }
+
+    @Override
 	public PotionBrewing potionBrewing() {
 		// Minecraft, why?
 		return PotionBrewing.EMPTY;
@@ -273,6 +295,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	@Override
 	public void sendBlockUpdated(BlockPos pPos, BlockState pOldState, BlockState pNewState, int pFlags) {
+        this.onBlockUpdate.accept(this);
 	}
 
 	@Override
