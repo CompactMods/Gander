@@ -114,12 +114,6 @@ public class GanderUI extends Screen {
         return false;
     }
 
-    @Override
-    public void removed() {
-        if(this.renderer != null)
-            this.renderer.dispose();
-    }
-
     public void setSceneSource(Component src) {
         this.sceneSource = src;
     }
@@ -127,7 +121,6 @@ public class GanderUI extends Screen {
     public void setScene(BakedLevel scene) {
         this.scene = scene;
         if(this.renderer != null) {
-            this.renderer.dispose();
             this.renderables.remove(this.renderer);
         }
 

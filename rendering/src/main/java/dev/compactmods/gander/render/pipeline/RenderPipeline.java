@@ -6,7 +6,6 @@ import dev.compactmods.gander.render.pipeline.context.LevelRenderingContext;
 import net.minecraft.client.Camera;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
 
 import net.minecraft.world.phys.Vec3;
@@ -21,21 +20,8 @@ import org.joml.Vector3fc;
  */
 public interface RenderPipeline<TCtx extends LevelRenderingContext> {
 
-    default void staticGeometryPass(TCtx ctx, GuiGraphics graphics, float partialTick, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix) {
-        staticGeometryPass(ctx, graphics, partialTick, poseStack, camera, projectionMatrix, Vec3.ZERO.toVector3f());
-    }
+    PipelineState setup(TCtx ctx, GuiGraphics graphics, Camera camera);
 
-    void staticGeometryPass(TCtx ctx, GuiGraphics graphics, float partialTick, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix, Vector3fc renderOffset);
+    void render(PipelineState state, TCtx ctx, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix);
 
-    default void blockEntitiesPass(TCtx ctx, GuiGraphics graphics, float partialTick, PoseStack poseStack, Camera camera, Frustum frustum, MultiBufferSource.BufferSource bufferSource) {
-        blockEntitiesPass(ctx, graphics, partialTick, poseStack, camera, frustum, bufferSource, Vec3.ZERO.toVector3f());
-    }
-
-    void blockEntitiesPass(TCtx ctx, GuiGraphics graphics, float partialTick, PoseStack poseStack, Camera camera, Frustum frustum, MultiBufferSource.BufferSource bufferSource, Vector3fc renderOffset);
-
-    default void translucentGeometryPass(TCtx ctx, GuiGraphics graphics, float partialTick, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix) {
-        translucentGeometryPass(ctx, graphics, partialTick, poseStack, camera, projectionMatrix, new Vector3f());
-    }
-
-    void translucentGeometryPass(TCtx ctx, GuiGraphics graphics, float partialTick, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix, Vector3fc renderOffset);
 }

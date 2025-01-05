@@ -8,9 +8,7 @@ import net.minecraft.client.gui.GuiGraphics;
 
 import org.joml.Matrix4f;
 
-public interface RenderPipelineLifecycleManager<TCtx extends LevelRenderingContext> {
+public interface PipelineGeometryUploadPhase<TCtx extends LevelRenderingContext> {
 
-    default void setup(TCtx ctx, GuiGraphics graphics, Camera camera) {}
-
-    default void teardown(TCtx ctx, GuiGraphics graphics) {}
+    void upload(PipelineState state, TCtx context, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix);
 }
