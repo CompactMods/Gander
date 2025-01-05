@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
-import dev.compactmods.gander.examples.LevelInLevelRenderer;
+import dev.compactmods.gander.world.LevelInLevelRenderer;
 import dev.compactmods.gander.network.OpenGanderUiForDeferredStructureRequest;
 import dev.compactmods.gander.network.OpenGanderUiForStructureRequest;
 import dev.compactmods.gander.network.RenderInWorldForDeferredStructureRequest;

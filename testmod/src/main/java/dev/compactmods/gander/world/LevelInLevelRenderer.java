@@ -1,6 +1,5 @@
-package dev.compactmods.gander.examples;
+package dev.compactmods.gander.world;
 
-import java.util.Stack;
 import java.util.UUID;
 import java.util.function.Supplier;
 

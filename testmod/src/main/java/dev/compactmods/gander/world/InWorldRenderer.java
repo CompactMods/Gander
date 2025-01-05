@@ -5,7 +5,6 @@ import dev.compactmods.gander.GanderTestMod;
 import org.joml.Vector3f;
 
 import dev.compactmods.gander.CommonEvents;
-import dev.compactmods.gander.examples.LevelInLevelRenderer;
 import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.geometry.LevelBakery;
