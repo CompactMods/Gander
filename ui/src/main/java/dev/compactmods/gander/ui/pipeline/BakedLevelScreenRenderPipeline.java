@@ -54,12 +54,15 @@ public class BakedLevelScreenRenderPipeline {
         final var renderTarget = state.get(GanderScreenToolkit.RENDER_TARGET);
         final var translucencyChain = state.get(GanderScreenToolkit.TRANSLUCENCY_CHAIN);
 
+        translucencyChain.process();
+
         mc.getMainRenderTarget().bindWrite(true);
         renderTarget.blitToScreen(renderTarget.width, renderTarget.height, false);
 
-        GanderScreenToolkit.restoreProjectionMatrix(state);
+        renderTarget.clear(Minecraft.ON_OSX);
+        translucencyChain.clear();
 
-        translucencyChain.process();
+        GanderScreenToolkit.restoreProjectionMatrix(state);
         return true;
     }
 }
