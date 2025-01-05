@@ -27,8 +27,15 @@ public class InWorldRenderer
 	public static void forStructureData(Component source, StructureTemplate data, Vector3f renderLocation) {
 		CommonEvents.setTitle(source);
 
-		var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess(), true);
-		var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
+        var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
+		var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess(), true, (newLevel) -> {
+            var bakedLevel = LevelBakery.bakeVertices(newLevel, bounds, new Vector3f());
+            var newRenderer = LevelInLevelRenderer.create(bakedLevel, newLevel, renderLocation);
+
+            //TODO: FIgure out how to override the existing LIL renderer
+            //GanderTestMod.addLevelInLevelRenderer(newRenderer);
+        });
+
 		virtualLevel.setBounds(bounds);
 		data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings().setKnownShape(true), RandomSource.create(), Block.UPDATE_CLIENTS);
 
