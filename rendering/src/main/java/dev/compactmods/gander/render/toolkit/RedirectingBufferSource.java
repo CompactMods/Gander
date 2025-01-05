@@ -37,7 +37,8 @@ class RedirectingBufferSource extends MultiBufferSource.BufferSource {
                     meshdata.sortQuads(bytebufferbuilder, RenderSystem.getVertexSorting());
                 }
 
-                renderType.draw(meshdata);
+                final var remappedRenderType = remapper.apply(renderType);
+                remappedRenderType.draw(meshdata);
             }
 
             if (renderType.equals(this.lastSharedType)) {

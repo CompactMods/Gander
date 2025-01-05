@@ -2,6 +2,7 @@ package dev.compactmods.gander.render.rendertypes;
 
 import java.util.Map;
 
+import dev.compactmods.gander.core.Gander;
 import dev.compactmods.gander.render.translucency.TranslucencyChain;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.minecraft.client.renderer.RenderStateShard;
@@ -41,8 +42,7 @@ public class RenderTypeStore {
 
 	public RenderType redirectedBlockRenderType(RenderType desiredType) {
 		final var crying = GanderCompositeRenderType.of(desiredType);
-		// TODO: GanderLib.asResource
-		final var remappedQuestionMark = ResourceLocation.fromNamespaceAndPath("gander", BLOCK_RENDER_TARGET_MAP.get(crying.state().outputState));
+		final var remappedQuestionMark = Gander.asResource(BLOCK_RENDER_TARGET_MAP.get(crying.state().outputState));
 
 		if (remappedQuestionMark == null)
 			return desiredType;
@@ -57,8 +57,7 @@ public class RenderTypeStore {
 
 	public RenderType redirectedFluidRenderType(RenderType desiredType) {
 		final var crying = GanderCompositeRenderType.of(desiredType);
-		// TODO: GanderLib.asResource
-		final var remappedQuestionMark = ResourceLocation.fromNamespaceAndPath("gander", FLUID_RENDER_TARGET_MAP.get(crying.state().outputState));
+		final var remappedQuestionMark = Gander.asResource(FLUID_RENDER_TARGET_MAP.get(crying.state().outputState));
 
 		if (remappedQuestionMark == null)
 			return desiredType;
