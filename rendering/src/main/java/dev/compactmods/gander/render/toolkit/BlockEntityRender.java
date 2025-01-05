@@ -45,22 +45,20 @@ public class BlockEntityRender {
 
 	public static void render(BlockAndTintGetter world, Stream<BlockEntity> resolver, PoseStack ms, Vector3f cameraPosition,
 							  @Nullable Matrix4f lightTransform, RenderTypeStore renderTypeStore, MultiBufferSource.BufferSource buffer, float pt) {
+		final var wrappedBuffer = RedirectingBufferSource.forBlocks(renderTypeStore, buffer);
 
-        // FIXME
-//		final var wrappedBuffer = RedirectingBufferSource.forBlocks(renderTypeStore, buffer);
-
-		resolver.filter(Objects::nonNull).forEach(ent -> render(world, ent, ms, cameraPosition, lightTransform, buffer, pt));
-		buffer.endBatch(RenderType.solid());
-		buffer.endBatch(RenderType.endPortal());
-		buffer.endBatch(RenderType.endGateway());
-		buffer.endBatch(Sheets.solidBlockSheet());
-		buffer.endBatch(Sheets.cutoutBlockSheet());
-		buffer.endBatch(Sheets.bedSheet());
-		buffer.endBatch(Sheets.shulkerBoxSheet());
-		buffer.endBatch(Sheets.signSheet());
-		buffer.endBatch(Sheets.hangingSignSheet());
-		buffer.endBatch(Sheets.chestSheet());
-		buffer.endBatch();
+		resolver.filter(Objects::nonNull).forEach(ent -> render(world, ent, ms, cameraPosition, lightTransform, wrappedBuffer, pt));
+		wrappedBuffer.endBatch(RenderType.solid());
+		wrappedBuffer.endBatch(RenderType.endPortal());
+		wrappedBuffer.endBatch(RenderType.endGateway());
+		wrappedBuffer.endBatch(Sheets.solidBlockSheet());
+		wrappedBuffer.endBatch(Sheets.cutoutBlockSheet());
+		wrappedBuffer.endBatch(Sheets.bedSheet());
+		wrappedBuffer.endBatch(Sheets.shulkerBoxSheet());
+		wrappedBuffer.endBatch(Sheets.signSheet());
+		wrappedBuffer.endBatch(Sheets.hangingSignSheet());
+		wrappedBuffer.endBatch(Sheets.chestSheet());
+		wrappedBuffer.endBatch();
 	}
 
 	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, Vector3f cameraPosition,

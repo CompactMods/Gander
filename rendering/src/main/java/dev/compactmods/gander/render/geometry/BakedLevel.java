@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.RenderType;
 
 import net.minecraft.client.renderer.SectionBufferBuilderPack;
 import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 import org.joml.Vector3f;
@@ -15,7 +16,7 @@ import org.joml.Vector3f;
 import java.util.Map;
 
 public final class BakedLevel {
-    private final BlockAndTintGetter originalLevel;
+    private final Level originalLevel;
     private final SectionBufferBuilderPack blockBuilders;
     private final SectionBufferBuilderPack fluidBuilders;
     private final Map<RenderType, VertexBuffer> blockBuffers;
@@ -24,7 +25,7 @@ public final class BakedLevel {
     private final Map<RenderType, MeshData.SortState> fluidSortStates;
     private final BoundingBox blockBoundaries;
 
-    public BakedLevel(BlockAndTintGetter originalLevel,
+    public BakedLevel(Level originalLevel,
                       SectionBufferBuilderPack blockBuilders,
                       SectionBufferBuilderPack fluidBuilders,
                       Map<RenderType, VertexBuffer> blockBuffers,
@@ -66,7 +67,7 @@ public final class BakedLevel {
         });
     }
 
-    public BlockAndTintGetter originalLevel() {
+    public Level originalLevel() {
         return originalLevel;
     }
 

@@ -11,6 +11,7 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -21,6 +22,12 @@ public class RenderTypes extends RenderStateShard {
         = RenderType.chunkBufferLayers()
         .stream()
         .collect(Collectors.toMap(RenderLevelStageEvent.Stage::fromRenderType, Function.identity()));
+
+    public static final Set<RenderLevelStageEvent.Stage> STATIC_GEOMETRY_STAGES = Set.of(
+        RenderLevelStageEvent.Stage.AFTER_SOLID_BLOCKS,
+        RenderLevelStageEvent.Stage.AFTER_CUTOUT_MIPPED_BLOCKS_BLOCKS,
+        RenderLevelStageEvent.Stage.AFTER_CUTOUT_BLOCKS
+    );
 
 	protected static final RenderStateShard.ShaderStateShard BLOCK_SHADER =
 			new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeTranslucentMovingBlockShader);
@@ -48,12 +55,12 @@ public class RenderTypes extends RenderStateShard {
 		return FLUID;
 	}
 
-    public static @Nullable RenderType renderTypeForStage(RenderLevelStageEvent.Stage stage) {
-        return GEOMETRY_STAGES.get(stage);
-    }
-
 	// Mmm gimme those protected fields
 	private RenderTypes() {
 		super(null, null, null);
 	}
+
+    public static boolean isStaticGeometryStage(RenderLevelStageEvent.Stage stage) {
+        return STATIC_GEOMETRY_STAGES.contains(stage);
+    }
 }

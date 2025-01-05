@@ -22,6 +22,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 
 import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 public class SpatialRenderer implements Renderable {
     private final Supplier<BakedVirtualLevelScreenPipeline> pipeline = Suppliers.memoize(BakedVirtualLevelScreenPipeline::new);
@@ -84,24 +85,9 @@ public class SpatialRenderer implements Renderable {
             // RENDER SCENE
 
             // TODO: Map layers somewhere - renderingContext.translucencyChain.layers()
-            renderingContext.translucencyChain.prepareLayer(Gander.asResource("main"));
-
-            pipe.staticGeometryPass(renderingContext, graphics, partialTicks, RenderType.solid(), poseStack, camera, projMatrix);
-            pipe.staticGeometryPass(renderingContext, graphics, partialTicks, RenderType.cutoutMipped(), poseStack, camera, projMatrix);
-            pipe.staticGeometryPass(renderingContext, graphics, partialTicks, RenderType.cutout(), poseStack, camera, projMatrix);
-
-            renderingContext.translucencyChain.prepareLayer(Gander.asResource("entity"));
+            pipe.staticGeometryPass(renderingContext, graphics, partialTicks, poseStack, camera, projMatrix);
             pipe.blockEntitiesPass(renderingContext, graphics, partialTicks, poseStack, camera, frustum, graphics.bufferSource());
-
-
-            renderingContext.translucencyChain.prepareLayer(Gander.asResource("water"));
-            renderingContext.translucencyChain.prepareLayer(Gander.asResource("translucent"));
-            pipe.staticGeometryPass(renderingContext, graphics, partialTicks, RenderType.translucent(), poseStack, camera, projMatrix);
-
-            renderingContext.translucencyChain.prepareLayer(Gander.asResource("item_entity"));
-            renderingContext.translucencyChain.prepareLayer(Gander.asResource("particles"));
-            renderingContext.translucencyChain.prepareLayer(Gander.asResource("clouds"));
-            renderingContext.translucencyChain.prepareLayer(Gander.asResource("weather"));
+            pipe.translucentGeometryPass(renderingContext, graphics, partialTicks, poseStack, camera, projMatrix);
 
             renderingContext.translucencyChain.process();
             // END RENDER SCENE

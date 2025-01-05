@@ -1,5 +1,6 @@
 package dev.compactmods.gander.examples;
 
+import java.util.Stack;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -58,19 +59,35 @@ public record LevelInLevelRenderer(UUID id, BakedDirectLevelRenderingContext ctx
 
         final var graphics = new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().renderBuffers().bufferSource());
 
-        var chunkRenderType = RenderTypes.renderTypeForStage(evt.getStage());
         var partialTick = evt.getPartialTick().getGameTimeDeltaPartialTick(true);
-        if (chunkRenderType != null) {
+
+        if(RenderTypes.isStaticGeometryStage(evt.getStage())) {
             var stack = new PoseStack();
             stack.mulPose(evt.getModelViewMatrix());
 
-            pipeline.staticGeometryPass(ctx, graphics, partialTick, chunkRenderType, stack, evt.getCamera(), evt.getProjectionMatrix(), renderOffset);
-        } else if (evt.getStage() == RenderLevelStageEvent.Stage.AFTER_ENTITIES) {
+            pipeline.staticGeometryPass(ctx, graphics, partialTick, stack, evt.getCamera(), evt.getProjectionMatrix(), renderOffset);
+        }
+
+        if (evt.getStage() == RenderLevelStageEvent.Stage.AFTER_BLOCK_ENTITIES) {
+            var stack = new PoseStack();
+//            stack.mulPose(evt.getModelViewMatrix());
+
             pipeline.blockEntitiesPass(ctx, graphics, partialTick,
-                evt.getPoseStack(),
+                stack,
                 evt.getCamera(),
                 evt.getFrustum(),
                 Minecraft.getInstance().renderBuffers().bufferSource(),
+                renderOffset);
+        }
+
+        if(evt.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
+            var stack = new PoseStack();
+            stack.mulPose(evt.getModelViewMatrix());
+
+            pipeline.translucentGeometryPass(ctx, graphics, partialTick,
+                stack,
+                evt.getCamera(),
+                evt.getProjectionMatrix(),
                 renderOffset);
         }
     }
