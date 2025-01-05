@@ -7,6 +7,8 @@ on:
     workflow_dispatch:
 
     push:
+        tags-ignore:
+            - "v*"
         paths-ignore:
             - "README.md"
             - "LICENSE"
@@ -35,6 +37,8 @@ jobs:
                     version_format: "${major}.${minor}.${patch}"
                     search_commit_body: true
                     bump_each_commit: true
+                    enable_prerelease_mode: true
+
     publish-core:
         name: Publish Core as Github Package - ${{ needs.vars.outputs.version }}
         needs: [ vars ]
@@ -49,7 +53,7 @@ jobs:
                 uses: actions/setup-java@v4
                 with:
                     distribution: temurin
-                    java-version: 17
+                    java-version: 21
 
             -   name: Setup Gradle
                 uses: gradle/actions/setup-gradle@v4
@@ -75,7 +79,7 @@ jobs:
                 uses: actions/setup-java@v4
                 with:
                     distribution: temurin
-                    java-version: 17
+                    java-version: 21
 
             -   name: Setup Gradle
                 uses: gradle/actions/setup-gradle@v4
@@ -101,7 +105,7 @@ jobs:
                 uses: actions/setup-java@v4
                 with:
                     distribution: temurin
-                    java-version: 17
+                    java-version: 21
 
             -   name: Setup Gradle
                 uses: gradle/actions/setup-gradle@v4
@@ -127,7 +131,7 @@ jobs:
                 uses: actions/setup-java@v4
                 with:
                     distribution: temurin
-                    java-version: 17
+                    java-version: 21
 
             -   name: Setup Gradle
                 uses: gradle/actions/setup-gradle@v4
