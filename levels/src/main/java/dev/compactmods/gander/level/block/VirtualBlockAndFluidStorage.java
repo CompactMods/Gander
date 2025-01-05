@@ -102,8 +102,8 @@ public class VirtualBlockAndFluidStorage {
         removeBlockEntity(blockEntity.getBlockPos()); // remove current block entity
 
         if(blockEntity.getBlockState().hasBlockEntity()) {
-            blockEntity.clearRemoved();
             blockEntity.setLevel(owningLevel);
+            blockEntity.clearRemoved();
             blockEntities.put(blockEntity.getBlockPos().asLong(), blockEntity);
         }
 	}
