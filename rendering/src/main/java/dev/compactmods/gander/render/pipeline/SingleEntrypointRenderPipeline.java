@@ -2,7 +2,6 @@ package dev.compactmods.gander.render.pipeline;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import dev.compactmods.gander.render.pipeline.context.LevelRenderingContext;
 import net.minecraft.client.Camera;
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -10,17 +9,17 @@ import org.joml.Matrix4f;
 
 import java.util.Set;
 
-public record SingleEntrypointRenderPipeline<TCtx extends LevelRenderingContext>(Set<PipelineLifecyclePhase<TCtx>> setupPhases,
-                                                                                 Set<PipelineLifecyclePhase<TCtx>> cleanupPhases,
-                                                                                 Set<PipelineGeometryUploadPhase<TCtx>> geometryPhases)
-    implements RenderPipeline<TCtx> {
+public record SingleEntrypointRenderPipeline<TCtx>(Set<PipelineLifecyclePhase<TCtx>> setupPhases,
+                                                   Set<PipelineLifecyclePhase<TCtx>> cleanupPhases,
+                                                   Set<PipelineGeometryUploadPhase<TCtx>> geometryPhases)
+    implements SinglePassRenderPipeline<TCtx> {
 
     @Override
-    public PipelineState setup(TCtx ctx, GuiGraphics graphics, Camera camera) {
+    public PipelineState setup(TCtx ctx, Camera camera) {
         PipelineState state = new PipelineState();
 
         for(var phase : setupPhases)
-            phase.run(state, ctx, graphics, camera);
+            phase.run(state, ctx, camera);
 
         return state;
     }
@@ -31,6 +30,6 @@ public record SingleEntrypointRenderPipeline<TCtx extends LevelRenderingContext>
             phase.upload(state, ctx, graphics, camera, poseStack, projectionMatrix);
 
         for(var phase : cleanupPhases)
-            phase.run(state, ctx, graphics, camera);
+            phase.run(state, ctx, camera);
     }
 }

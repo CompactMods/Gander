@@ -2,6 +2,9 @@ package dev.compactmods.gander.render.pipeline;
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
+
 public class PipelineState {
 
     public record Item<T>(Class<T> type) {}
@@ -15,6 +18,11 @@ public class PipelineState {
         }
 
         return null;
+    }
+
+    public <T> T getOrDefault(Item<T> property, T defaultValue) {
+        var t = get(property);
+        return t == null ? defaultValue : t;
     }
 
     public <T> void set(Item<T> property, T value) {

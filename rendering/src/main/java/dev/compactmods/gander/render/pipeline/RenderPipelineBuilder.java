@@ -1,12 +1,9 @@
 package dev.compactmods.gander.render.pipeline;
 
-import dev.compactmods.gander.render.pipeline.context.LevelRenderingContext;
-
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-public class RenderPipelineBuilder<TCtx extends LevelRenderingContext> {
+public class RenderPipelineBuilder<TCtx> {
 
     private final Set<PipelineLifecyclePhase<TCtx>> setupPhases = new LinkedHashSet<>();
     private final Set<PipelineLifecyclePhase<TCtx>> cleanupPhases = new LinkedHashSet<>();
@@ -27,7 +24,7 @@ public class RenderPipelineBuilder<TCtx extends LevelRenderingContext> {
         return this;
     }
 
-    public RenderPipeline<TCtx> build() {
+    public SinglePassRenderPipeline<TCtx> singlePass() {
         return new SingleEntrypointRenderPipeline<TCtx>(setupPhases, cleanupPhases, geometryPhases);
     }
 }

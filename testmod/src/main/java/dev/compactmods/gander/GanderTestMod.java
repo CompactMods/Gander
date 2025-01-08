@@ -46,8 +46,8 @@ public class GanderTestMod {
 		modEventBus.addListener(GanderTestMod::onPacketRegistration);
 		CommonEvents.register(modEventBus);
 
-//        NeoForge.EVENT_BUS.addListener((RenderLevelStageEvent renderStage) -> LIL_RENDERERS.values()
-//            .forEach(lil -> lil.onRenderStage(renderStage)));
+        NeoForge.EVENT_BUS.addListener((RenderLevelStageEvent renderStage) -> LIL_RENDERERS.values()
+            .forEach(lil -> lil.onRenderStage(renderStage)));
 
         if(FMLEnvironment.dist.isClient())
             NeoForge.EVENT_BUS.addListener(ClientTickEvent.Post.class, event -> LIL_RENDERERS.values()

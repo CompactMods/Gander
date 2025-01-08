@@ -7,13 +7,11 @@ import com.mojang.blaze3d.vertex.VertexSorting;
 
 import dev.compactmods.gander.core.Gander;
 import dev.compactmods.gander.render.pipeline.PipelineState;
-import dev.compactmods.gander.render.pipeline.context.LevelRenderingContext;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import dev.compactmods.gander.render.translucency.TranslucencyChain;
 import net.minecraft.client.Camera;
 import net.minecraft.client.GraphicsStatus;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 
 import org.joml.Matrix4f;
 
@@ -27,20 +25,20 @@ public class GanderScreenToolkit {
     public static final PipelineState.Item<RenderTypeStore> RENDER_TYPE_STORE = new PipelineState.Item<>(RenderTypeStore.class);
     public static final PipelineState.Item<RenderTarget> RENDER_TARGET = new PipelineState.Item<>(RenderTarget.class);
 
-    public static boolean switchToFabulous(PipelineState state, LevelRenderingContext context, GuiGraphics graphics, Camera camera) {
+    public static boolean switchToFabulous(PipelineState state, Object context, Camera camera) {
         final var opts = Minecraft.getInstance().options;
         state.set(PREVIOUS_GRAPHICS_MODE, opts.graphicsMode().get());
         opts.graphicsMode().set(GraphicsStatus.FABULOUS);
         return true;
     }
 
-    public static boolean revertGraphicsMode(PipelineState pipelineState, LevelRenderingContext context, GuiGraphics graphics, Camera camera) {
+    public static boolean revertGraphicsMode(PipelineState pipelineState, Object context, Camera camera) {
         final var opts = Minecraft.getInstance().options;
         opts.graphicsMode().set(pipelineState.get(PREVIOUS_GRAPHICS_MODE));
         return true;
     }
 
-    public static boolean setupRenderRequirements(PipelineState pipelineState, LevelRenderingContext context, GuiGraphics graphics, Camera camera) {
+    public static boolean setupBasicRenderRequirements(PipelineState pipelineState, Object context, Camera camera) {
         final var mc = Minecraft.getInstance();
         final var renderTarget = new TextureTarget(mc.getWindow().getWidth(), mc.getWindow().getHeight(), true, Minecraft.ON_OSX);
         renderTarget.setClearColor(0, 0, 0, 0);

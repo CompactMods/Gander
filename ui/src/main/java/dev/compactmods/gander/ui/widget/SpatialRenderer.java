@@ -14,6 +14,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import dev.compactmods.gander.core.camera.SceneCamera;
 import net.minecraft.client.gui.GuiGraphics;
 
+import org.jetbrains.annotations.NotNull;
+
 public class SpatialRenderer implements Renderable {
     private final BakedLevelScreenRenderingContext renderingContext;
     private final GanderScreenRenderHelper renderHelper;
@@ -48,10 +50,10 @@ public class SpatialRenderer implements Renderable {
 	}
 
 	@Override
-	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 
         if(state == null)
-            this.state = BakedLevelScreenRenderPipeline.INSTANCE.setup(renderingContext, graphics, camera);
+            this.state = BakedLevelScreenRenderPipeline.INSTANCE.setup(renderingContext, camera);
 
         renderHelper.renderInScreenSpace(graphics, camera, (projMatrix, poseStack) -> {
             poseStack.translate(

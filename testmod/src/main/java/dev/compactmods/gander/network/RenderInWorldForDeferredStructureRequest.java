@@ -1,13 +1,14 @@
 package dev.compactmods.gander.network;
 
 import dev.compactmods.gander.GanderTestMod;
-import dev.compactmods.gander.world.InWorldRenderer;
+import dev.compactmods.gander.world.LevelOverlayRenderSystem;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +32,6 @@ public record RenderInWorldForDeferredStructureRequest(ResourceLocation structur
 
 	public static final IPayloadHandler<RenderInWorldForDeferredStructureRequest> HANDLER = (pkt, ctx) -> {
 		if(FMLEnvironment.dist.isClient())
-			ctx.enqueueWork(() -> InWorldRenderer.forStructure(pkt.structureId, pkt.renderLocation));
+			ctx.enqueueWork(() -> PacketDistributor.sendToServer(new StructureSceneDataRequest(pkt.structureId, true, pkt.renderLocation)));
 	};
 }

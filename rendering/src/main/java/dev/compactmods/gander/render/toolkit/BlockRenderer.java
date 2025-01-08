@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.ShaderInstance;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -32,7 +33,7 @@ public class BlockRenderer {
 
 	// TODO: we shouldn't leak internals...
 	public static void renderSectionLayer(Map<RenderType, VertexBuffer> renderBuffers, Function<RenderType, RenderType> redirector, RenderType renderType, PoseStack poseStack,
-			Vector3f cameraPosition, Matrix4f pProjectionMatrix) {
+                                          Vector3fc cameraPosition, Matrix4f pProjectionMatrix) {
 		final var mc = Minecraft.getInstance();
 
 		final var retargetedRenderType = redirector.apply(renderType);
@@ -49,7 +50,7 @@ public class BlockRenderer {
 		if (vertexbuffer != null) {
 			if (uniform != null) {
 				shaderinstance.apply();
-				uniform.set(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z);
+				uniform.set(-cameraPosition.x(), -cameraPosition.y(), -cameraPosition.z());
 				uniform.upload();
 			}
 

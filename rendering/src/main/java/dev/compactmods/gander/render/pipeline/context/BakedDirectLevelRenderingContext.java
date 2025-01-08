@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.VertexBuffer;
 
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.Map;
@@ -23,6 +22,5 @@ import java.util.stream.Stream;
 public record BakedDirectLevelRenderingContext(BakedLevel level,
                                                Map<RenderType, VertexBuffer> blockBuffers,
                                                Map<RenderType, VertexBuffer> fluidBuffers,
-                                               Supplier<Stream<BlockEntity>> blockEntities)
-    implements LevelRenderingContext {
+                                               Supplier<Stream<BlockEntity>> blockEntities) {
 }

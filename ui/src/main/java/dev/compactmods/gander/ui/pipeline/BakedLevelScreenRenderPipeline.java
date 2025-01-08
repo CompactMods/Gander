@@ -1,28 +1,27 @@
 package dev.compactmods.gander.ui.pipeline;
 
 import dev.compactmods.gander.render.pipeline.PipelineState;
-import dev.compactmods.gander.render.pipeline.RenderPipeline;
 import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
+import dev.compactmods.gander.render.pipeline.SinglePassRenderPipeline;
 import dev.compactmods.gander.ui.pipeline.context.BakedLevelScreenRenderingContext;
 import dev.compactmods.gander.ui.toolkit.GanderScreenToolkit;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
 
 public class BakedLevelScreenRenderPipeline {
 
-    public static RenderPipeline<BakedLevelScreenRenderingContext> INSTANCE = new RenderPipelineBuilder<BakedLevelScreenRenderingContext>()
-        .addSetupPhase(GanderScreenToolkit::setupRenderRequirements)
+    public static SinglePassRenderPipeline<BakedLevelScreenRenderingContext> INSTANCE = new RenderPipelineBuilder<BakedLevelScreenRenderingContext>()
         .addSetupPhase(GanderScreenToolkit::switchToFabulous)
+        .addSetupPhase(GanderScreenToolkit::setupBasicRenderRequirements)
         .addSetupPhase(BakedLevelScreenRenderPipeline::setup)
         .addGeometryUploadPhase(GanderScreenPipelinePhases.STATIC_GEOMETRY_UPLOAD)
         .addGeometryUploadPhase(GanderScreenPipelinePhases.BLOCK_ENTITIES_GEOMETRY_UPLOAD)
         .addGeometryUploadPhase(GanderScreenPipelinePhases.TRANSLUCENT_GEOMETRY_UPLOAD)
         .addCleanupPhase(BakedLevelScreenRenderPipeline::teardown)
         .addCleanupPhase(GanderScreenToolkit::revertGraphicsMode)
-        .build();
+        .singlePass();
 
-    private static boolean setup(PipelineState state, BakedLevelScreenRenderingContext ctx, GuiGraphics graphics, Camera camera) {
+    private static boolean setup(PipelineState state, BakedLevelScreenRenderingContext ctx, Camera camera) {
         final var mc = Minecraft.getInstance();
         final var renderTarget = state.get(GanderScreenToolkit.RENDER_TARGET);
         final var translucencyChain = state.get(GanderScreenToolkit.TRANSLUCENCY_CHAIN);
@@ -48,7 +47,7 @@ public class BakedLevelScreenRenderPipeline {
         return true;
     }
 
-    private static boolean teardown(PipelineState state, BakedLevelScreenRenderingContext ctx, GuiGraphics graphics, Camera camera) {
+    private static boolean teardown(PipelineState state, BakedLevelScreenRenderingContext ctx, Camera camera) {
         Minecraft mc = Minecraft.getInstance();
 
         final var renderTarget = state.get(GanderScreenToolkit.RENDER_TARGET);

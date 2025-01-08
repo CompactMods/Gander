@@ -3,7 +3,7 @@ package dev.compactmods.gander.network;
 import org.joml.Vector3f;
 
 import dev.compactmods.gander.GanderTestMod;
-import dev.compactmods.gander.world.InWorldRenderer;
+import dev.compactmods.gander.world.LevelOverlayRenderSystem;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtAccounter;
@@ -43,7 +43,9 @@ public record RenderInWorldForStructureRequest(Component sceneSource, StructureT
 
 	public static final IPayloadHandler<RenderInWorldForStructureRequest> HANDLER = (pkt, ctx) -> {
 		if(FMLEnvironment.dist.isClient())
-			ctx.enqueueWork(() -> InWorldRenderer.forStructureData(pkt.sceneSource, pkt.data, pkt.renderLocation));
+			ctx.enqueueWork(() -> {
+                LevelOverlayRenderSystem.createAndAddRenderer(pkt.sceneSource, pkt.data, pkt.renderLocation);
+            });
 	};
 
 	@Override
