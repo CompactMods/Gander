@@ -1,5 +1,7 @@
 package dev.compactmods.gander.ui.pipeline;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
 import dev.compactmods.gander.render.pipeline.SinglePassRenderPipeline;
@@ -8,16 +10,20 @@ import dev.compactmods.gander.ui.pipeline.context.BakedLevelScreenRenderingConte
 import dev.compactmods.gander.ui.toolkit.GanderScreenToolkit;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+
+import org.joml.Matrix4f;
 
 public class BakedLevelScreenRenderPipeline {
 
     public static SinglePassRenderPipeline<BakedLevelScreenRenderingContext> INSTANCE = new RenderPipelineBuilder<BakedLevelScreenRenderingContext>()
         .addSetupPhase(GanderScreenToolkit::switchToFabulous)
         .addSetupPhase(GanderScreenToolkit::setupBasicRenderRequirements)
-        .addSetupPhase(BakedLevelScreenRenderPipeline::setup)
+        .addContextSetupPhase(BakedLevelScreenRenderPipeline::setup)
         .addGeometryUploadPhase(GanderScreenPipelinePhases.STATIC_GEOMETRY_UPLOAD)
         .addGeometryUploadPhase(GanderScreenPipelinePhases.BLOCK_ENTITIES_GEOMETRY_UPLOAD)
         .addGeometryUploadPhase(GanderScreenPipelinePhases.TRANSLUCENT_GEOMETRY_UPLOAD)
+        .addRenderPhase(BakedLevelScreenRenderPipeline::render)
         .addCleanupPhase(BakedLevelScreenRenderPipeline::teardown)
         .addCleanupPhase(GanderScreenToolkit::revertGraphicsMode)
         .singlePass();
@@ -48,7 +54,7 @@ public class BakedLevelScreenRenderPipeline {
         return true;
     }
 
-    private static boolean teardown(PipelineState state, BakedLevelScreenRenderingContext ctx, Camera camera) {
+    private static void render(PipelineState state, BakedLevelScreenRenderingContext context, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix) {
         Minecraft mc = Minecraft.getInstance();
 
         final var renderTarget = state.get(GanderRenderToolkit.RENDER_TARGET);
@@ -58,6 +64,11 @@ public class BakedLevelScreenRenderPipeline {
 
         mc.getMainRenderTarget().bindWrite(true);
         renderTarget.blitToScreen(renderTarget.width, renderTarget.height, false);
+    }
+
+    private static boolean teardown(PipelineState state) {
+        final var renderTarget = state.get(GanderRenderToolkit.RENDER_TARGET);
+        final var translucencyChain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
 
         renderTarget.clear(Minecraft.ON_OSX);
         translucencyChain.clear();

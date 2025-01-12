@@ -1,7 +1,6 @@
 package dev.compactmods.gander.render.pipeline;
 
 import net.minecraft.client.Camera;
-import net.minecraft.client.gui.GuiGraphics;
 
 /**
  * A render pipeline is a pre-configured set of rendering steps for rendering a
@@ -9,6 +8,10 @@ import net.minecraft.client.gui.GuiGraphics;
  */
 public interface RenderPipeline<TCtx> {
 
-    PipelineState setup(TCtx ctx, Camera camera);
+    PipelineState setup();
+
+    default void setupContext(PipelineState state, TCtx ctx, Camera camera) {
+
+    }
 
 }

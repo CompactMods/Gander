@@ -14,20 +14,20 @@ import net.minecraft.client.Minecraft;
 
 public class GanderScreenToolkit {
 
-    public static boolean switchToFabulous(PipelineState state, Object context, Camera camera) {
+    public static boolean switchToFabulous(PipelineState state) {
         final var opts = Minecraft.getInstance().options;
         state.set(GanderRenderToolkit.PREVIOUS_GRAPHICS_MODE, opts.graphicsMode().get());
         opts.graphicsMode().set(GraphicsStatus.FABULOUS);
         return true;
     }
 
-    public static boolean revertGraphicsMode(PipelineState pipelineState, Object context, Camera camera) {
+    public static boolean revertGraphicsMode(PipelineState pipelineState) {
         final var opts = Minecraft.getInstance().options;
         opts.graphicsMode().set(pipelineState.get(GanderRenderToolkit.PREVIOUS_GRAPHICS_MODE));
         return true;
     }
 
-    public static boolean setupBasicRenderRequirements(PipelineState pipelineState, Object context, Camera camera) {
+    public static boolean setupBasicRenderRequirements(PipelineState pipelineState) {
         final var mc = Minecraft.getInstance();
         final var renderTarget = new TextureTarget(mc.getWindow().getWidth(), mc.getWindow().getHeight(), true, Minecraft.ON_OSX);
         renderTarget.setClearColor(0, 0, 0, 0);

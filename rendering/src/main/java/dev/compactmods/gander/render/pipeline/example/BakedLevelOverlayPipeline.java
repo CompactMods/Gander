@@ -170,8 +170,14 @@ public final class BakedLevelOverlayPipeline implements MultiPassRenderPipeline<
     }
 
     @Override
-    public PipelineState setup(Context context, Camera camera) {
+    public PipelineState setup() {
         return new PipelineState();
+    }
+
+    public PipelineState setup(Vector3fc renderLocation) {
+        final var initialState = new PipelineState();
+        initialState.set(GanderRenderToolkit.RENDER_ORIGIN, renderLocation);
+        return initialState;
     }
 
     /**

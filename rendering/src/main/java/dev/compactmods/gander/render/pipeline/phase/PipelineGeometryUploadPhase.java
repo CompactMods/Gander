@@ -1,7 +1,8 @@
-package dev.compactmods.gander.render.pipeline;
+package dev.compactmods.gander.render.pipeline.phase;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import dev.compactmods.gander.render.pipeline.PipelineState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.gui.GuiGraphics;
 

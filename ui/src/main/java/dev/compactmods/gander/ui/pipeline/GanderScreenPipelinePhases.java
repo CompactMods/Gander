@@ -3,7 +3,7 @@ package dev.compactmods.gander.ui.pipeline;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import dev.compactmods.gander.core.Gander;
-import dev.compactmods.gander.render.pipeline.PipelineGeometryUploadPhase;
+import dev.compactmods.gander.render.pipeline.phase.PipelineGeometryUploadPhase;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.toolkit.BlockEntityRender;
 import dev.compactmods.gander.render.toolkit.BlockRenderer;

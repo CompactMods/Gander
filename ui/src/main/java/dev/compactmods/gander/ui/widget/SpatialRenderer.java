@@ -52,8 +52,10 @@ public class SpatialRenderer implements Renderable {
 	@Override
 	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 
-        if(state == null)
-            this.state = BakedLevelScreenRenderPipeline.INSTANCE.setup(renderingContext, camera);
+        if(state == null) {
+            this.state = BakedLevelScreenRenderPipeline.INSTANCE.setup();
+            BakedLevelScreenRenderPipeline.INSTANCE.setupContext(this.state, renderingContext, camera);
+        }
 
         renderHelper.renderInScreenSpace(graphics, camera, (projMatrix, poseStack) -> {
             poseStack.translate(

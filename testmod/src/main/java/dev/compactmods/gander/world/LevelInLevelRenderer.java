@@ -8,7 +8,6 @@ import dev.compactmods.gander.level.TickingLevel;
 import dev.compactmods.gander.render.RenderTypes;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.pipeline.example.BakedLevelOverlayPipeline;
-import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import net.minecraft.client.gui.GuiGraphics;
 
 import org.joml.Vector3f;
@@ -45,8 +44,8 @@ public record LevelInLevelRenderer(UUID id, PipelineState state, BakedLevelOverl
             virtualLevel.blockSystem().blockAndFluidStorage()::blockEntities
         );
 
-        final var initialState = BakedLevelOverlayPipeline.INSTANCE.setup(ctx, null);
-        initialState.set(GanderRenderToolkit.RENDER_ORIGIN, renderLocation);
+        final var initialState = BakedLevelOverlayPipeline.INSTANCE.setup(renderLocation);
+        BakedLevelOverlayPipeline.INSTANCE.setupContext(initialState, ctx, new SceneCamera());
 
         return new LevelInLevelRenderer(UUID.randomUUID(), initialState, ctx);
     }
