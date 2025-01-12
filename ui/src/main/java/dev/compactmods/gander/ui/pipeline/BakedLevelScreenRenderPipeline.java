@@ -3,6 +3,7 @@ package dev.compactmods.gander.ui.pipeline;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
 import dev.compactmods.gander.render.pipeline.SinglePassRenderPipeline;
+import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import dev.compactmods.gander.ui.pipeline.context.BakedLevelScreenRenderingContext;
 import dev.compactmods.gander.ui.toolkit.GanderScreenToolkit;
 import net.minecraft.client.Camera;
@@ -23,8 +24,8 @@ public class BakedLevelScreenRenderPipeline {
 
     private static boolean setup(PipelineState state, BakedLevelScreenRenderingContext ctx, Camera camera) {
         final var mc = Minecraft.getInstance();
-        final var renderTarget = state.get(GanderScreenToolkit.RENDER_TARGET);
-        final var translucencyChain = state.get(GanderScreenToolkit.TRANSLUCENCY_CHAIN);
+        final var renderTarget = state.get(GanderRenderToolkit.RENDER_TARGET);
+        final var translucencyChain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
 
         var width = mc.getWindow().getWidth();
         var height = mc.getWindow().getHeight();
@@ -50,8 +51,8 @@ public class BakedLevelScreenRenderPipeline {
     private static boolean teardown(PipelineState state, BakedLevelScreenRenderingContext ctx, Camera camera) {
         Minecraft mc = Minecraft.getInstance();
 
-        final var renderTarget = state.get(GanderScreenToolkit.RENDER_TARGET);
-        final var translucencyChain = state.get(GanderScreenToolkit.TRANSLUCENCY_CHAIN);
+        final var renderTarget = state.get(GanderRenderToolkit.RENDER_TARGET);
+        final var translucencyChain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
 
         translucencyChain.process();
 
