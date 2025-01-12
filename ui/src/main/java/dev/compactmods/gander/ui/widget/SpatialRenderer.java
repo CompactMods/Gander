@@ -1,17 +1,15 @@
 package dev.compactmods.gander.ui.widget;
 
+import dev.compactmods.gander.core.camera.SceneCamera;
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.ui.pipeline.BakedLevelScreenRenderPipeline;
 import dev.compactmods.gander.ui.pipeline.context.BakedLevelScreenRenderingContext;
 import dev.compactmods.gander.ui.toolkit.GanderScreenRenderHelper;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Renderable;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import dev.compactmods.gander.core.camera.SceneCamera;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.GuiGraphics;
 
 import org.jetbrains.annotations.NotNull;
@@ -21,38 +19,36 @@ public class SpatialRenderer implements Renderable {
     private final GanderScreenRenderHelper renderHelper;
     private PipelineState state;
 
-	private final CompassOverlay compassOverlay;
-	private boolean shouldRenderCompass;
+    private final CompassOverlay compassOverlay;
+    private boolean shouldRenderCompass;
 
-	private final SceneCamera camera;
+    private final SceneCamera camera;
 
-	public SpatialRenderer(BakedLevel bakedLevel) {
+    public SpatialRenderer(BakedLevel bakedLevel, int width, int height) {
         this.compassOverlay = new CompassOverlay();
         this.shouldRenderCompass = false;
         this.camera = new SceneCamera();
         this.renderingContext = BakedLevelScreenRenderingContext.forBakedLevel(bakedLevel);
+        this.renderHelper = new GanderScreenRenderHelper(width, height);
+    }
 
-        final var mc = Minecraft.getInstance();
-        this.renderHelper = new GanderScreenRenderHelper(mc.getWindow().getWidth(), mc.getWindow().getHeight());
-	}
-
-	public SceneCamera camera() {
-		return camera;
-	}
+    public SceneCamera camera() {
+        return camera;
+    }
 
     // FIXME
 //	public void recalculateTranslucency() {
 //        renderingContext.bakedLevel.resortTranslucency(camera.getPosition().toVector3f());
 //    }
 
-	public void shouldRenderCompass(boolean render) {
-		this.shouldRenderCompass = render;
-	}
+    public void shouldRenderCompass(boolean render) {
+        this.shouldRenderCompass = render;
+    }
 
-	@Override
-	public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+    @Override
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 
-        if(state == null) {
+        if (state == null) {
             this.state = BakedLevelScreenRenderPipeline.INSTANCE.setup();
             BakedLevelScreenRenderPipeline.INSTANCE.setupContext(this.state, renderingContext, camera);
         }
@@ -67,27 +63,27 @@ public class SpatialRenderer implements Renderable {
                 state, renderingContext, graphics, camera, poseStack, projMatrix
             );
         });
-	}
+    }
 
-	private void renderCompass(GuiGraphics graphics, float partialTicks, PoseStack poseStack) {
-		poseStack.pushPose();
-		{
-			poseStack.translate(
-					renderingContext.blockBoundaries().getXSpan() / -2f,
-					renderingContext.blockBoundaries().getYSpan() / -2f,
-					renderingContext.blockBoundaries().getZSpan() / -2f);
+    private void renderCompass(GuiGraphics graphics, float partialTicks, PoseStack poseStack) {
+        poseStack.pushPose();
+        {
+            poseStack.translate(
+                renderingContext.blockBoundaries().getXSpan() / -2f,
+                renderingContext.blockBoundaries().getYSpan() / -2f,
+                renderingContext.blockBoundaries().getZSpan() / -2f);
 
-			var position = camera.getLookFrom();
-			poseStack.translate(-position.x, -position.y, -position.z);
-			poseStack.last().pose().negateY();
-			poseStack.scale(1 / 16f, 1 / 16f, 1 / 16f);
+            var position = camera.getLookFrom();
+            poseStack.translate(-position.x, -position.y, -position.z);
+            poseStack.last().pose().negateY();
+            poseStack.scale(1 / 16f, 1 / 16f, 1 / 16f);
 
-			compassOverlay.render(graphics, partialTicks);
-		}
-		poseStack.popPose();
-	}
+            compassOverlay.render(graphics, partialTicks);
+        }
+        poseStack.popPose();
+    }
 
-	public void zoom(double factor) {
-		camera.zoom((float) factor);
-	}
+    public void zoom(double factor) {
+        camera.zoom((float) factor);
+    }
 }

@@ -124,6 +124,6 @@ public class GanderUI extends Screen {
             this.renderables.remove(this.renderer);
         }
 
-        this.renderer = addRenderableOnly(new SpatialRenderer(this.scene));
+        this.renderer = addRenderableOnly(new SpatialRenderer(this.scene, this.width, this.height));
     }
 }
