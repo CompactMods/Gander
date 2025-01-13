@@ -13,6 +13,6 @@ import org.joml.Matrix4f;
 
 public interface MultiPassRenderPipeline<TCtx> extends RenderPipeline<TCtx> {
 
-    void renderPass(PipelineState state, TCtx ctx, RenderType renderType, GuiGraphics graphics, Camera camera, Frustum frustum, PoseStack poseStack, Matrix4f projectionMatrix);
+    void renderPass(PipelineState state, TCtx ctx, RenderType renderType, GuiGraphics graphics, Camera camera, Frustum frustum, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix);
 
 }

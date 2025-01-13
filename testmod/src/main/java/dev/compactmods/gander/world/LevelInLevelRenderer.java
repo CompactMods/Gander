@@ -58,11 +58,10 @@ public record LevelInLevelRenderer(UUID id, PipelineState state, BakedLevelOverl
         final var renderTypeForStage = RenderTypes.GEOMETRY_STAGES.get(evt.getStage());
         if(renderTypeForStage != null) {
             var stack = evt.getPoseStack();
-            stack.mulPose(evt.getModelViewMatrix());
 
             BakedLevelOverlayPipeline.INSTANCE.renderPass(state, ctx, renderTypeForStage, graphics, camera,
                 evt.getFrustum(),
-                stack, evt.getProjectionMatrix());
+                stack, evt.getProjectionMatrix(), evt.getModelViewMatrix());
         }
     }
 
