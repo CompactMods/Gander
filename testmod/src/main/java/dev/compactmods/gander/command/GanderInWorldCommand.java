@@ -6,6 +6,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
+import dev.compactmods.gander.CommonEvents;
 import dev.compactmods.gander.GanderTestMod;
 import dev.compactmods.gander.network.RenderInWorldForDeferredStructureRequest;
 import dev.compactmods.gander.network.RenderInWorldForStructureRequest;
@@ -66,6 +67,7 @@ public class GanderInWorldCommand {
 
     private static int clearInWorldRenderers(CommandContext<CommandSourceStack> commandSourceStackCommandContext) {
         GanderTestMod.LIL_RENDERERS.clear();
+        CommonEvents.setTitle(Component.empty());
         return 0;
     }
 
