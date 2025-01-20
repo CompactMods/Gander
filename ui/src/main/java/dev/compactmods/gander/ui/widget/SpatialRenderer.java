@@ -9,14 +9,23 @@ import dev.compactmods.gander.ui.toolkit.GanderScreenRenderHelper;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.GuiGraphics;
+
+import net.minecraft.client.gui.layouts.LayoutElement;
+
+import net.minecraft.client.gui.navigation.ScreenPosition;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+
+import net.minecraft.util.CommonColors;
 
 import org.jetbrains.annotations.NotNull;
 
 public class SpatialRenderer implements Renderable {
     private final BakedLevelScreenRenderingContext renderingContext;
     private final GanderScreenRenderHelper renderHelper;
+    private final ScreenRectangle renderArea;
     private PipelineState state;
 
     private final CompassOverlay compassOverlay;
@@ -24,10 +33,11 @@ public class SpatialRenderer implements Renderable {
 
     private final SceneCamera camera;
 
-    public SpatialRenderer(BakedLevel bakedLevel, int width, int height) {
+    public SpatialRenderer(BakedLevel bakedLevel, int x, int y, int width, int height) {
         this.compassOverlay = new CompassOverlay();
         this.shouldRenderCompass = false;
         this.camera = new SceneCamera();
+        this.renderArea = new ScreenRectangle(new ScreenPosition(x, y), width, height);
         this.renderingContext = BakedLevelScreenRenderingContext.forBakedLevel(bakedLevel);
         this.renderHelper = new GanderScreenRenderHelper(width, height);
     }
@@ -53,6 +63,7 @@ public class SpatialRenderer implements Renderable {
             BakedLevelScreenRenderPipeline.INSTANCE.setupContext(this.state, renderingContext, camera);
         }
 
+        graphics.enableScissor(renderArea.left(), renderArea.top(), renderArea.right(), renderArea.bottom());
         renderHelper.renderInScreenSpace(graphics, camera, (projMatrix, poseStack) -> {
             poseStack.translate(
                 renderingContext.bakedLevel().blockBoundaries().getXSpan() / -2f,
@@ -63,6 +74,7 @@ public class SpatialRenderer implements Renderable {
                 state, renderingContext, graphics, camera, poseStack, projMatrix
             );
         });
+        graphics.disableScissor();
     }
 
     private void renderCompass(GuiGraphics graphics, float partialTicks, PoseStack poseStack) {
@@ -85,5 +97,9 @@ public class SpatialRenderer implements Renderable {
 
     public void zoom(double factor) {
         camera.zoom((float) factor);
+    }
+
+    public ScreenRectangle getRenderArea() {
+        return renderArea;
     }
 }

@@ -9,6 +9,8 @@ import dev.compactmods.gander.ui.widget.SpatialRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.CommonColors;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.item.DyeColor;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -46,8 +48,14 @@ public class GanderUI extends Screen {
     }
 
     @Override
-    public void renderTransparentBackground(GuiGraphics pGuiGraphics) {
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.renderBackground(graphics, mouseX, mouseY, partialTick);
 
+        if(renderer != null) {
+            var renderArea = renderer.getRenderArea();
+            graphics.fill(renderArea.left(), renderArea.top(), renderArea.right(), renderArea.bottom(),
+                FastColor.ARGB32.color(120, CommonColors.BLACK));
+        }
     }
 
     @Override
@@ -124,6 +132,6 @@ public class GanderUI extends Screen {
             this.renderables.remove(this.renderer);
         }
 
-        this.renderer = addRenderableOnly(new SpatialRenderer(this.scene, this.width, this.height));
+        this.renderer = addRenderableOnly(new SpatialRenderer(this.scene, 100, 40, this.width - 200, this.height - 80));
     }
 }
