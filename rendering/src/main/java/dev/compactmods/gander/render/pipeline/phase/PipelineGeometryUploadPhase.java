@@ -8,7 +8,7 @@ import net.minecraft.client.gui.GuiGraphics;
 
 import org.joml.Matrix4f;
 
-public interface PipelineGeometryUploadPhase<TCtx> {
+public interface PipelineGeometryUploadPhase<TCtx> extends PipelinePhase {
 
     void upload(PipelineState state, TCtx context, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix);
 }

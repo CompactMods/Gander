@@ -16,17 +16,22 @@ import org.joml.Matrix4f;
 
 public class BakedLevelScreenRenderPipeline {
 
-    public static SinglePassRenderPipeline<BakedLevelScreenRenderingContext> INSTANCE = new RenderPipelineBuilder<BakedLevelScreenRenderingContext>()
-        .addSetupPhase(GanderScreenToolkit::switchToFabulous)
-        .addSetupPhase(GanderScreenToolkit::setupBasicRenderRequirements)
-        .addContextSetupPhase(BakedLevelScreenRenderPipeline::setup)
-        .addGeometryUploadPhase(GanderScreenPipelinePhases.STATIC_GEOMETRY_UPLOAD)
-        .addGeometryUploadPhase(GanderScreenPipelinePhases.BLOCK_ENTITIES_GEOMETRY_UPLOAD)
-        .addGeometryUploadPhase(GanderScreenPipelinePhases.TRANSLUCENT_GEOMETRY_UPLOAD)
-        .addRenderPhase(BakedLevelScreenRenderPipeline::render)
-        .addCleanupPhase(BakedLevelScreenRenderPipeline::teardown)
-        .addCleanupPhase(GanderScreenToolkit::revertGraphicsMode)
-        .singlePass();
+    public static SinglePassRenderPipeline<BakedLevelScreenRenderingContext> INSTANCE;
+    static {
+        var builder = new RenderPipelineBuilder<BakedLevelScreenRenderingContext>();
+        builder.phases()
+            .addSetupPhase(GanderScreenToolkit::setupBasicRenderRequirements)
+            .addContextSetupPhase(BakedLevelScreenRenderPipeline::setup)
+            .addPreGeometryPhase(GanderScreenToolkit::switchToFabulous)
+            .addGeometryUploadPhase(GanderScreenPipelinePhases.STATIC_GEOMETRY_UPLOAD)
+            .addGeometryUploadPhase(GanderScreenPipelinePhases.BLOCK_ENTITIES_GEOMETRY_UPLOAD)
+            .addGeometryUploadPhase(GanderScreenPipelinePhases.TRANSLUCENT_GEOMETRY_UPLOAD)
+            .addRenderPhase(BakedLevelScreenRenderPipeline::render)
+            .addCleanupPhase(GanderScreenToolkit::revertGraphicsMode)
+            .addCleanupPhase(BakedLevelScreenRenderPipeline::teardown);
+
+        INSTANCE = builder.singlePass();
+    }
 
     private static boolean setup(PipelineState state, BakedLevelScreenRenderingContext ctx, Camera camera) {
         final var mc = Minecraft.getInstance();

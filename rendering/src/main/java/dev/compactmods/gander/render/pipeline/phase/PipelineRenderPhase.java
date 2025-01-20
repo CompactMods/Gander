@@ -9,7 +9,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import org.joml.Matrix4f;
 
 @FunctionalInterface
-public interface PipelineRenderPhase<TCtx> {
+public interface PipelineRenderPhase<TCtx> extends PipelinePhase {
 
     void render(PipelineState state, TCtx context, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix);
 
