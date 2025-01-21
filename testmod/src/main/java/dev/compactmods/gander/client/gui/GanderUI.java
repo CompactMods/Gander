@@ -9,6 +9,8 @@ import dev.compactmods.gander.ui.widget.SpatialRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.CommonColors;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.item.DyeColor;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -46,8 +48,14 @@ public class GanderUI extends Screen {
     }
 
     @Override
-    public void renderTransparentBackground(GuiGraphics pGuiGraphics) {
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.renderBackground(graphics, mouseX, mouseY, partialTick);
 
+        if(renderer != null) {
+            var renderArea = renderer.getRenderArea();
+            graphics.fill(renderArea.left(), renderArea.top(), renderArea.right(), renderArea.bottom(),
+                FastColor.ARGB32.color(120, CommonColors.BLACK));
+        }
     }
 
     @Override
@@ -78,31 +86,31 @@ public class GanderUI extends Screen {
 
         if (code == InputConstants.KEY_R) {
             renderer.camera().resetLook();
-//            renderer.recalculateTranslucency();
+            renderer.recalculateTranslucency();
             return true;
         }
 
         if (code == InputConstants.KEY_UP) {
             renderer.camera().lookUp(rotateSpeed);
-//            renderer.recalculateTranslucency();
+            renderer.recalculateTranslucency();
             return true;
         }
 
         if (code == InputConstants.KEY_DOWN) {
             renderer.camera().lookDown(rotateSpeed);
-//            renderer.recalculateTranslucency();
+            renderer.recalculateTranslucency();
             return true;
         }
 
         if (code == InputConstants.KEY_LEFT) {
             renderer.camera().lookLeft(rotateSpeed);
-//            renderer.recalculateTranslucency();
+            renderer.recalculateTranslucency();
             return true;
         }
 
         if (code == InputConstants.KEY_RIGHT) {
             renderer.camera().lookRight(rotateSpeed);
-//            renderer.recalculateTranslucency();
+            renderer.recalculateTranslucency();
             return true;
         }
 
@@ -114,12 +122,6 @@ public class GanderUI extends Screen {
         return false;
     }
 
-    @Override
-    public void removed() {
-        if(this.renderer != null)
-            this.renderer.dispose();
-    }
-
     public void setSceneSource(Component src) {
         this.sceneSource = src;
     }
@@ -127,10 +129,9 @@ public class GanderUI extends Screen {
     public void setScene(BakedLevel scene) {
         this.scene = scene;
         if(this.renderer != null) {
-            this.renderer.dispose();
             this.renderables.remove(this.renderer);
         }
 
-        this.renderer = addRenderableOnly(new SpatialRenderer(this.scene));
+        this.renderer = addRenderableOnly(new SpatialRenderer(this.scene, 100, 40, this.width - 200, this.height - 80));
     }
 }

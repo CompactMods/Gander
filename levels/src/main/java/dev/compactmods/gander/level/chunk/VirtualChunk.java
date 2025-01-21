@@ -156,12 +156,6 @@ public class VirtualChunk extends EmptyLevelChunk {
 		return false;
 	}
 
-    // TODO: Is there some other overload for this?
-	/*@Override
-	public ChunkStatus getStatus() {
-		return ChunkStatus.LIGHT;
-	}*/
-
 	@Override
 	public void removeBlockEntity(BlockPos pos) {
 		virtualLevel.removeBlockEntity(pos);

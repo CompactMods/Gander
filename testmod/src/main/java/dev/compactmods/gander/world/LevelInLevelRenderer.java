@@ -1,22 +1,20 @@
 package dev.compactmods.gander.world;
 
 import java.util.UUID;
-import java.util.function.Supplier;
 
+import dev.compactmods.gander.core.camera.SceneCamera;
 import dev.compactmods.gander.level.TickingLevel;
+
+import dev.compactmods.gander.render.RenderTypes;
+import dev.compactmods.gander.render.pipeline.PipelineState;
+import dev.compactmods.gander.render.pipeline.example.BakedLevelOverlayPipeline;
+import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import net.minecraft.client.gui.GuiGraphics;
 
 import org.joml.Vector3f;
 
-import com.google.common.base.Suppliers;
-import com.mojang.blaze3d.vertex.PoseStack;
-
 import dev.compactmods.gander.level.VirtualLevel;
-import dev.compactmods.gander.render.pipeline.RenderPipeline;
-import dev.compactmods.gander.render.RenderTypes;
 import dev.compactmods.gander.render.geometry.BakedLevel;
-import dev.compactmods.gander.render.pipeline.BakedLevelOverlayPipeline;
-import dev.compactmods.gander.render.pipeline.context.BakedDirectLevelRenderingContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.phys.Vec3;
@@ -26,9 +24,7 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 /**
  * Serves as a reference implementation of a level-in-level renderer, using a pre-built rendering pipeline.
  */
-public record LevelInLevelRenderer(UUID id, BakedDirectLevelRenderingContext ctx, Vector3f renderOffset) {
-    private static final Supplier<RenderPipeline<BakedDirectLevelRenderingContext>> PIPELINE = Suppliers.memoize(BakedLevelOverlayPipeline::new);
-
+public record LevelInLevelRenderer(UUID id, PipelineState state, BakedLevelOverlayPipeline.Context ctx) {
     public static LevelInLevelRenderer create(BakedLevel level, VirtualLevel virtualLevel) {
         BoundingBox bounds = virtualLevel.getBounds();
         final var centerBlock = bounds.getCenter()
@@ -43,51 +39,33 @@ public record LevelInLevelRenderer(UUID id, BakedDirectLevelRenderingContext ctx
     }
 
     public static LevelInLevelRenderer create(BakedLevel level, VirtualLevel virtualLevel, Vector3f renderLocation) {
-        final var ctx = new BakedDirectLevelRenderingContext(
+        final var ctx = new BakedLevelOverlayPipeline.Context(
             level,
             level.blockRenderBuffers(), level.fluidRenderBuffers(),
             virtualLevel.blockSystem().blockAndFluidStorage()::blockEntities
         );
 
-        return new LevelInLevelRenderer(UUID.randomUUID(), ctx, renderLocation);
+        final var initialState = BakedLevelOverlayPipeline.INSTANCE.setup();
+        initialState.set(GanderRenderToolkit.RENDER_ORIGIN, renderLocation);
+        BakedLevelOverlayPipeline.INSTANCE.setupContext(initialState, ctx, new SceneCamera());
+
+        return new LevelInLevelRenderer(UUID.randomUUID(), initialState, ctx);
     }
 
     public void onRenderStage(RenderLevelStageEvent evt) {
-        final var pipeline = PIPELINE.get();
-        if (pipeline == null) return;
-
         final var graphics = new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().renderBuffers().bufferSource());
 
-        var partialTick = evt.getPartialTick().getGameTimeDeltaPartialTick(true);
+        final var camera = new SceneCamera();
 
-        if(RenderTypes.isStaticGeometryStage(evt.getStage())) {
-            var stack = new PoseStack();
-            stack.mulPose(evt.getModelViewMatrix());
+        final var renderTypeForStage = RenderTypes.GEOMETRY_STAGES.get(evt.getStage());
+        final var partialTick = evt.getPartialTick().getGameTimeDeltaPartialTick(true);
 
-            pipeline.staticGeometryPass(ctx, graphics, partialTick, stack, evt.getCamera(), evt.getProjectionMatrix(), renderOffset);
-        }
+        if(renderTypeForStage != null) {
+            var stack = evt.getPoseStack();
 
-        if (evt.getStage() == RenderLevelStageEvent.Stage.AFTER_BLOCK_ENTITIES) {
-            var stack = new PoseStack();
-//            stack.mulPose(evt.getModelViewMatrix());
-
-            pipeline.blockEntitiesPass(ctx, graphics, partialTick,
-                stack,
-                evt.getCamera(),
+            BakedLevelOverlayPipeline.INSTANCE.renderPass(state, ctx, renderTypeForStage, graphics, camera,
                 evt.getFrustum(),
-                Minecraft.getInstance().renderBuffers().bufferSource(),
-                renderOffset);
-        }
-
-        if(evt.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
-            var stack = new PoseStack();
-            stack.mulPose(evt.getModelViewMatrix());
-
-            pipeline.translucentGeometryPass(ctx, graphics, partialTick,
-                stack,
-                evt.getCamera(),
-                evt.getProjectionMatrix(),
-                renderOffset);
+                stack, evt.getProjectionMatrix(), evt.getModelViewMatrix(), partialTick);
         }
     }
 

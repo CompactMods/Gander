@@ -1,120 +1,106 @@
 package dev.compactmods.gander.ui.widget;
 
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-
-import dev.compactmods.gander.core.Gander;
+import dev.compactmods.gander.core.camera.SceneCamera;
 import dev.compactmods.gander.render.geometry.BakedLevel;
-import dev.compactmods.gander.ui.pipeline.BakedVirtualLevelScreenPipeline;
+import dev.compactmods.gander.render.pipeline.PipelineState;
+import dev.compactmods.gander.ui.pipeline.BakedLevelScreenRenderPipeline;
 import dev.compactmods.gander.ui.pipeline.context.BakedLevelScreenRenderingContext;
 import dev.compactmods.gander.ui.toolkit.GanderScreenRenderHelper;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.renderer.culling.Frustum;
-
-import org.joml.Matrix4f;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import dev.compactmods.gander.core.camera.SceneCamera;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
 
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
+import net.minecraft.client.gui.layouts.LayoutElement;
+
+import net.minecraft.client.gui.navigation.ScreenPosition;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+
+import net.minecraft.util.CommonColors;
+
+import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
 
 public class SpatialRenderer implements Renderable {
-    private final Supplier<BakedVirtualLevelScreenPipeline> pipeline = Suppliers.memoize(BakedVirtualLevelScreenPipeline::new);
     private final BakedLevelScreenRenderingContext renderingContext;
     private final GanderScreenRenderHelper renderHelper;
+    private final ScreenRectangle renderArea;
+    private PipelineState state;
 
-	private final CompassOverlay compassOverlay;
-	private boolean shouldRenderCompass;
+    private final CompassOverlay compassOverlay;
+    private boolean shouldRenderCompass;
 
-	private final SceneCamera camera;
+    private final SceneCamera camera;
 
-	private boolean isDisposed = false;
-
-	public SpatialRenderer(BakedLevel bakedLevel) {
+    public SpatialRenderer(BakedLevel bakedLevel, int x, int y, int width, int height) {
         this.compassOverlay = new CompassOverlay();
         this.shouldRenderCompass = false;
         this.camera = new SceneCamera();
-        this.renderingContext = new BakedLevelScreenRenderingContext(bakedLevel);
+        this.renderArea = new ScreenRectangle(new ScreenPosition(x, y), width, height);
+        this.renderingContext = BakedLevelScreenRenderingContext.forBakedLevel(bakedLevel);
+        this.renderHelper = new GanderScreenRenderHelper(width, height);
+    }
 
-        final var mc = Minecraft.getInstance();
-        this.renderHelper = new GanderScreenRenderHelper(mc.getWindow().getWidth(), mc.getWindow().getHeight());
-	}
+    public SceneCamera camera() {
+        return camera;
+    }
 
-	public void dispose() {
-		if (isDisposed) return;
-		this.isDisposed = true;
-		this.renderingContext.dispose();
-	}
+	public void recalculateTranslucency() {
+        // FIXME - Black Screen Issue
+        //  renderingContext.recalculateTranslucency(camera);
+    }
 
-	public SceneCamera camera() {
-		return camera;
-	}
+    public void shouldRenderCompass(boolean render) {
+        this.shouldRenderCompass = render;
+    }
 
-    // FIXME
-//	public void recalculateTranslucency() {
-//        renderingContext.bakedLevel.resortTranslucency(camera.getPosition().toVector3f());
-//    }
+    @Override
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 
-	public void shouldRenderCompass(boolean render) {
-		this.shouldRenderCompass = render;
-	}
+        if (state == null) {
+            this.state = BakedLevelScreenRenderPipeline.INSTANCE.setup();
+            BakedLevelScreenRenderPipeline.INSTANCE.setupContext(this.state, renderingContext, camera);
+        }
 
-	@Override
-	public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        final var pipe = pipeline.get();
-
-        final var frustum = new Frustum(new Matrix4f().rotate(camera.rotation().conjugate(new Quaternionf())),
-            renderHelper.projectionMatrix());
-
-        final var manager = pipe.createLifecycleManager();
-
-        manager.setup(renderingContext, graphics, camera);
-
+        graphics.enableScissor(renderArea.left(), renderArea.top(), renderArea.right(), renderArea.bottom());
         renderHelper.renderInScreenSpace(graphics, camera, (projMatrix, poseStack) -> {
             poseStack.translate(
-                renderingContext.bakedLevel.blockBoundaries().getXSpan() / -2f,
-                renderingContext.bakedLevel.blockBoundaries().getYSpan() / -2f,
-                renderingContext.bakedLevel.blockBoundaries().getZSpan() / -2f);
+                renderingContext.bakedLevel().blockBoundaries().getXSpan() / -2f,
+                renderingContext.bakedLevel().blockBoundaries().getYSpan() / -2f,
+                renderingContext.bakedLevel().blockBoundaries().getZSpan() / -2f);
 
-            // RENDER SCENE
-
-            // TODO: Map layers somewhere - renderingContext.translucencyChain.layers()
-            pipe.staticGeometryPass(renderingContext, graphics, partialTicks, poseStack, camera, projMatrix);
-            pipe.blockEntitiesPass(renderingContext, graphics, partialTicks, poseStack, camera, frustum, graphics.bufferSource());
-            pipe.translucentGeometryPass(renderingContext, graphics, partialTicks, poseStack, camera, projMatrix);
-
-            renderingContext.translucencyChain.process();
-            // END RENDER SCENE
+            BakedLevelScreenRenderPipeline.INSTANCE.render(
+                state, renderingContext, graphics, camera, poseStack, projMatrix, new Matrix4f(), partialTicks
+            );
         });
+        graphics.disableScissor();
+    }
 
-        manager.teardown(renderingContext, graphics);
-	}
+    private void renderCompass(GuiGraphics graphics, float partialTicks, PoseStack poseStack) {
+        poseStack.pushPose();
+        {
+            poseStack.translate(
+                renderingContext.blockBoundaries().getXSpan() / -2f,
+                renderingContext.blockBoundaries().getYSpan() / -2f,
+                renderingContext.blockBoundaries().getZSpan() / -2f);
 
-	private void renderCompass(GuiGraphics graphics, float partialTicks, PoseStack poseStack) {
-		poseStack.pushPose();
-		{
-			poseStack.translate(
-					renderingContext.blockBoundaries.getXSpan() / -2f,
-					renderingContext.blockBoundaries.getYSpan() / -2f,
-					renderingContext.blockBoundaries.getZSpan() / -2f);
+            var position = camera.getLookFrom();
+            poseStack.translate(-position.x, -position.y, -position.z);
+            poseStack.last().pose().negateY();
+            poseStack.scale(1 / 16f, 1 / 16f, 1 / 16f);
 
-			var position = camera.getLookFrom();
-			poseStack.translate(-position.x, -position.y, -position.z);
-			poseStack.last().pose().negateY();
-			poseStack.scale(1 / 16f, 1 / 16f, 1 / 16f);
+            compassOverlay.render(graphics, partialTicks);
+        }
+        poseStack.popPose();
+    }
 
-			compassOverlay.render(graphics, partialTicks);
-		}
-		poseStack.popPose();
-	}
+    public void zoom(double factor) {
+        camera.zoom((float) factor);
+    }
 
-	public void zoom(double factor) {
-		camera.zoom((float) factor);
-	}
+    public ScreenRectangle getRenderArea() {
+        return renderArea;
+    }
 }

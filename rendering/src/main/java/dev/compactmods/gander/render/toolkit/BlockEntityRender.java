@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.Sheets;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.loading.FMLEnvironment;
 
 import org.apache.logging.log4j.LogManager;
@@ -64,7 +65,10 @@ public class BlockEntityRender {
 	public static void render(BlockAndTintGetter world, @NotNull BlockEntity blockEntity, PoseStack ms, Vector3f cameraPosition,
 							  @Nullable Matrix4f lightTransform, MultiBufferSource.BufferSource buffer, float pt) {
 
-		BlockEntityRenderer<BlockEntity> renderer = Minecraft.getInstance().getBlockEntityRenderDispatcher().getRenderer(blockEntity);
+		BlockEntityRenderer<BlockEntity> renderer = Minecraft.getInstance()
+            .getBlockEntityRenderDispatcher()
+            .getRenderer(blockEntity);
+
 		if (renderer == null)
 			return;
 
@@ -76,7 +80,8 @@ public class BlockEntityRender {
 			BlockPos worldPos = getLightPos(lightTransform, pos);
 			int worldLight = LevelRenderer.getLightColor(world, worldPos);
 
-			renderer.render(blockEntity, pt, ms, buffer, worldLight, OverlayTexture.NO_OVERLAY);
+            if(renderer.shouldRender(blockEntity, new Vec3(cameraPosition)))
+			    renderer.render(blockEntity, pt, ms, buffer, worldLight, OverlayTexture.NO_OVERLAY);
 
 		} catch (Exception e) {
 			String message = "BlockEntity " + BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(blockEntity.getType()) + " could not be rendered virtually.";

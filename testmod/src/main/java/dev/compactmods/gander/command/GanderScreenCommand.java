@@ -1,6 +1,7 @@
 package dev.compactmods.gander.command;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -15,6 +16,8 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceKeyArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -22,6 +25,7 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -31,6 +35,7 @@ public class GanderScreenCommand {
         -> SharedSuggestionProvider.suggestResource(ctx.getSource().getServer().getStructureManager().listTemplates(), builder);
 
     public static void addScreenSubtree(CommandBuildContext buildContext, LiteralArgumentBuilder<CommandSourceStack> root) {
+        // --- SCENE: For Existing Templates ---
         var scene = Commands.literal("scene")
             .then(
                 Commands.argument("scene", ResourceLocationArgument.id())
@@ -38,6 +43,7 @@ public class GanderScreenCommand {
                     .executes(GanderScreenCommand::openTemplateScene)
             );
 
+        // --- STRUCTURE: Generated Structures (Jigsaw) ---
         var structure = Commands.literal("structure")
             .then(Commands.argument("structure", ResourceKeyArgument.key(Registries.STRUCTURE))
                 .executes(ctx -> openStructureSceneWithFloor(ctx, Blocks.AIR.defaultBlockState()))
@@ -46,15 +52,21 @@ public class GanderScreenCommand {
                 )
             );
 
+        // --- DEBUG: EVERY BLOCK EVER ---
         var debug = Commands.literal("debug")
             .executes(GanderScreenCommand::generateDebug);
 
-        final var renderToScreenRoot = Commands.literal("screen");
+        // --- NEARBY (A Player) ---
+        var nearby = Commands.literal("nearby")
+            .then(Commands.argument("distance", IntegerArgumentType.integer(3, 32))
+                .executes(GanderScreenCommand::nearbyBlocks));
 
+        final var renderToScreenRoot = Commands.literal("screen");
         renderToScreenRoot
             .then(scene)
             .then(structure)
-            .then(debug);
+            .then(debug)
+            .then(nearby);
 
         root.then(renderToScreenRoot);
     }
@@ -109,5 +121,27 @@ public class GanderScreenCommand {
 
         PacketDistributor.sendToPlayer(player, new OpenGanderUiForStructureRequest(Component.literal("Generated: minecraft:debug"), structure));
         return Command.SINGLE_SUCCESS;
+    }
+
+    private static int nearbyBlocks(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+
+        var distance = IntegerArgumentType.getInteger(ctx, "distance");
+        var source = ctx.getSource();
+
+        StructureTemplate finalStructure = new StructureTemplate();
+        finalStructure.fillFromWorld(source.getLevel(),
+            BlockPos.containing(source.getPosition().subtract(distance, distance, distance)),
+            new Vec3i(distance * 2, distance * 2, distance * 2),
+            false, null);
+
+        final var nearbyPlayers = source.getLevel()
+                .getPlayers(player -> player.position()
+                    .closerThan(source.getPosition(), 5, 5));
+
+        for(var nearby : nearbyPlayers) {
+            PacketDistributor.sendToPlayer(nearby, new OpenGanderUiForStructureRequest(Component.literal("Nearby: " + distance + " blocks"), finalStructure));
+        }
+
+        return 0;
     }
 }
