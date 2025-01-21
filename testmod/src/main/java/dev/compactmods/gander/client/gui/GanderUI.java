@@ -86,31 +86,31 @@ public class GanderUI extends Screen {
 
         if (code == InputConstants.KEY_R) {
             renderer.camera().resetLook();
-//            renderer.recalculateTranslucency();
+            renderer.recalculateTranslucency();
             return true;
         }
 
         if (code == InputConstants.KEY_UP) {
             renderer.camera().lookUp(rotateSpeed);
-//            renderer.recalculateTranslucency();
+            renderer.recalculateTranslucency();
             return true;
         }
 
         if (code == InputConstants.KEY_DOWN) {
             renderer.camera().lookDown(rotateSpeed);
-//            renderer.recalculateTranslucency();
+            renderer.recalculateTranslucency();
             return true;
         }
 
         if (code == InputConstants.KEY_LEFT) {
             renderer.camera().lookLeft(rotateSpeed);
-//            renderer.recalculateTranslucency();
+            renderer.recalculateTranslucency();
             return true;
         }
 
         if (code == InputConstants.KEY_RIGHT) {
             renderer.camera().lookRight(rotateSpeed);
-//            renderer.recalculateTranslucency();
+            renderer.recalculateTranslucency();
             return true;
         }
 

@@ -47,10 +47,10 @@ public class SpatialRenderer implements Renderable {
         return camera;
     }
 
-    // FIXME
-//	public void recalculateTranslucency() {
-//        renderingContext.bakedLevel.resortTranslucency(camera.getPosition().toVector3f());
-//    }
+	public void recalculateTranslucency() {
+        // FIXME - Black Screen Issue
+        //  renderingContext.recalculateTranslucency(camera);
+    }
 
     public void shouldRenderCompass(boolean render) {
         this.shouldRenderCompass = render;

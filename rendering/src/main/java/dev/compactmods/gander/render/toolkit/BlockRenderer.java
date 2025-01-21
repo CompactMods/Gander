@@ -36,7 +36,6 @@ public class BlockRenderer {
 		renderSectionLayer(bakedLevel.fluidRenderBuffers(), renderTypeStore::redirectedFluidRenderType, renderType, poseStack, camera, renderOrigin, pProjectionMatrix);
 	}
 
-	// TODO: we shouldn't leak internals...
 	public static void renderSectionLayer(Map<RenderType, VertexBuffer> renderBuffers,
                                           Function<RenderType, RenderType> redirector,
                                           RenderType renderType,

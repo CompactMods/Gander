@@ -21,13 +21,7 @@ public class LevelOverlayRenderSystem
 		CommonEvents.setTitle(source);
 
         var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
-		var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess(), true, (newLevel) -> {
-            var bakedLevel = LevelBakery.bakeVertices(newLevel, bounds, new Vector3f());
-            var newRenderer = LevelInLevelRenderer.create(bakedLevel, newLevel, renderLocation);
-
-            //TODO: FIgure out how to override the existing LIL renderer
-            //GanderTestMod.addLevelInLevelRenderer(newRenderer);
-        });
+		var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess(), true);
 
 		virtualLevel.setBounds(bounds);
 		data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings().setKnownShape(true), RandomSource.create(), Block.UPDATE_CLIENTS);

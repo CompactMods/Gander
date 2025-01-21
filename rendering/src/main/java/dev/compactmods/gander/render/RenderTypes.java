@@ -21,12 +21,6 @@ public class RenderTypes extends RenderStateShard {
         .stream()
         .collect(Collectors.toMap(RenderLevelStageEvent.Stage::fromRenderType, Function.identity()));
 
-    public static final Set<RenderType> STATIC_GEOMETRY_RENDER_TYPES = Set.of(
-        RenderType.SOLID,
-        RenderType.CUTOUT_MIPPED,
-        RenderType.CUTOUT
-    );
-
 	protected static final RenderStateShard.ShaderStateShard BLOCK_SHADER =
 			new RenderStateShard.ShaderStateShard(GameRenderer::getRendertypeTranslucentMovingBlockShader);
 
@@ -57,8 +51,4 @@ public class RenderTypes extends RenderStateShard {
 	private RenderTypes() {
 		super(null, null, null);
 	}
-
-    public static boolean isStaticGeometryRenderType(RenderType renderType) {
-        return STATIC_GEOMETRY_RENDER_TYPES.contains(renderType);
-    }
 }

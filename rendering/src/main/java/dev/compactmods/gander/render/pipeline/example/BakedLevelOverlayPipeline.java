@@ -23,7 +23,6 @@ import net.minecraft.world.phys.Vec3;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.joml.Vector3fc;
 
 import java.util.Map;
 import java.util.Objects;
@@ -42,7 +41,7 @@ public final class BakedLevelOverlayPipeline {
     static {
         var builder = new RenderPipelineBuilder<BakedLevelOverlayPipeline.Context>();
         builder.phases()
-            .addGeometryUploadPhase(RenderTypes::isStaticGeometryRenderType, BakedLevelOverlayPipeline::staticGeometryPass)
+            .addGeometryUploadPhase(STATIC_GEOMETRY::contains, BakedLevelOverlayPipeline::staticGeometryPass)
             .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::blockEntitiesPass)
             .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::translucentGeometryPass);
 
@@ -54,14 +53,8 @@ public final class BakedLevelOverlayPipeline {
 
         final var camPos = camera.getPosition().toVector3f();
 
-        // FIXME - This translation is wrong, it glues the render to the top of the player's head
         poseStack.pushPose();
         poseStack.mulPose(modelViewMatrix);
-
-//        poseStack.translate(-camPos.x, -camPos.y, -camPos.z);
-//        poseStack.translate(renderOrigin.x, renderOrigin.y, renderOrigin.z);
-
-        poseStack.pushPose();
 
         for (RenderType renderType : STATIC_GEOMETRY) {
             BlockRenderer.renderSectionLayer(
@@ -81,7 +74,6 @@ public final class BakedLevelOverlayPipeline {
                 projectionMatrix);
         }
 
-        poseStack.popPose();
         poseStack.popPose();
     }
 
@@ -103,33 +95,25 @@ public final class BakedLevelOverlayPipeline {
         final var camPos = camera.getPosition().toVector3f();
         var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
 
-        // Rebase the camera so that block entities get coordinates relative to their inner level, rather than the real level
-//        movableCamera.setup(camera.getEntity().level(), camera.getEntity(), camera.isDetached(), false, partialTick);
-//        movableCamera.moveWorldSpace(-renderOrigin.x(), -renderOrigin.y(), -renderOrigin.z());
-
         final var mc = Minecraft.getInstance();
         final var bufferSource = mc.renderBuffers().bufferSource();
         final var blockEntityRenderDispatcher = mc.getBlockEntityRenderDispatcher();
 
         // TODO: maybe we should raycast in the virtual level for these, rather than pulling from the real level?
-//        mc.getEntityRenderDispatcher().prepare(camera.getEntity().level(), movableCamera, Minecraft.getInstance().crosshairPickEntity);
         blockEntityRenderDispatcher.prepare(ctx.level().originalLevel(), camera, mc.hitResult);
 
-        final var renderOffset = new Vector3f(
-            (float) (renderOrigin.x() - camPos.x),
-            (float) (renderOrigin.y() - camPos.y),
-            (float) (renderOrigin.z() - camPos.z));
+        final var renderOffset = new Vector3f(renderOrigin).sub(camPos);
 
         poseStack.pushPose();
         poseStack.translate(renderOffset.x, renderOffset.y, renderOffset.z);
         ctx.blockEntities().get().forEach(blockEnt ->
-            renderSingleBlockEntity(partialTicks, poseStack, bufferSource, blockEnt, blockEntityRenderDispatcher, renderOrigin));
+            renderSingleBlockEntity(partialTicks, poseStack, bufferSource, blockEnt, blockEntityRenderDispatcher));
 
         poseStack.popPose();
     }
 
     private static void renderSingleBlockEntity(float partialTick, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
-                                         BlockEntity blockEnt, BlockEntityRenderDispatcher blockEntityRenderDispatcher, Vector3fc renderOrigin) {
+                                         BlockEntity blockEnt, BlockEntityRenderDispatcher blockEntityRenderDispatcher) {
         poseStack.pushPose();
         final var offset = Vec3.atLowerCornerOf(blockEnt.getBlockPos());
         poseStack.translate(offset.x, offset.y, offset.z);
