@@ -21,6 +21,7 @@ import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.util.CommonColors;
 
 import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
 
 public class SpatialRenderer implements Renderable {
     private final BakedLevelScreenRenderingContext renderingContext;
@@ -71,7 +72,7 @@ public class SpatialRenderer implements Renderable {
                 renderingContext.bakedLevel().blockBoundaries().getZSpan() / -2f);
 
             BakedLevelScreenRenderPipeline.INSTANCE.render(
-                state, renderingContext, graphics, camera, poseStack, projMatrix
+                state, renderingContext, graphics, camera, poseStack, projMatrix, new Matrix4f(), partialTicks
             );
         });
         graphics.disableScissor();

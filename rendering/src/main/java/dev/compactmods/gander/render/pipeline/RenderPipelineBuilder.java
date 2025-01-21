@@ -18,4 +18,8 @@ public class RenderPipelineBuilder<TCtx> {
     public SinglePassRenderPipeline<TCtx> singlePass() {
         return new SingleEntrypointRenderPipeline<>(phaseCollectionBuilder.build());
     }
+
+    public MultiPassRenderPipeline<TCtx> stagedMultiPass() {
+        return new StagedMultipassRenderPipeline<>(phaseCollectionBuilder.build());
+    }
 }

@@ -43,12 +43,12 @@ public record SingleEntrypointRenderPipeline<TCtx>(PipelinePhaseCollection<TCtx>
     }
 
     @Override
-    public void render(PipelineState state, TCtx ctx, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix) {
+    public void render(PipelineState state, TCtx ctx, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f viewMatrix, float partialTicks) {
         for (var preRenderPhase : phases.beforeGeometryPhases())
             preRenderPhase.run(state);
 
         for (var phase : phases.geometryUploadPhases())
-            phase.upload(state, ctx, graphics, camera, poseStack, projectionMatrix);
+            phase.upload(state, ctx, graphics, camera, poseStack, projectionMatrix, viewMatrix, partialTicks);
 
         for (var phase : phases.renderPhases())
             phase.render(state, ctx, graphics, camera, poseStack, projectionMatrix);

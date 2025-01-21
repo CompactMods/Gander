@@ -8,6 +8,7 @@ import dev.compactmods.gander.level.TickingLevel;
 import dev.compactmods.gander.render.RenderTypes;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.pipeline.example.BakedLevelOverlayPipeline;
+import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import net.minecraft.client.gui.GuiGraphics;
 
 import org.joml.Vector3f;
@@ -44,7 +45,8 @@ public record LevelInLevelRenderer(UUID id, PipelineState state, BakedLevelOverl
             virtualLevel.blockSystem().blockAndFluidStorage()::blockEntities
         );
 
-        final var initialState = BakedLevelOverlayPipeline.INSTANCE.setup(renderLocation);
+        final var initialState = BakedLevelOverlayPipeline.INSTANCE.setup();
+        initialState.set(GanderRenderToolkit.RENDER_ORIGIN, renderLocation);
         BakedLevelOverlayPipeline.INSTANCE.setupContext(initialState, ctx, new SceneCamera());
 
         return new LevelInLevelRenderer(UUID.randomUUID(), initialState, ctx);
@@ -56,12 +58,14 @@ public record LevelInLevelRenderer(UUID id, PipelineState state, BakedLevelOverl
         final var camera = new SceneCamera();
 
         final var renderTypeForStage = RenderTypes.GEOMETRY_STAGES.get(evt.getStage());
+        final var partialTick = evt.getPartialTick().getGameTimeDeltaPartialTick(true);
+
         if(renderTypeForStage != null) {
             var stack = evt.getPoseStack();
 
             BakedLevelOverlayPipeline.INSTANCE.renderPass(state, ctx, renderTypeForStage, graphics, camera,
                 evt.getFrustum(),
-                stack, evt.getProjectionMatrix(), evt.getModelViewMatrix());
+                stack, evt.getProjectionMatrix(), evt.getModelViewMatrix(), partialTick);
         }
     }
 

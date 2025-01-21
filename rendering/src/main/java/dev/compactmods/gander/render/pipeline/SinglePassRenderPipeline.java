@@ -9,6 +9,6 @@ import org.joml.Matrix4f;
 
 public interface SinglePassRenderPipeline<TCtx> extends RenderPipeline<TCtx> {
 
-    void render(PipelineState state, TCtx ctx, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix);
+    void render(PipelineState state, TCtx ctx, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f viewMatrix, float partialTicks);
 
 }

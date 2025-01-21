@@ -8,6 +8,7 @@ import dev.compactmods.gander.render.RenderTypes;
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.pipeline.MultiPassRenderPipeline;
 import dev.compactmods.gander.render.pipeline.PipelineState;
+import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
 import dev.compactmods.gander.render.toolkit.BlockRenderer;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import net.minecraft.client.Camera;
@@ -16,7 +17,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
-import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
@@ -29,33 +29,35 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public final class BakedLevelOverlayPipeline implements MultiPassRenderPipeline<BakedLevelOverlayPipeline.Context> {
+public final class BakedLevelOverlayPipeline {
 
-    public static final BakedLevelOverlayPipeline INSTANCE = new BakedLevelOverlayPipeline();
+    private static final Predicate<RenderType> IS_TRANSLUCENT = renderType -> renderType == RenderType.TRANSLUCENT;
+    private static final Set<RenderType> STATIC_GEOMETRY = Set.of(RenderType.solid(), RenderType.cutoutMipped(), RenderType.cutout());
 
-    private final Set<RenderType> STATIC_GEOMETRY = Set.of(RenderType.solid(), RenderType.cutoutMipped(), RenderType.cutout());
+    public static MultiPassRenderPipeline<BakedLevelOverlayPipeline.Context> INSTANCE;
+    static {
+        var builder = new RenderPipelineBuilder<BakedLevelOverlayPipeline.Context>();
+        builder.phases()
+            .addGeometryUploadPhase(RenderTypes::isStaticGeometryRenderType, BakedLevelOverlayPipeline::staticGeometryPass)
+            .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::blockEntitiesPass)
+            .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::translucentGeometryPass);
 
-    private Vector3f getCorrectedRenderOrigin(PipelineState state, float partialTicks) {
-        var origin = new Vector3f(state.getOrDefault(GanderRenderToolkit.RENDER_ORIGIN, new Vector3f()));
-        var player = Objects.requireNonNull(Minecraft.getInstance().player);
-        return new Vector3f(
-            Mth.lerp(partialTicks, (float) (origin.x() - player.xOld), (float) (origin.x() - player.getX())),
-            Mth.lerp(partialTicks, (float) (origin.y() - player.yOld), (float) (origin.y() - player.getY())),
-            Mth.lerp(partialTicks, (float) (origin.z() - player.zOld), (float) (origin.z() - player.getZ()))
-        );
+        INSTANCE = builder.stagedMultiPass();
     }
 
-    public void staticGeometryPass(PipelineState state, Context ctx, GuiGraphics graphics, float partialTick, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix) {
-
-        var renderOrigin = getCorrectedRenderOrigin(state, partialTick);
+    private static void staticGeometryPass(PipelineState state, Context ctx, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
+        var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
 
         final var camPos = camera.getPosition().toVector3f();
 
         // FIXME - This translation is wrong, it glues the render to the top of the player's head
         poseStack.pushPose();
+        poseStack.mulPose(modelViewMatrix);
+
 //        poseStack.translate(-camPos.x, -camPos.y, -camPos.z);
 //        poseStack.translate(renderOrigin.x, renderOrigin.y, renderOrigin.z);
 
@@ -83,18 +85,30 @@ public final class BakedLevelOverlayPipeline implements MultiPassRenderPipeline<
         poseStack.popPose();
     }
 
-    public void blockEntitiesPass(PipelineState state, Context ctx,
-                                  GuiGraphics graphics, float partialTick, PoseStack poseStack, Camera camera,
-                                  Frustum frustum, MultiBufferSource.BufferSource bufferSource) {
+
+    private static Vector3f getCorrectedRenderOrigin(PipelineState state, float partialTicks) {
+        var origin = new Vector3f(state.getOrDefault(GanderRenderToolkit.RENDER_ORIGIN, new Vector3f()));
+        var player = Objects.requireNonNull(Minecraft.getInstance().player);
+        return new Vector3f(
+            Mth.lerp(partialTicks, (float) (origin.x() - player.xOld), (float) (origin.x() - player.getX())),
+            Mth.lerp(partialTicks, (float) (origin.y() - player.yOld), (float) (origin.y() - player.getY())),
+            Mth.lerp(partialTicks, (float) (origin.z() - player.zOld), (float) (origin.z() - player.getZ()))
+        );
+    }
+
+    public static void blockEntitiesPass(PipelineState state, Context ctx,
+                                         GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
+
 
         final var camPos = camera.getPosition().toVector3f();
-        var renderOrigin = getCorrectedRenderOrigin(state, partialTick);
+        var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
 
         // Rebase the camera so that block entities get coordinates relative to their inner level, rather than the real level
 //        movableCamera.setup(camera.getEntity().level(), camera.getEntity(), camera.isDetached(), false, partialTick);
 //        movableCamera.moveWorldSpace(-renderOrigin.x(), -renderOrigin.y(), -renderOrigin.z());
 
         final var mc = Minecraft.getInstance();
+        final var bufferSource = mc.renderBuffers().bufferSource();
         final var blockEntityRenderDispatcher = mc.getBlockEntityRenderDispatcher();
 
         // TODO: maybe we should raycast in the virtual level for these, rather than pulling from the real level?
@@ -109,14 +123,13 @@ public final class BakedLevelOverlayPipeline implements MultiPassRenderPipeline<
         poseStack.pushPose();
         poseStack.translate(renderOffset.x, renderOffset.y, renderOffset.z);
         ctx.blockEntities().get().forEach(blockEnt ->
-            renderSingleBlockEntity(partialTick, poseStack, frustum, bufferSource, blockEnt, blockEntityRenderDispatcher, renderOrigin));
+            renderSingleBlockEntity(partialTicks, poseStack, bufferSource, blockEnt, blockEntityRenderDispatcher, renderOrigin));
 
         poseStack.popPose();
     }
 
-    private void renderSingleBlockEntity(float partialTick, PoseStack poseStack, Frustum frustum, MultiBufferSource.BufferSource bufferSource, BlockEntity blockEnt, BlockEntityRenderDispatcher blockEntityRenderDispatcher, Vector3fc renderOrigin) {
-        if (!isBlockEntityRendererVisible(blockEntityRenderDispatcher, blockEnt, frustum, renderOrigin)) return;
-
+    private static void renderSingleBlockEntity(float partialTick, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
+                                         BlockEntity blockEnt, BlockEntityRenderDispatcher blockEntityRenderDispatcher, Vector3fc renderOrigin) {
         poseStack.pushPose();
         final var offset = Vec3.atLowerCornerOf(blockEnt.getBlockPos());
         poseStack.translate(offset.x, offset.y, offset.z);
@@ -124,19 +137,14 @@ public final class BakedLevelOverlayPipeline implements MultiPassRenderPipeline<
         poseStack.popPose();
     }
 
-    private boolean isBlockEntityRendererVisible(BlockEntityRenderDispatcher dispatcher, BlockEntity blockEntity, Frustum frustum, Vector3fc origin) {
-        if(true) return true; // origin seems to be wonky
-        var renderer = dispatcher.getRenderer(blockEntity);
-        return renderer != null && frustum.isVisible(renderer.getRenderBoundingBox(blockEntity).move(origin.x(), origin.y(), origin.z()));
-    }
+    public static void translucentGeometryPass(PipelineState state, Context ctx,
+                                               GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
 
-    public void translucentGeometryPass(PipelineState state, Context ctx,
-                                        GuiGraphics graphics,
-                                        float partialTick, PoseStack poseStack,
-                                        Camera camera, Matrix4f projectionMatrix) {
-
-        var renderOrigin = getCorrectedRenderOrigin(state, partialTick);
+        var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
         final var camPos = camera.getPosition().toVector3f();
+
+        poseStack.pushPose();
+        poseStack.mulPose(modelViewMatrix);
 
         BlockRenderer.renderSectionLayer(
             ctx.fluidBuffers(),
@@ -153,53 +161,8 @@ public final class BakedLevelOverlayPipeline implements MultiPassRenderPipeline<
             poseStack,
             camPos, renderOrigin,
             projectionMatrix);
-    }
-
-    @Override
-    public void renderPass(PipelineState state, Context ctx,
-                           RenderType renderType, GuiGraphics graphics, Camera camera,
-                           Frustum frustum, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix) {
-
-        var partialTick = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true);
 
         poseStack.pushPose();
-
-        if (RenderTypes.isStaticGeometryRenderType(renderType)) {
-            poseStack.mulPose(modelViewMatrix);
-
-            staticGeometryPass(state, ctx, graphics, partialTick, poseStack, camera, projectionMatrix);
-        }
-
-        if (renderType == RenderType.TRANSLUCENT) {
-
-            blockEntitiesPass(state, ctx, graphics, partialTick,
-                poseStack,
-                camera,
-                frustum,
-                Minecraft.getInstance().renderBuffers().bufferSource());
-        }
-
-        if (renderType == RenderType.TRANSLUCENT) { // 'TRANSLUCENT_MOVING_BLOCK' seems to never occur
-            poseStack.mulPose(modelViewMatrix);
-
-            translucentGeometryPass(state, ctx, graphics, partialTick,
-                poseStack,
-                camera,
-                projectionMatrix);
-        }
-
-        poseStack.popPose();
-    }
-
-    @Override
-    public PipelineState setup() {
-        return new PipelineState();
-    }
-
-    public PipelineState setup(Vector3fc renderLocation) {
-        final var initialState = new PipelineState();
-        initialState.set(GanderRenderToolkit.RENDER_ORIGIN, renderLocation);
-        return initialState;
     }
 
     /**

@@ -1,7 +1,10 @@
 package dev.compactmods.gander.render.pipeline.phase;
 
+import net.minecraft.client.renderer.RenderType;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public record PipelinePhaseCollection<TCtx>(
     Set<PipelineLifecyclePhase> setupPhases,
@@ -35,6 +38,12 @@ public record PipelinePhaseCollection<TCtx>(
 
         public Builder<TCtx> addGeometryUploadPhase(PipelineGeometryUploadPhase<TCtx> phase) {
             this.geometryPhases.add(phase);
+            return this;
+        }
+
+        @Override
+        public IPipelinePhaseCollectionBuilder<TCtx> addGeometryUploadPhase(Predicate<RenderType> predicate, PipelineGeometryUploadPhase<TCtx> phase) {
+            this.geometryPhases.add(new PredicateWrappedGeometryUploadPhase<>(predicate, phase));
             return this;
         }
 
