@@ -424,4 +424,9 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
     public BoundingBox getBounds() {
         return bounds;
     }
+
+    public void refreshBlockEntityModels() {
+        blocks.blockAndFluidStorage().blockEntities()
+            .forEach(modelDataManager::requestRefresh);
+    }
 }

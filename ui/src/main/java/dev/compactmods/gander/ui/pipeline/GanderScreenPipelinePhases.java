@@ -14,6 +14,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 
+import net.minecraft.world.phys.HitResult;
+
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -59,6 +61,9 @@ public class GanderScreenPipelinePhases {
         final var partialTick = mc.getTimer().getGameTimeDeltaPartialTick(true);
 
         chain.prepareLayer(Gander.asResource("entity"));
+
+        final var dispatcher = mc.getBlockEntityRenderDispatcher();
+        dispatcher.prepare(ctx.bakedLevel().originalLevel(), camera, null);
 
         BlockEntityRender.render(ctx.blockAndTints(), blockEntities, poseStack, lookFrom, renderTypeStore, graphics.bufferSource(), partialTick);
     }

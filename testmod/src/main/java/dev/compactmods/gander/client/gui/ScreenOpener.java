@@ -49,12 +49,15 @@ public class ScreenOpener {
 		openGanderUI(ui -> {
             var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
             var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess(), true, (newLevel) -> {
+                newLevel.refreshBlockEntityModels();
+
                 var bakedLevel = LevelBakery.bakeVertices(newLevel, bounds, new Vector3f());
                 ui.setScene(bakedLevel);
             });
 
 			virtualLevel.setBounds(bounds);
 			data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings().setKnownShape(true), RandomSource.create(), Block.UPDATE_CLIENTS);
+            virtualLevel.refreshBlockEntityModels();
 
 			var bakedLevel = LevelBakery.bakeVertices(virtualLevel, bounds, new Vector3f());
 			ui.setSceneSource(source);
