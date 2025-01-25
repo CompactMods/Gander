@@ -22,11 +22,11 @@ public record StagedMultipassRenderPipeline(PipelinePhaseCollection phaseCollect
 
         for (var phase : phaseCollection.geometryUploadPhases()) {
             if(phase.shouldRun(renderType))
-                phase.upload(state, graphics, camera, poseStack, projectionMatrix, modelViewMatrix, partialTicks);
+                phase.upload(state, graphics, camera, projectionMatrix, modelViewMatrix, partialTicks);
         }
 
         for (var phase : phaseCollection.renderPhases())
-            phase.render(state, graphics, camera, poseStack, projectionMatrix);
+            phase.render(state, graphics, camera, projectionMatrix);
 
         for (var phase : phaseCollection.cleanupPhases())
             phase.run(state);

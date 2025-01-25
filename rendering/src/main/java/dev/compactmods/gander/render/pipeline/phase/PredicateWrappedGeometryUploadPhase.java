@@ -1,7 +1,5 @@
 package dev.compactmods.gander.render.pipeline.phase;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import net.minecraft.client.Camera;
 import net.minecraft.client.gui.GuiGraphics;
@@ -21,7 +19,7 @@ public record PredicateWrappedGeometryUploadPhase(Predicate<RenderType> predicat
     }
 
     @Override
-    public void upload(PipelineState state, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
-        phase.upload(state, graphics, camera, poseStack, projectionMatrix, modelViewMatrix, partialTicks);
+    public void upload(PipelineState state, GuiGraphics graphics, Camera camera, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
+        phase.upload(state, graphics, camera, projectionMatrix, modelViewMatrix, partialTicks);
     }
 }

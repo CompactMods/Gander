@@ -62,15 +62,19 @@ public class SpatialRenderer implements Renderable {
         }
 
 //        graphics.enableScissor(renderArea.left(), renderArea.top(), renderArea.right(), renderArea.bottom());
-        renderHelper.renderInScreenSpace(graphics, camera, (projMatrix, poseStack) -> {
+        renderHelper.renderInScreenSpace(graphics, camera, (projMatrix) -> {
+            final var poseStack = graphics.pose();
+            poseStack.pushPose();
             poseStack.translate(
                 bakedLevel.blockBoundaries().getXSpan() / -2f,
                 bakedLevel.blockBoundaries().getYSpan() / -2f,
                 bakedLevel.blockBoundaries().getZSpan() / -2f);
 
             BakedLevelScreenRenderPipeline.INSTANCE.render(
-                state, graphics, camera, poseStack, projMatrix, new Matrix4f(), partialTicks
+                state, graphics, camera, projMatrix, new Matrix4f(), partialTicks
             );
+
+            poseStack.popPose();
         });
 //        graphics.disableScissor();
     }

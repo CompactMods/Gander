@@ -4,7 +4,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import com.mojang.blaze3d.vertex.VertexBuffer;
 
-import dev.compactmods.gander.render.RenderTypes;
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.pipeline.MultiPassRenderPipeline;
 import dev.compactmods.gander.render.pipeline.PipelineState;
@@ -50,12 +49,13 @@ public final class BakedLevelOverlayPipeline {
         INSTANCE = builder.stagedMultiPass();
     }
 
-    private static void staticGeometryPass(PipelineState state, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
+    private static void staticGeometryPass(PipelineState state, GuiGraphics graphics, Camera camera, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
         var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
 
         final var camPos = camera.getPosition().toVector3f();
         final var ctx = state.get(BAKED_LEVEL_CTX);
 
+        final var poseStack = graphics.pose();
         poseStack.pushPose();
         poseStack.mulPose(modelViewMatrix);
 
@@ -91,7 +91,7 @@ public final class BakedLevelOverlayPipeline {
         );
     }
 
-    public static void blockEntitiesPass(PipelineState state, GuiGraphics graphics, Camera camera, PoseStack poseStack,
+    public static void blockEntitiesPass(PipelineState state, GuiGraphics graphics, Camera camera,
                                          Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
 
 
@@ -108,6 +108,7 @@ public final class BakedLevelOverlayPipeline {
 
         final var renderOffset = new Vector3f(renderOrigin).sub(camPos);
 
+        final var poseStack = graphics.pose();
         poseStack.pushPose();
         poseStack.translate(renderOffset.x, renderOffset.y, renderOffset.z);
         ctx.blockEntities().get().forEach(blockEnt ->
@@ -126,13 +127,14 @@ public final class BakedLevelOverlayPipeline {
     }
 
     public static void translucentGeometryPass(PipelineState state, GuiGraphics graphics, Camera camera,
-                                               PoseStack poseStack, Matrix4f projectionMatrix,
+                                               Matrix4f projectionMatrix,
                                                Matrix4f modelViewMatrix, float partialTicks) {
 
         var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
         final var camPos = camera.getPosition().toVector3f();
         final var ctx = state.get(BAKED_LEVEL_CTX);
 
+        final var poseStack = graphics.pose();
         poseStack.pushPose();
         poseStack.mulPose(modelViewMatrix);
 

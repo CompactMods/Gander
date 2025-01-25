@@ -1,31 +1,18 @@
 package dev.compactmods.gander.ui.pipeline;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.BufferUploader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-
-import com.mojang.blaze3d.vertex.VertexFormat;
 
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
 import dev.compactmods.gander.render.pipeline.SinglePassRenderPipeline;
+import dev.compactmods.gander.render.pipeline.example.BakedLevelOverlayPipeline;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import dev.compactmods.gander.ui.toolkit.GanderScreenToolkit;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 
-import net.minecraft.client.renderer.ShaderInstance;
-
-import net.minecraft.util.Mth;
-import net.neoforged.neoforge.client.GlStateBackup;
-
 import org.joml.Matrix4f;
-
-import java.util.Objects;
 
 public class BakedLevelScreenRenderPipeline {
 
@@ -78,7 +65,7 @@ public class BakedLevelScreenRenderPipeline {
         return true;
     }
 
-    private static void render(PipelineState state, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix) {
+    private static void render(PipelineState state, GuiGraphics graphics, Camera camera, Matrix4f projectionMatrix) {
         final var mc = Minecraft.getInstance();
         final var renderTarget = state.get(GanderRenderToolkit.RENDER_TARGET);
         final var renderBounds = state.get(GanderRenderToolkit.RENDER_BOUNDS);

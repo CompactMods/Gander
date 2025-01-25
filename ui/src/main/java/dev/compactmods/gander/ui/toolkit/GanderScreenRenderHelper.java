@@ -11,6 +11,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import org.joml.Matrix4f;
 
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public record GanderScreenRenderHelper(int width, int height) {
 
@@ -22,7 +23,7 @@ public record GanderScreenRenderHelper(int width, int height) {
             10000000);
     }
 
-    public void renderInScreenSpace(GuiGraphics graphics, Camera camera, BiConsumer<Matrix4f, PoseStack> render) {
+    public void renderInScreenSpace(GuiGraphics graphics, Camera camera, Consumer<Matrix4f> render) {
         final var projMatrix = projectionMatrix();
 
         RenderSystem.setProjectionMatrix(projMatrix, VertexSorting.byDistance(camera.getPosition().toVector3f()));
@@ -39,7 +40,7 @@ public record GanderScreenRenderHelper(int width, int height) {
             poseStack.setIdentity();
             poseStack.mulPose(camera.rotation());
 
-            render.accept(projMatrix, poseStack);
+            render.accept(projMatrix);
         }
 
         poseStack2.popMatrix();
