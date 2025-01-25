@@ -1,6 +1,13 @@
 package dev.compactmods.gander.ui.pipeline;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.BufferUploader;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
+
+import com.mojang.blaze3d.vertex.VertexFormat;
 
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
@@ -12,7 +19,13 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 
+import net.minecraft.client.renderer.ShaderInstance;
+
+import net.minecraft.util.Mth;
+
 import org.joml.Matrix4f;
+
+import java.util.Objects;
 
 public class BakedLevelScreenRenderPipeline {
 
@@ -75,7 +88,33 @@ public class BakedLevelScreenRenderPipeline {
 
         mc.getMainRenderTarget().bindWrite(true);
 
-        renderTarget.blitToScreen(renderTarget.width, renderTarget.height, false);
+        RenderSystem.assertOnRenderThread();
+        GlStateManager._colorMask(true, true, true, false);
+        GlStateManager._disableDepthTest();
+        GlStateManager._depthMask(false);
+
+        var guiScale = mc.getWindow().getGuiScale();
+
+        GlStateManager._viewport(
+            Mth.floor(renderBounds.left() * guiScale),
+            mc.getWindow().getHeight() - Mth.floor(renderBounds.top() * guiScale) - Mth.floor(renderBounds.height() * guiScale),
+            Mth.floor((renderBounds.width()) * guiScale),
+            Mth.floor((renderBounds.height()) * guiScale)
+        );
+
+        Minecraft minecraft = Minecraft.getInstance();
+        ShaderInstance shaderinstance = (ShaderInstance) Objects.requireNonNull(minecraft.gameRenderer.blitShader, "Blit shader not loaded");
+        shaderinstance.setSampler("DiffuseSampler", renderTarget.getColorTextureId());
+        shaderinstance.apply();
+        BufferBuilder bufferbuilder = RenderSystem.renderThreadTesselator().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLIT_SCREEN);
+        bufferbuilder.addVertex(0.0F, 0.0F, 0.0F);
+        bufferbuilder.addVertex(1.0F, 0.0F, 0.0F);
+        bufferbuilder.addVertex(1.0F, 1.0F, 0.0F);
+        bufferbuilder.addVertex(0.0F, 1.0F, 0.0F);
+        BufferUploader.draw(bufferbuilder.buildOrThrow());
+        shaderinstance.clear();
+        GlStateManager._depthMask(true);
+        GlStateManager._colorMask(true, true, true, true);
     }
 
     private static boolean teardown(PipelineState state) {
