@@ -61,10 +61,7 @@ public class GanderUI extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         super.render(graphics, mouseX, mouseY, partialTicks);
-        renderSceneSourceLabel(graphics);
-    }
 
-    private void renderSceneSourceLabel(GuiGraphics graphics) {
         if (this.sceneSource != null) {
             graphics.pose().pushPose();
             graphics.drawCenteredString(font, sceneSource, width / 2, 10, DyeColor.WHITE.getFireworkColor());
@@ -132,6 +129,6 @@ public class GanderUI extends Screen {
             this.renderables.remove(this.renderer);
         }
 
-        this.renderer = addRenderableOnly(new SpatialRenderer(this.scene, 100, 40, this.width - 200, this.height - 80));
+        this.renderer = addRenderableOnly(new SpatialRenderer(this.scene, 0, 0, width, height));
     }
 }

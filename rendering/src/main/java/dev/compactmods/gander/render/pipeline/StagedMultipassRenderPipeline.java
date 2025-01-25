@@ -10,28 +10,32 @@ import net.minecraft.client.renderer.culling.Frustum;
 
 import org.joml.Matrix4f;
 
-public record StagedMultipassRenderPipeline<TCtx>(PipelinePhaseCollection<TCtx> phaseCollection) implements MultiPassRenderPipeline<TCtx> {
+import java.util.function.Consumer;
+
+public record StagedMultipassRenderPipeline(PipelinePhaseCollection phaseCollection) implements MultiPassRenderPipeline {
 
     @Override
-    public void renderPass(PipelineState state, TCtx ctx, RenderType renderType, GuiGraphics graphics, Camera camera, Frustum frustum,
+    public void renderPass(PipelineState state, RenderType renderType, GuiGraphics graphics, Camera camera, Frustum frustum,
                            PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
         for (var preRenderPhase : phaseCollection.beforeGeometryPhases())
             preRenderPhase.run(state);
 
         for (var phase : phaseCollection.geometryUploadPhases()) {
             if(phase.shouldRun(renderType))
-                phase.upload(state, ctx, graphics, camera, poseStack, projectionMatrix, modelViewMatrix, partialTicks);
+                phase.upload(state, graphics, camera, poseStack, projectionMatrix, modelViewMatrix, partialTicks);
         }
 
         for (var phase : phaseCollection.renderPhases())
-            phase.render(state, ctx, graphics, camera, poseStack, projectionMatrix);
+            phase.render(state, graphics, camera, poseStack, projectionMatrix);
 
         for (var phase : phaseCollection.cleanupPhases())
             phase.run(state);
     }
 
     @Override
-    public PipelineState setup() {
-        return new PipelineState();
+    public PipelineState setup(Consumer<PipelineState> initializer) {
+        final var state = new PipelineState();
+        initializer.accept(state);
+        return state;
     }
 }

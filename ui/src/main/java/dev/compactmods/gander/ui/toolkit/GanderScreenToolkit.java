@@ -8,7 +8,6 @@ import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import dev.compactmods.gander.render.translucency.TranslucencyChain;
-import net.minecraft.client.Camera;
 import net.minecraft.client.GraphicsStatus;
 import net.minecraft.client.Minecraft;
 
@@ -27,12 +26,18 @@ public class GanderScreenToolkit {
         return true;
     }
 
-    public static boolean setupBasicRenderRequirements(PipelineState pipelineState) {
+    public static boolean setupRenderTarget(PipelineState state) {
         final var mc = Minecraft.getInstance();
+
         final var renderTarget = new TextureTarget(mc.getWindow().getWidth(), mc.getWindow().getHeight(), true, Minecraft.ON_OSX);
         renderTarget.setClearColor(0, 0, 0, 0);
 
-        pipelineState.set(GanderRenderToolkit.RENDER_TARGET, renderTarget);
+        state.set(GanderRenderToolkit.RENDER_TARGET, renderTarget);
+        return true;
+    }
+
+    public static boolean setupTranslucencyChain(PipelineState pipelineState) {
+        final var renderTarget = pipelineState.get(GanderRenderToolkit.RENDER_TARGET);
 
         final var translucencyChain = TranslucencyChain.builder()
             .addLayer(Gander.asResource("main"))

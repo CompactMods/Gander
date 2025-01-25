@@ -45,9 +45,11 @@ public record LevelInLevelRenderer(UUID id, PipelineState state, BakedLevelOverl
             virtualLevel.blockSystem().blockAndFluidStorage()::blockEntities
         );
 
-        final var initialState = BakedLevelOverlayPipeline.INSTANCE.setup();
-        initialState.set(GanderRenderToolkit.RENDER_ORIGIN, renderLocation);
-        BakedLevelOverlayPipeline.INSTANCE.setupContext(initialState, ctx, new SceneCamera());
+        final var initialState = BakedLevelOverlayPipeline.INSTANCE.setup((state) -> {
+            state.set(BakedLevelOverlayPipeline.BAKED_LEVEL_CTX, ctx);
+            state.set(GanderRenderToolkit.RENDER_ORIGIN, renderLocation);
+            state.set(GanderRenderToolkit.CAMERA, new SceneCamera());
+        });
 
         return new LevelInLevelRenderer(UUID.randomUUID(), initialState, ctx);
     }
@@ -63,7 +65,7 @@ public record LevelInLevelRenderer(UUID id, PipelineState state, BakedLevelOverl
         if(renderTypeForStage != null) {
             var stack = evt.getPoseStack();
 
-            BakedLevelOverlayPipeline.INSTANCE.renderPass(state, ctx, renderTypeForStage, graphics, camera,
+            BakedLevelOverlayPipeline.INSTANCE.renderPass(state, renderTypeForStage, graphics, camera,
                 evt.getFrustum(),
                 stack, evt.getProjectionMatrix(), evt.getModelViewMatrix(), partialTick);
         }

@@ -37,9 +37,11 @@ public final class BakedLevelOverlayPipeline {
     private static final Predicate<RenderType> IS_TRANSLUCENT = renderType -> renderType == RenderType.TRANSLUCENT;
     private static final Set<RenderType> STATIC_GEOMETRY = Set.of(RenderType.solid(), RenderType.cutoutMipped(), RenderType.cutout());
 
-    public static MultiPassRenderPipeline<BakedLevelOverlayPipeline.Context> INSTANCE;
+    public static final PipelineState.Item<Context> BAKED_LEVEL_CTX = new PipelineState.Item<>(Context.class);
+
+    public static MultiPassRenderPipeline INSTANCE;
     static {
-        var builder = new RenderPipelineBuilder<BakedLevelOverlayPipeline.Context>();
+        var builder = new RenderPipelineBuilder();
         builder.phases()
             .addGeometryUploadPhase(STATIC_GEOMETRY::contains, BakedLevelOverlayPipeline::staticGeometryPass)
             .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::blockEntitiesPass)
@@ -48,10 +50,11 @@ public final class BakedLevelOverlayPipeline {
         INSTANCE = builder.stagedMultiPass();
     }
 
-    private static void staticGeometryPass(PipelineState state, Context ctx, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
+    private static void staticGeometryPass(PipelineState state, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
         var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
 
         final var camPos = camera.getPosition().toVector3f();
+        final var ctx = state.get(BAKED_LEVEL_CTX);
 
         poseStack.pushPose();
         poseStack.mulPose(modelViewMatrix);
@@ -88,11 +91,12 @@ public final class BakedLevelOverlayPipeline {
         );
     }
 
-    public static void blockEntitiesPass(PipelineState state, Context ctx,
-                                         GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
+    public static void blockEntitiesPass(PipelineState state, GuiGraphics graphics, Camera camera, PoseStack poseStack,
+                                         Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
 
 
         final var camPos = camera.getPosition().toVector3f();
+        final var ctx = state.get(BAKED_LEVEL_CTX);
         var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
 
         final var mc = Minecraft.getInstance();
@@ -121,11 +125,13 @@ public final class BakedLevelOverlayPipeline {
         poseStack.popPose();
     }
 
-    public static void translucentGeometryPass(PipelineState state, Context ctx,
-                                               GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
+    public static void translucentGeometryPass(PipelineState state, GuiGraphics graphics, Camera camera,
+                                               PoseStack poseStack, Matrix4f projectionMatrix,
+                                               Matrix4f modelViewMatrix, float partialTicks) {
 
         var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
         final var camPos = camera.getPosition().toVector3f();
+        final var ctx = state.get(BAKED_LEVEL_CTX);
 
         poseStack.pushPose();
         poseStack.mulPose(modelViewMatrix);

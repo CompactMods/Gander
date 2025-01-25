@@ -12,7 +12,7 @@ import org.joml.Matrix4f;
 
 import java.util.function.Predicate;
 
-public record PredicateWrappedGeometryUploadPhase<TCtx>(Predicate<RenderType> predicate, PipelineGeometryUploadPhase<TCtx> phase) implements PipelineGeometryUploadPhase<TCtx> {
+public record PredicateWrappedGeometryUploadPhase(Predicate<RenderType> predicate, PipelineGeometryUploadPhase phase) implements PipelineGeometryUploadPhase {
 
     @Override
     public boolean shouldRun(RenderType type) {
@@ -21,7 +21,7 @@ public record PredicateWrappedGeometryUploadPhase<TCtx>(Predicate<RenderType> pr
     }
 
     @Override
-    public void upload(PipelineState state, TCtx context, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
-        phase.upload(state, context, graphics, camera, poseStack, projectionMatrix, modelViewMatrix, partialTicks);
+    public void upload(PipelineState state, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
+        phase.upload(state, graphics, camera, poseStack, projectionMatrix, modelViewMatrix, partialTicks);
     }
 }

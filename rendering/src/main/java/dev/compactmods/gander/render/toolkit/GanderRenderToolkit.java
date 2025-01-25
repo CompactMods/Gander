@@ -3,13 +3,23 @@ package dev.compactmods.gander.render.toolkit;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.VertexSorting;
 
+import dev.compactmods.gander.render.RenderBoundaries;
+import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import dev.compactmods.gander.render.translucency.TranslucencyChain;
+import net.minecraft.client.Camera;
 import net.minecraft.client.GraphicsStatus;
+
+import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.core.BlockPos;
+
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3fc;
+
+import java.util.stream.Stream;
 
 public class GanderRenderToolkit {
     public static final PipelineState.Item<GraphicsStatus> PREVIOUS_GRAPHICS_MODE = new PipelineState.Item<>(GraphicsStatus.class);
@@ -19,4 +29,9 @@ public class GanderRenderToolkit {
     public static final PipelineState.Item<RenderTypeStore> RENDER_TYPE_STORE = new PipelineState.Item<>(RenderTypeStore.class);
     public static final PipelineState.Item<RenderTarget> RENDER_TARGET = new PipelineState.Item<>(RenderTarget.class);
     public static final PipelineState.Item<Vector3fc> RENDER_ORIGIN = new PipelineState.Item<>(Vector3fc.class);
+
+    public static final PipelineState.Item<BakedLevel> BAKED_LEVEL = new PipelineState.Item<>(BakedLevel.class);
+    public static final PipelineState.Item<ScreenRectangle> RENDER_BOUNDS = new PipelineState.Item<>(ScreenRectangle.class);
+    public static final PipelineState.Item<Camera> CAMERA = new PipelineState.Item<>(Camera.class);
+    public static final PipelineState.Item<BlockPos[]> BLOCK_ENTITY_POSITIONS = new PipelineState.Item<>(BlockPos[].class);
 }

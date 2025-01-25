@@ -7,8 +7,8 @@ import net.minecraft.client.gui.GuiGraphics;
 
 import org.joml.Matrix4f;
 
-public interface SinglePassRenderPipeline<TCtx> extends RenderPipeline<TCtx> {
+public interface SinglePassRenderPipeline extends RenderPipeline {
 
-    void render(PipelineState state, TCtx ctx, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f viewMatrix, float partialTicks);
+    void render(PipelineState state, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f viewMatrix, float partialTicks);
 
 }

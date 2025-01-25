@@ -28,4 +28,12 @@ public class PipelineState {
     public <T> void set(Item<T> property, T value) {
         this.properties.put(property, value);
     }
+
+    public <T> void remove(Item<T> property) {
+        this.properties.remove(property);
+    }
+
+    public void clear() {
+        this.properties.clear();
+    }
 }
