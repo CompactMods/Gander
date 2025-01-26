@@ -7,6 +7,7 @@ import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.ui.widget.SpatialRenderer;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
@@ -62,12 +63,21 @@ public class GanderUI extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        super.render(graphics, mouseX, mouseY, partialTicks);
+
+        this.renderBackground(graphics, mouseX, mouseY, partialTicks);
+
 
         if (this.sceneSource != null) {
             graphics.pose().pushPose();
             graphics.drawCenteredString(font, sceneSource, width / 2, 10, DyeColor.WHITE.getFireworkColor());
             graphics.pose().popPose();
+        }
+
+        // Active camera rotation
+        // graphics.drawString(font, activeRenderer.camera().cameraRotation().toString(), 10, 100, CommonColors.WHITE, true);
+
+        for (Renderable renderable : this.renderables) {
+            renderable.render(graphics, mouseX, mouseY, partialTicks);
         }
     }
 
@@ -145,22 +155,26 @@ public class GanderUI extends Screen {
         this.renderables.clear();
 
         this.activeRenderer = addRenderableOnly(new SpatialRenderer(this.scene, 100, 20, 200, 100));
-        this.activeRenderer.camera().zoom(-10);
+        this.activeRenderer.camera().zoom(-100);
 
         var s2 = addRenderableOnly(new SpatialRenderer(this.scene, 310, 20, 200, 100));
         s2.camera().lookDirection(Direction.DOWN);
-        s2.camera().zoom(-10);
+        s2.camera().zoom(-100);
 
         var s3 = addRenderableOnly(new SpatialRenderer(this.scene, 100, 130, 200, 100));
         s3.camera().lookDirection(Direction.NORTH);
-        s3.camera().zoom(-10);
+        s3.camera().zoom(-100);
 
         var s4 = addRenderableOnly(new SpatialRenderer(this.scene, 310, 130, 200, 100));
-        s4.camera().lookDirection(Direction.WEST);
-        s4.camera().zoom(-10);
+        s4.camera().lookDirection(Direction.SOUTH);
+        s4.camera().zoom(-100);
 
         var s5 = addRenderableOnly(new SpatialRenderer(this.scene, 100, 240, 200, 100));
-        s5.camera().lookDirection(Direction.UP);
-        s5.camera().zoom(-10);
+        s5.camera().lookDirection(Direction.WEST);
+        s5.camera().zoom(-100);
+
+        var s6 = addRenderableOnly(new SpatialRenderer(this.scene, 310, 240, 200, 100));
+        s6.camera().lookDirection(Direction.EAST);
+        s6.camera().zoom(-100);
     }
 }
