@@ -23,6 +23,7 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -35,8 +36,6 @@ public final class BakedLevelOverlayPipeline {
 
     private static final Predicate<RenderType> IS_TRANSLUCENT = renderType -> renderType == RenderType.TRANSLUCENT;
     private static final Set<RenderType> STATIC_GEOMETRY = Set.of(RenderType.solid(), RenderType.cutoutMipped(), RenderType.cutout());
-
-    public static final PipelineState.Item<Context> BAKED_LEVEL_CTX = new PipelineState.Item<>(Context.class);
 
     public static MultiPassRenderPipeline INSTANCE;
     static {
@@ -54,7 +53,7 @@ public final class BakedLevelOverlayPipeline {
         final var camera = state.get(GanderRenderToolkit.CAMERA);
 
         final var camPos = camera.getPosition().toVector3f();
-        final var ctx = state.get(BAKED_LEVEL_CTX);
+        final var bakedLevel = state.get(GanderRenderToolkit.BAKED_LEVEL);
 
         final var projectionMatrix = state.get(GanderRenderToolkit.PROJECTION_MATRIX);
         final var modelViewMatrix = state.get(GanderRenderToolkit.MODEL_VIEW_MATRIX);
@@ -64,21 +63,23 @@ public final class BakedLevelOverlayPipeline {
         poseStack.mulPose(modelViewMatrix);
 
         for (RenderType renderType : STATIC_GEOMETRY) {
-            BlockRenderer.renderSectionLayer(
-                ctx.blockBuffers(),
-                Function.identity(),
-                renderType,
-                poseStack,
-                camPos, renderOrigin,
-                projectionMatrix);
+            for(var section : bakedLevel.sections().values()) {
+                BlockRenderer.renderSectionLayer(
+                    section.blockBuffers(),
+                    Function.identity(),
+                    renderType,
+                    poseStack,
+                    camPos, renderOrigin,
+                    projectionMatrix);
 
-            BlockRenderer.renderSectionLayer(
-                ctx.fluidBuffers(),
-                Function.identity(),
-                renderType,
-                poseStack,
-                camPos, renderOrigin,
-                projectionMatrix);
+                BlockRenderer.renderSectionLayer(
+                    section.fluidBuffers(),
+                    Function.identity(),
+                    renderType,
+                    poseStack,
+                    camPos, renderOrigin,
+                    projectionMatrix);
+            }
         }
 
         poseStack.popPose();
@@ -99,7 +100,9 @@ public final class BakedLevelOverlayPipeline {
 
         final var camera = state.get(GanderRenderToolkit.CAMERA);
         final var camPos = camera.getPosition().toVector3f();
-        final var ctx = state.get(BAKED_LEVEL_CTX);
+        final var bakedLevel = state.get(GanderRenderToolkit.BAKED_LEVEL);
+        final var blockEntities = state.get(GanderRenderToolkit.BLOCK_ENTITY_POSITIONS);
+
         var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
 
         final var mc = Minecraft.getInstance();
@@ -107,15 +110,18 @@ public final class BakedLevelOverlayPipeline {
         final var blockEntityRenderDispatcher = mc.getBlockEntityRenderDispatcher();
 
         // TODO: maybe we should raycast in the virtual level for these, rather than pulling from the real level?
-        blockEntityRenderDispatcher.prepare(ctx.level().originalLevel(), camera, mc.hitResult);
+        blockEntityRenderDispatcher.prepare(bakedLevel.originalLevel(), camera, mc.hitResult);
 
         final var renderOffset = new Vector3f(renderOrigin).sub(camPos);
 
         final var poseStack = graphics.pose();
         poseStack.pushPose();
         poseStack.translate(renderOffset.x, renderOffset.y, renderOffset.z);
-        ctx.blockEntities().get().forEach(blockEnt ->
-            renderSingleBlockEntity(partialTicks, poseStack, bufferSource, blockEnt, blockEntityRenderDispatcher));
+        Arrays.stream(blockEntities)
+            .map(bakedLevel.originalLevel()::getBlockEntity)
+            .forEach(blockEnt -> {
+                renderSingleBlockEntity(partialTicks, poseStack, bufferSource, blockEnt, blockEntityRenderDispatcher);
+            });
 
         poseStack.popPose();
     }
@@ -133,7 +139,7 @@ public final class BakedLevelOverlayPipeline {
         final var camera = state.get(GanderRenderToolkit.CAMERA);
         var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
         final var camPos = camera.getPosition().toVector3f();
-        final var ctx = state.get(BAKED_LEVEL_CTX);
+        final var bakedLevel = state.get(GanderRenderToolkit.BAKED_LEVEL);
         final var projectionMatrix = state.get(GanderRenderToolkit.PROJECTION_MATRIX);
         final var modelViewMatrix = state.get(GanderRenderToolkit.MODEL_VIEW_MATRIX);
 
@@ -141,37 +147,24 @@ public final class BakedLevelOverlayPipeline {
         poseStack.pushPose();
         poseStack.mulPose(modelViewMatrix);
 
-        BlockRenderer.renderSectionLayer(
-            ctx.fluidBuffers(),
-            Function.identity(),
-            RenderType.translucent(),
-            poseStack,
-            camPos, renderOrigin,
-            projectionMatrix);
+        bakedLevel.sections().forEach((chunkPos, section) -> {
+            BlockRenderer.renderSectionLayer(
+                section.fluidBuffers(),
+                Function.identity(),
+                RenderType.translucent(),
+                poseStack,
+                camPos, renderOrigin,
+                projectionMatrix);
 
-        BlockRenderer.renderSectionLayer(
-            ctx.blockBuffers(),
-            Function.identity(),
-            RenderType.translucent(),
-            poseStack,
-            camPos, renderOrigin,
-            projectionMatrix);
+            BlockRenderer.renderSectionLayer(
+                section.blockBuffers(),
+                Function.identity(),
+                RenderType.translucent(),
+                poseStack,
+                camPos, renderOrigin,
+                projectionMatrix);
+        });
 
         poseStack.pushPose();
-    }
-
-    /**
-     * Used for rendering baked level geometry directly to another level, with no render type
-     * redirection being applied.
-     *
-     * @param level         Baked level geometry.
-     * @param blockBuffers  Baked level geometry - block buffer information.
-     * @param fluidBuffers  Baked level geometry - fluid buffer information.
-     * @param blockEntities Supplier for the block entity information.
-     */
-    public record Context(BakedLevel level,
-                          Map<RenderType, VertexBuffer> blockBuffers,
-                          Map<RenderType, VertexBuffer> fluidBuffers,
-                          Supplier<Stream<BlockEntity>> blockEntities) {
     }
 }

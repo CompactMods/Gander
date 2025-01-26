@@ -3,6 +3,7 @@ package dev.compactmods.gander.client.gui;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import org.apache.commons.lang3.function.Consumers;
@@ -47,7 +48,7 @@ public class ScreenOpener {
 
 	public static void forStructureData(Component source, StructureTemplate data) {
 		openGanderUI(ui -> {
-            var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
+            var bounds = AABB.of(data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO));
             var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess(), true, (newLevel) -> {
                 newLevel.refreshBlockEntityModels();
 

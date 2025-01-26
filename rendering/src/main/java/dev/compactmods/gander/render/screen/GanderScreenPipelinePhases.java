@@ -35,14 +35,16 @@ public class GanderScreenPipelinePhases {
 
         final var camPos = camera.getPosition().toVector3f();
 
-        BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.solid(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-        BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.solid(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+        for(var section : bakedLevel.sections().values()) {
+            BlockRenderer.renderSectionBlocks(section, renderTypeStore, RenderType.solid(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+            BlockRenderer.renderSectionFluids(section, renderTypeStore, RenderType.solid(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
 
-        BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-        BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutoutMipped(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+            BlockRenderer.renderSectionBlocks(section, renderTypeStore, RenderType.cutoutMipped(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+            BlockRenderer.renderSectionFluids(section, renderTypeStore, RenderType.cutoutMipped(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
 
-        BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.cutout(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-        BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.cutout(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+            BlockRenderer.renderSectionBlocks(section, renderTypeStore, RenderType.cutout(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+            BlockRenderer.renderSectionFluids(section, renderTypeStore, RenderType.cutout(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+        }
     }
 
     private static void blockEntitiesPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
@@ -82,7 +84,9 @@ public class GanderScreenPipelinePhases {
 
         final var camPos = camera.getPosition().toVector3f();
 
-        BlockRenderer.renderSectionFluids(bakedLevel, renderTypeStore, RenderType.translucent(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-        BlockRenderer.renderSectionBlocks(bakedLevel, renderTypeStore, RenderType.translucent(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+        for(var section : bakedLevel.sections().values()) {
+            BlockRenderer.renderSectionFluids(section, renderTypeStore, RenderType.translucent(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+            BlockRenderer.renderSectionBlocks(section, renderTypeStore, RenderType.translucent(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+        }
     }
 }

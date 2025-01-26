@@ -10,6 +10,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 
 import com.mojang.blaze3d.vertex.VertexSorting;
 
+import dev.compactmods.gander.core.math.WorldMath;
 import dev.compactmods.gander.render.vertex.FluidVertexConsumer;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
@@ -22,6 +23,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -29,45 +31,68 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.material.FluidState;
 
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.client.model.data.ModelData;
 
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class LevelBakery {
 
-    public static BakedLevel bakeVertices(Level level, BoundingBox blockBoundaries, Vector3f cameraPosition) {
-        final SectionBufferBuilderPack blockPack = new SectionBufferBuilderPack();
-        final SectionBufferBuilderPack fluidPack = new SectionBufferBuilderPack();
+    public static BakedLevel bakeVertices(Level level, AABB blockBoundaries, Vector3f cameraPosition) {
 
-        final Map<RenderType, BufferBuilder> blockBufferBuilders = new HashMap<>();
-        final Map<RenderType, BufferBuilder> fluidBufferBuilders = new HashMap<>();
+        final var minChunk = WorldMath.minCornerChunk(blockBoundaries);
+        final var maxChunk = WorldMath.maxCornerChunk(blockBoundaries);
 
-        final Reference2ObjectArrayMap<RenderType, VertexBuffer> blockGeometry = new Reference2ObjectArrayMap<>();
-        final Reference2ObjectArrayMap<RenderType, VertexBuffer> fluidGeometry = new Reference2ObjectArrayMap<>();
+        Set<ChunkPos> allChunks = ChunkPos.rangeClosed(minChunk, maxChunk).collect(Collectors.toSet());
 
-        final Reference2ObjectArrayMap<RenderType, MeshData.SortState> blockRenderSortStates = new Reference2ObjectArrayMap<>();
-        final Reference2ObjectArrayMap<RenderType, MeshData.SortState> fluidRenderSortStates = new Reference2ObjectArrayMap<>();
+        Map<ChunkPos, BakedLevelSection> bakedSections = new Reference2ObjectArrayMap<>();
+        for (ChunkPos chunkPos : allChunks) {
 
-        final var SORTING = VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+            final AABB chunkArea = WorldMath.chunkAABB(level, chunkPos);
 
-        PoseStack pose = new PoseStack();
-        RandomSource random = RandomSource.createNewThreadLocalInstance();
-        BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
-        ModelBlockRenderer renderer = dispatcher.getModelRenderer();
+            final SectionBufferBuilderPack blockPack = new SectionBufferBuilderPack();
+            final SectionBufferBuilderPack fluidPack = new SectionBufferBuilderPack();
 
-        ModelBlockRenderer.enableCaching();
-        BlockPos.betweenClosedStream(blockBoundaries).forEach(pos -> {
-            createBlockGeometry(level, pos, pose, dispatcher, random, blockBufferBuilders, blockPack, renderer, fluidBufferBuilders);
-        });
+            final Map<RenderType, BufferBuilder> blockBufferBuilders = new HashMap<>();
+            final Map<RenderType, BufferBuilder> fluidBufferBuilders = new HashMap<>();
 
-        sortGeometry(blockBufferBuilders, blockPack, SORTING, blockRenderSortStates, blockGeometry, fluidBufferBuilders,
-            fluidRenderSortStates, fluidGeometry);
+            final Reference2ObjectArrayMap<RenderType, VertexBuffer> blockGeometry = new Reference2ObjectArrayMap<>();
+            final Reference2ObjectArrayMap<RenderType, VertexBuffer> fluidGeometry = new Reference2ObjectArrayMap<>();
 
-        return new BakedLevel(level, blockPack, fluidPack, blockGeometry, fluidGeometry,
-            blockRenderSortStates, fluidRenderSortStates, blockBoundaries);
+            final Reference2ObjectArrayMap<RenderType, MeshData.SortState> blockRenderSortStates = new Reference2ObjectArrayMap<>();
+            final Reference2ObjectArrayMap<RenderType, MeshData.SortState> fluidRenderSortStates = new Reference2ObjectArrayMap<>();
+
+            final var SORTING = VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+            PoseStack pose = new PoseStack();
+            RandomSource random = RandomSource.createNewThreadLocalInstance();
+            BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
+            ModelBlockRenderer renderer = dispatcher.getModelRenderer();
+
+            ModelBlockRenderer.enableCaching();
+            BlockPos.betweenClosedStream(blockBoundaries).forEach(pos -> {
+                createBlockGeometry(level, pos, pose, dispatcher, random, blockBufferBuilders, blockPack, renderer, fluidBufferBuilders);
+            });
+
+            sortGeometry(blockBufferBuilders, blockPack, SORTING, blockRenderSortStates, blockGeometry, fluidBufferBuilders,
+                fluidRenderSortStates, fluidGeometry);
+
+            final var bakedSection = new BakedLevelSection(blockPack, fluidPack,
+                blockGeometry, fluidGeometry,
+                blockRenderSortStates, fluidRenderSortStates,
+                chunkArea);
+
+            bakedSections.put(chunkPos, bakedSection);
+        }
+
+        return new BakedLevel(level, blockBoundaries, bakedSections);
     }
 
     private static void createBlockGeometry(Level level, BlockPos pos, PoseStack pose, BlockRenderDispatcher dispatcher,
@@ -119,7 +144,7 @@ public class LevelBakery {
     private static void sortGeometry(Map<RenderType, BufferBuilder> blockBufferBuilders, SectionBufferBuilderPack blockPack, VertexSorting SORTING, Reference2ObjectArrayMap<RenderType, MeshData.SortState> blockRenderSortStates, Reference2ObjectArrayMap<RenderType, VertexBuffer> blockGeometry, Map<RenderType, BufferBuilder> fluidBufferBuilders, Reference2ObjectArrayMap<RenderType, MeshData.SortState> fluidRenderSortStates, Reference2ObjectArrayMap<RenderType, VertexBuffer> fluidGeometry) {
         blockBufferBuilders.forEach((renderType, builder) -> {
             final var buffer = builder.build();
-            if(buffer == null) return;
+            if (buffer == null) return;
 
             if (renderType.sortOnUpload()) {
                 var state = buffer.sortQuads(blockPack.buffer(renderType), SORTING);
@@ -135,7 +160,7 @@ public class LevelBakery {
 
         fluidBufferBuilders.forEach((renderType, builder) -> {
             final var buffer = builder.build();
-            if(buffer == null) return;
+            if (buffer == null) return;
 
             if (renderType.sortOnUpload()) {
                 var state = buffer.sortQuads(blockPack.buffer(renderType), SORTING);

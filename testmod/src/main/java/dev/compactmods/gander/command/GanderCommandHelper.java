@@ -29,6 +29,9 @@ import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureCheck;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
+import net.minecraft.world.phys.AABB;
+
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -70,8 +73,8 @@ public class GanderCommandHelper {
         }
 
         // GENERATE
-        BoundingBox boundingbox = structureStart.getBoundingBox();
-        level.setBounds(boundingbox);
+        final var boundingbox = structureStart.getBoundingBox();
+        level.setBounds(AABB.of(boundingbox));
 
         var lowestY = boundingbox.minY();
 
@@ -134,6 +137,7 @@ public class GanderCommandHelper {
     }
 
     static @NotNull StructureTemplate buildDebugStructure(CommandContext<CommandSourceStack> ctx) {
+        final var logger = LogManager.getLogger();
         var source = ctx.getSource();
 
         var registryAccess = source.registryAccess();
@@ -151,19 +155,20 @@ public class GanderCommandHelper {
 
         var maxX = 323;
         var maxZ = 327;
-        var minY = DebugLevelSource.BARRIER_HEIGHT;
-        var maxY = DebugLevelSource.HEIGHT;
 
-        // DebugLevelSource.initValidStates();
-        var bounds = new BoundingBox(0, minY, 0, maxX, maxY, maxZ);
-        level.setBounds(bounds);
+        var bounds = new BoundingBox(0, DebugLevelSource.BARRIER_HEIGHT, 0, maxX, DebugLevelSource.HEIGHT, maxZ);
+        level.setBounds(AABB.of(bounds));
         var generator = new DebugLevelSource(registryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.THE_VOID));
 
         var maxChunkX = maxX / 16;
         var maxChunkZ = maxZ / 16;
 
+        logger.debug("Generating {} debug chunks...", maxChunkX * maxChunkZ);
+
         for (var x = 0; x < maxChunkX; x++) {
             for (var z = 0; z < maxChunkZ; z++) {
+                logger.debug("Generating debug chunk: {}, {}", x, z);
+
                 var chunk = level.getChunk(x, z);
                 generator.applyBiomeDecoration(level, chunk, null);
             }

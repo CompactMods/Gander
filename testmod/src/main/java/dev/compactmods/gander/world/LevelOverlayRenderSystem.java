@@ -2,6 +2,8 @@ package dev.compactmods.gander.world;
 
 import dev.compactmods.gander.GanderTestMod;
 
+import net.minecraft.world.phys.AABB;
+
 import org.joml.Vector3f;
 
 import dev.compactmods.gander.CommonEvents;
@@ -20,7 +22,7 @@ public class LevelOverlayRenderSystem
 	public static void createAndAddRenderer(Component source, StructureTemplate data, Vector3f renderLocation) {
 		CommonEvents.setTitle(source);
 
-        var bounds = data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO);
+        var bounds = AABB.of(data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO));
 		var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess(), true);
 
 		virtualLevel.setBounds(bounds);

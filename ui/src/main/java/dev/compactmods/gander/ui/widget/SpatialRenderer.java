@@ -65,9 +65,9 @@ public class SpatialRenderer implements Renderable {
             final var poseStack = graphics.pose();
             poseStack.pushPose();
             poseStack.translate(
-                bakedLevel.blockBoundaries().getXSpan() / -2f,
-                bakedLevel.blockBoundaries().getYSpan() / -2f,
-                bakedLevel.blockBoundaries().getZSpan() / -2f);
+                bakedLevel.blockBoundaries().getXsize() / -2f,
+                bakedLevel.blockBoundaries().getYsize() / -2f,
+                bakedLevel.blockBoundaries().getZsize() / -2f);
 
             state.set(GanderRenderToolkit.PROJECTION_MATRIX, projMatrix);
 
@@ -93,9 +93,9 @@ public class SpatialRenderer implements Renderable {
         poseStack.pushPose();
         {
             poseStack.translate(
-                bakedLevel.blockBoundaries().getXSpan() / -2f,
-                bakedLevel.blockBoundaries().getYSpan() / -2f,
-                bakedLevel.blockBoundaries().getZSpan() / -2f);
+                bakedLevel.blockBoundaries().getXsize() / -2f,
+                bakedLevel.blockBoundaries().getYsize() / -2f,
+                bakedLevel.blockBoundaries().getZsize() / -2f);
 
             var position = camera.getLookFrom();
             poseStack.translate(-position.x, -position.y, -position.z);
