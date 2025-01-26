@@ -19,7 +19,7 @@ public record PredicateWrappedGeometryUploadPhase(Predicate<RenderType> predicat
     }
 
     @Override
-    public void upload(PipelineState state, GuiGraphics graphics, Camera camera, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
-        phase.upload(state, graphics, camera, projectionMatrix, modelViewMatrix, partialTicks);
+    public void upload(PipelineState state, GuiGraphics graphics, float partialTicks) {
+        phase.upload(state, graphics, partialTicks);
     }
 }

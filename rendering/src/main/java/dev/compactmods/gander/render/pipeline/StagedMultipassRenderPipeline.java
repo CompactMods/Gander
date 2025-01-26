@@ -15,18 +15,18 @@ import java.util.function.Consumer;
 public record StagedMultipassRenderPipeline(PipelinePhaseCollection phaseCollection) implements MultiPassRenderPipeline {
 
     @Override
-    public void renderPass(PipelineState state, RenderType renderType, GuiGraphics graphics, Camera camera, Frustum frustum,
-                           PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks) {
+    public void renderPass(PipelineState state, RenderType renderType, GuiGraphics graphics,
+                           Frustum frustum, float partialTicks) {
         for (var preRenderPhase : phaseCollection.beforeGeometryPhases())
             preRenderPhase.run(state);
 
         for (var phase : phaseCollection.geometryUploadPhases()) {
             if(phase.shouldRun(renderType))
-                phase.upload(state, graphics, camera, projectionMatrix, modelViewMatrix, partialTicks);
+                phase.upload(state, graphics, partialTicks);
         }
 
         for (var phase : phaseCollection.renderPhases())
-            phase.render(state, graphics, camera, projectionMatrix);
+            phase.render(state, graphics);
 
         for (var phase : phaseCollection.cleanupPhases())
             phase.run(state);

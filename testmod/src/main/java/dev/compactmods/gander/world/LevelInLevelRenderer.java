@@ -7,7 +7,7 @@ import dev.compactmods.gander.level.TickingLevel;
 
 import dev.compactmods.gander.render.RenderTypes;
 import dev.compactmods.gander.render.pipeline.PipelineState;
-import dev.compactmods.gander.render.pipeline.example.BakedLevelOverlayPipeline;
+import dev.compactmods.gander.render.pipeline.impl.BakedLevelOverlayPipeline;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -57,17 +57,15 @@ public record LevelInLevelRenderer(UUID id, PipelineState state, BakedLevelOverl
     public void onRenderStage(RenderLevelStageEvent evt) {
         final var graphics = new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().renderBuffers().bufferSource());
 
-        final var camera = new SceneCamera();
-
         final var renderTypeForStage = RenderTypes.GEOMETRY_STAGES.get(evt.getStage());
         final var partialTick = evt.getPartialTick().getGameTimeDeltaPartialTick(true);
 
         if(renderTypeForStage != null) {
-            var stack = evt.getPoseStack();
+            state.set(GanderRenderToolkit.PROJECTION_MATRIX, evt.getProjectionMatrix());
+            state.set(GanderRenderToolkit.MODEL_VIEW_MATRIX, evt.getModelViewMatrix());
 
-            BakedLevelOverlayPipeline.INSTANCE.renderPass(state, renderTypeForStage, graphics, camera,
-                evt.getFrustum(),
-                stack, evt.getProjectionMatrix(), evt.getModelViewMatrix(), partialTick);
+            BakedLevelOverlayPipeline.INSTANCE.renderPass(state, renderTypeForStage, graphics,
+                evt.getFrustum(), partialTick);
         }
     }
 

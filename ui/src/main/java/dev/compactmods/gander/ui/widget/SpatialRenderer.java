@@ -4,8 +4,8 @@ import dev.compactmods.gander.core.camera.SceneCamera;
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
-import dev.compactmods.gander.ui.pipeline.BakedLevelScreenRenderPipeline;
-import dev.compactmods.gander.ui.toolkit.GanderScreenRenderHelper;
+import dev.compactmods.gander.render.pipeline.impl.BakedLevelScreenRenderPipeline;
+import dev.compactmods.gander.render.screen.GanderScreenRenderHelper;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
@@ -45,7 +45,7 @@ public class SpatialRenderer implements Renderable {
         return camera;
     }
 
-	public void recalculateTranslucency() {
+    public void recalculateTranslucency() {
         // FIXME - Black Screen Issue
         //  renderingContext.recalculateTranslucency(camera);
     }
@@ -61,7 +61,6 @@ public class SpatialRenderer implements Renderable {
             this.state = BakedLevelScreenRenderPipeline.INSTANCE.setup(this::setupInitialState);
         }
 
-//        graphics.enableScissor(renderArea.left(), renderArea.top(), renderArea.right(), renderArea.bottom());
         renderHelper.renderInScreenSpace(graphics, camera, (projMatrix) -> {
             final var poseStack = graphics.pose();
             poseStack.pushPose();
@@ -70,30 +69,24 @@ public class SpatialRenderer implements Renderable {
                 bakedLevel.blockBoundaries().getYSpan() / -2f,
                 bakedLevel.blockBoundaries().getZSpan() / -2f);
 
-            BakedLevelScreenRenderPipeline.INSTANCE.render(
-                state, graphics, camera, projMatrix, new Matrix4f(), partialTicks
-            );
+            state.set(GanderRenderToolkit.PROJECTION_MATRIX, projMatrix);
+
+            BakedLevelScreenRenderPipeline.INSTANCE.render(state, graphics, partialTicks);
 
             poseStack.popPose();
         });
-//        graphics.disableScissor();
     }
 
     private void setupInitialState(PipelineState state) {
-        final var mc = Minecraft.getInstance();
-        final var textureScale = mc.getWindow().getGuiScale();
-
-        state.set(GanderRenderToolkit.BAKED_LEVEL, bakedLevel);
-        state.set(GanderRenderToolkit.RENDER_BOUNDS, renderArea);
-
-        state.set(GanderRenderToolkit.CAMERA, this.camera);
-
         final var blockEntityPositions = BlockPos.betweenClosedStream(bakedLevel.blockBoundaries())
             .filter(p -> bakedLevel.originalLevel().getBlockState(p).hasBlockEntity())
             .map(BlockPos::immutable)
             .toArray(BlockPos[]::new);
 
         state.set(GanderRenderToolkit.BLOCK_ENTITY_POSITIONS, blockEntityPositions);
+        state.set(GanderRenderToolkit.BAKED_LEVEL, bakedLevel);
+        state.set(GanderRenderToolkit.RENDER_BOUNDS, renderArea);
+        state.set(GanderRenderToolkit.CAMERA, this.camera);
     }
 
     private void renderCompass(GuiGraphics graphics, float partialTicks, PoseStack poseStack) {

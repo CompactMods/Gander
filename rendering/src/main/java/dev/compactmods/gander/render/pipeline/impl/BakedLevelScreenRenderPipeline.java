@@ -1,29 +1,25 @@
-package dev.compactmods.gander.ui.pipeline;
+package dev.compactmods.gander.render.pipeline.impl;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.BufferUploader;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.PoseStack;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
 import dev.compactmods.gander.render.pipeline.SinglePassRenderPipeline;
-import dev.compactmods.gander.render.pipeline.example.BakedLevelOverlayPipeline;
+import dev.compactmods.gander.render.screen.GanderScreenPipelinePhases;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
-import dev.compactmods.gander.ui.toolkit.GanderScreenToolkit;
-import net.minecraft.client.Camera;
+import dev.compactmods.gander.render.screen.GanderScreenToolkit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 
 import net.minecraft.client.renderer.ShaderInstance;
 
 import net.minecraft.util.Mth;
-
-import org.joml.Matrix4f;
 
 import java.util.Objects;
 
@@ -52,7 +48,6 @@ public class BakedLevelScreenRenderPipeline {
     private static boolean setup(PipelineState state) {
         final var mc = Minecraft.getInstance();
         final var bakedLevel = state.get(GanderRenderToolkit.BAKED_LEVEL);
-//        final var renderBounds = state.get(GanderRenderToolkit.RENDER_BOUNDS);
         final var camera = state.get(GanderRenderToolkit.CAMERA);
         final var renderTarget = state.get(GanderRenderToolkit.RENDER_TARGET);
         final var translucencyChain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
@@ -78,8 +73,10 @@ public class BakedLevelScreenRenderPipeline {
         return true;
     }
 
-    private static void render(PipelineState state, GuiGraphics graphics, Camera camera, Matrix4f projectionMatrix) {
+    private static void render(PipelineState state, GuiGraphics graphics) {
         final var mc = Minecraft.getInstance();
+
+        final var projectionMatrix = state.get(GanderRenderToolkit.PROJECTION_MATRIX);
         final var renderTarget = state.get(GanderRenderToolkit.RENDER_TARGET);
         final var renderBounds = state.get(GanderRenderToolkit.RENDER_BOUNDS);
         final var translucencyChain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);

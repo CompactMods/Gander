@@ -30,6 +30,9 @@ public class GanderRenderToolkit {
     public static final PipelineState.Item<RenderTarget> RENDER_TARGET = new PipelineState.Item<>(RenderTarget.class);
     public static final PipelineState.Item<Vector3fc> RENDER_ORIGIN = new PipelineState.Item<>(Vector3fc.class);
 
+    public static final PipelineState.Item<Matrix4f> PROJECTION_MATRIX = new PipelineState.Item<>(Matrix4f.class);
+    public static final PipelineState.Item<Matrix4f> MODEL_VIEW_MATRIX = new PipelineState.Item<>(Matrix4f.class);
+
     public static final PipelineState.Item<BakedLevel> BAKED_LEVEL = new PipelineState.Item<>(BakedLevel.class);
     public static final PipelineState.Item<ScreenRectangle> RENDER_BOUNDS = new PipelineState.Item<>(ScreenRectangle.class);
     public static final PipelineState.Item<Camera> CAMERA = new PipelineState.Item<>(Camera.class);

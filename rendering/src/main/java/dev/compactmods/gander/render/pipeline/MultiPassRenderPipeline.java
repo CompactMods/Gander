@@ -13,7 +13,6 @@ import org.joml.Matrix4f;
 
 public interface MultiPassRenderPipeline extends RenderPipeline {
 
-    void renderPass(PipelineState state, RenderType renderType, GuiGraphics graphics, Camera camera, Frustum frustum,
-                    PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f modelViewMatrix, float partialTicks);
+    void renderPass(PipelineState state, RenderType renderType, GuiGraphics graphics, Frustum frustum, float partialTicks);
 
 }

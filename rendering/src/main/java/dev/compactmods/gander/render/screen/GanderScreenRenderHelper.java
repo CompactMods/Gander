@@ -1,4 +1,4 @@
-package dev.compactmods.gander.ui.toolkit;
+package dev.compactmods.gander.render.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -10,7 +10,6 @@ import net.minecraft.client.gui.GuiGraphics;
 
 import org.joml.Matrix4f;
 
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public record GanderScreenRenderHelper(int width, int height) {
@@ -23,6 +22,13 @@ public record GanderScreenRenderHelper(int width, int height) {
             10000000);
     }
 
+    /**
+     * Prepares the graphics pose stack and projection matrices for rendering to the screen.
+     *
+     * @param graphics GuiGraphics instance from the screen/render method
+     * @param camera The camera instance used to view the scene from
+     * @param render A consumer for receiving the set-up projection matrix
+     */
     public void renderInScreenSpace(GuiGraphics graphics, Camera camera, Consumer<Matrix4f> render) {
         final var projMatrix = projectionMatrix();
 

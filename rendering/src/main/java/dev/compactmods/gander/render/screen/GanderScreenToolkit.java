@@ -1,4 +1,4 @@
-package dev.compactmods.gander.ui.toolkit;
+package dev.compactmods.gander.render.screen;
 
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
