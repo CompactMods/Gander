@@ -13,6 +13,7 @@ import net.minecraft.world.phys.AABB;
 import org.joml.Vector3f;
 
 import java.util.Map;
+import java.util.function.Function;
 
 public record BakedLevelSection(SectionBufferBuilderPack blockBuilders,
                                 SectionBufferBuilderPack fluidBuilders,
@@ -41,8 +42,11 @@ public record BakedLevelSection(SectionBufferBuilderPack blockBuilders,
                 return;
 
             var buffer = buffers.get(type);
-            buffer.uploadIndexBuffer(result);
-            VertexBuffer.unbind();
+            if(buffer != null) {
+                buffer.bind();
+                buffer.uploadIndexBuffer(result);
+                VertexBuffer.unbind();
+            }
         });
     }
 }

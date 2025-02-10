@@ -1,9 +1,7 @@
 package dev.compactmods.gander.render.geometry;
 
-import net.minecraft.world.level.ChunkPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.world.level.Level;
-
-import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 import net.minecraft.world.phys.AABB;
 
@@ -13,7 +11,7 @@ import java.util.Map;
 
 public record BakedLevel(Level originalLevel,
                          AABB blockBoundaries,
-                         Map<ChunkPos, BakedLevelSection> sections) {
+                         Map<SectionPos, BakedLevelSection> sections) {
 
 
     public void resortTranslucency(Vector3f vector3f) {

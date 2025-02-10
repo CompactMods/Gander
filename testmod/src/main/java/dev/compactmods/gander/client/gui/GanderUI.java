@@ -23,6 +23,8 @@ public class GanderUI extends Screen {
     private SpatialRenderer activeRenderer;
     private Component sceneSource;
 
+    private boolean singlePanel = false;
+
     GanderUI() {
         super(Component.empty());
     }
@@ -154,27 +156,32 @@ public class GanderUI extends Screen {
 
         this.renderables.clear();
 
-        this.activeRenderer = addRenderableOnly(new SpatialRenderer(this.scene, 100, 20, 200, 100));
-        this.activeRenderer.camera().zoom(-10);
+        if(singlePanel) {
+            this.activeRenderer = addRenderableOnly(new SpatialRenderer(this.scene, 0, 0, width, height));
+            this.activeRenderer.camera().zoom(-10);
+        } else {
+            this.activeRenderer = addRenderableOnly(new SpatialRenderer(this.scene, 100, 20, 200, 100));
+            this.activeRenderer.camera().zoom(-10);
 
-        var s2 = addRenderableOnly(new SpatialRenderer(this.scene, 310, 20, 200, 100));
-        s2.camera().lookDirection(Direction.DOWN);
-        s2.camera().zoom(-10);
+            var s2 = addRenderableOnly(new SpatialRenderer(this.scene, 310, 20, 200, 100));
+            s2.camera().lookDirection(Direction.DOWN);
+            s2.camera().zoom(-10);
 
-        var s3 = addRenderableOnly(new SpatialRenderer(this.scene, 100, 130, 200, 100));
-        s3.camera().lookDirection(Direction.NORTH);
-        s3.camera().zoom(-10);
+            var s3 = addRenderableOnly(new SpatialRenderer(this.scene, 100, 130, 200, 100));
+            s3.camera().lookDirection(Direction.NORTH);
+            s3.camera().zoom(-10);
 
-        var s4 = addRenderableOnly(new SpatialRenderer(this.scene, 310, 130, 200, 100));
-        s4.camera().lookDirection(Direction.SOUTH);
-        s4.camera().zoom(-10);
+            var s4 = addRenderableOnly(new SpatialRenderer(this.scene, 310, 130, 200, 100));
+            s4.camera().lookDirection(Direction.SOUTH);
+            s4.camera().zoom(-10);
 
-        var s5 = addRenderableOnly(new SpatialRenderer(this.scene, 100, 240, 200, 100));
-        s5.camera().lookDirection(Direction.WEST);
-        s5.camera().zoom(-10);
+            var s5 = addRenderableOnly(new SpatialRenderer(this.scene, 100, 240, 200, 100));
+            s5.camera().lookDirection(Direction.WEST);
+            s5.camera().zoom(-10);
 
-        var s6 = addRenderableOnly(new SpatialRenderer(this.scene, 310, 240, 200, 100));
-        s6.camera().lookDirection(Direction.EAST);
-        s6.camera().zoom(-10);
+            var s6 = addRenderableOnly(new SpatialRenderer(this.scene, 310, 240, 200, 100));
+            s6.camera().lookDirection(Direction.EAST);
+            s6.camera().zoom(-10);
+        }
     }
 }
