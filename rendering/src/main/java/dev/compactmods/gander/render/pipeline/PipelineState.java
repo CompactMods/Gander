@@ -2,9 +2,6 @@ package dev.compactmods.gander.render.pipeline;
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
-
 public class PipelineState {
 
     public record Item<T>(Class<T> type) {}

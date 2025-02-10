@@ -1,7 +1,5 @@
 package dev.compactmods.gander.render.mixin;
 
-import com.mojang.blaze3d.pipeline.RenderTarget;
-
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import dev.compactmods.gander.render.rendertypes.GanderCompositeRenderType;

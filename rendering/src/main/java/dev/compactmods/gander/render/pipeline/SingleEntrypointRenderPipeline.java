@@ -1,12 +1,7 @@
 package dev.compactmods.gander.render.pipeline;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-
 import dev.compactmods.gander.render.pipeline.phase.PipelinePhaseCollection;
-import net.minecraft.client.Camera;
 import net.minecraft.client.gui.GuiGraphics;
-
-import org.joml.Matrix4f;
 
 import java.util.function.Consumer;
 

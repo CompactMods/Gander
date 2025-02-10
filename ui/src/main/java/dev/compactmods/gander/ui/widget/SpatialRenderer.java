@@ -9,7 +9,6 @@ import dev.compactmods.gander.render.screen.GanderScreenRenderHelper;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -19,7 +18,6 @@ import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.core.BlockPos;
 
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix4f;
 
 public class SpatialRenderer implements Renderable {
     private final GanderScreenRenderHelper renderHelper;
@@ -46,8 +44,8 @@ public class SpatialRenderer implements Renderable {
     }
 
     public void recalculateTranslucency() {
-        // FIXME - Black Screen Issue
-        //  renderingContext.recalculateTranslucency(camera);
+        final var lvl = state.get(GanderRenderToolkit.BAKED_LEVEL);
+        lvl.resortTranslucency(camera.getLookFrom());
     }
 
     public void shouldRenderCompass(boolean render) {

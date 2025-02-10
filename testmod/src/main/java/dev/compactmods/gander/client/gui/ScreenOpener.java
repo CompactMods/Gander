@@ -4,7 +4,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 
 import org.apache.commons.lang3.function.Consumers;
 import org.joml.Vector3f;

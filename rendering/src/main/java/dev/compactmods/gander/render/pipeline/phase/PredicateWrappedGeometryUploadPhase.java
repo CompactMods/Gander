@@ -1,12 +1,9 @@
 package dev.compactmods.gander.render.pipeline.phase;
 
 import dev.compactmods.gander.render.pipeline.PipelineState;
-import net.minecraft.client.Camera;
 import net.minecraft.client.gui.GuiGraphics;
 
 import net.minecraft.client.renderer.RenderType;
-
-import org.joml.Matrix4f;
 
 import java.util.function.Predicate;
 

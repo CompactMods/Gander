@@ -3,7 +3,6 @@ package dev.compactmods.gander.render.toolkit;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.VertexSorting;
 
-import dev.compactmods.gander.render.RenderBoundaries;
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
@@ -14,12 +13,8 @@ import net.minecraft.client.GraphicsStatus;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.core.BlockPos;
 
-import net.minecraft.world.level.block.entity.BlockEntity;
-
 import org.joml.Matrix4f;
 import org.joml.Vector3fc;
-
-import java.util.stream.Stream;
 
 public class GanderRenderToolkit {
     public static final PipelineState.Item<GraphicsStatus> PREVIOUS_GRAPHICS_MODE = new PipelineState.Item<>(GraphicsStatus.class);

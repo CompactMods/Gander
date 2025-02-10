@@ -1,7 +1,6 @@
 package dev.compactmods.gander.network;
 
 import dev.compactmods.gander.GanderTestMod;
-import dev.compactmods.gander.world.LevelOverlayRenderSystem;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;

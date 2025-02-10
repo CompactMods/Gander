@@ -1,9 +1,7 @@
 package dev.compactmods.gander.render.translucency;
 
-import com.google.common.collect.Lists;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 
-import net.minecraft.client.renderer.PostChain;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;

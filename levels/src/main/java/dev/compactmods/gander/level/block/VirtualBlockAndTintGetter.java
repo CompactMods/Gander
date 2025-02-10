@@ -1,6 +1,5 @@
 package dev.compactmods.gander.level.block;
 
-import dev.compactmods.gander.level.light.VirtualLightEngine;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

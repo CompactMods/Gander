@@ -6,12 +6,10 @@ import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.toolkit.BlockEntityRender;
 import dev.compactmods.gander.render.toolkit.BlockRenderer;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
 
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.util.Arrays;

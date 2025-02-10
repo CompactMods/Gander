@@ -6,10 +6,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import com.mojang.blaze3d.vertex.VertexBuffer;
 
-import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.geometry.BakedLevelSection;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
