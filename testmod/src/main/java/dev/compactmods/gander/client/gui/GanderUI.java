@@ -7,18 +7,23 @@ import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.ui.widget.SpatialRenderer;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.FastColor;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 public class GanderUI extends Screen {
 
     private BakedLevel scene;
-    private SpatialRenderer renderer;
+    private SpatialRenderer activeRenderer;
     private Component sceneSource;
+
+    private boolean singlePanel = false;
 
     GanderUI() {
         super(Component.empty());
@@ -51,8 +56,8 @@ public class GanderUI extends Screen {
     public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(graphics, mouseX, mouseY, partialTick);
 
-        if(renderer != null) {
-            var renderArea = renderer.getRenderArea();
+        if(activeRenderer != null) {
+            var renderArea = activeRenderer.getRenderArea();
             graphics.fill(renderArea.left(), renderArea.top(), renderArea.right(), renderArea.bottom(),
                 FastColor.ARGB32.color(120, CommonColors.BLACK));
         }
@@ -60,22 +65,42 @@ public class GanderUI extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        super.render(graphics, mouseX, mouseY, partialTicks);
-        renderSceneSourceLabel(graphics);
-    }
 
-    private void renderSceneSourceLabel(GuiGraphics graphics) {
+        this.renderBackground(graphics, mouseX, mouseY, partialTicks);
+
+
         if (this.sceneSource != null) {
             graphics.pose().pushPose();
             graphics.drawCenteredString(font, sceneSource, width / 2, 10, DyeColor.WHITE.getFireworkColor());
             graphics.pose().popPose();
         }
+
+        // Active camera rotation
+        // graphics.drawString(font, activeRenderer.camera().cameraRotation().toString(), 10, 100, CommonColors.WHITE, true);
+
+        for (Renderable renderable : this.renderables) {
+            renderable.render(graphics, mouseX, mouseY, partialTicks);
+        }
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        int x = Mth.floor(mouseX);
+        int y = Mth.floor(mouseY);
+        var renderClicked = renderables.stream()
+            .filter(SpatialRenderer.class::isInstance)
+            .map(SpatialRenderer.class::cast)
+            .filter(r -> r.getRenderArea().containsPoint(x, y))
+            .findFirst();
+
+        renderClicked.ifPresent(r -> this.activeRenderer = r);
+        return true;
     }
 
     @Override
     public boolean mouseScrolled(double pMouseX, double pMouseY, double pScrollX, double pScrollY) {
-        if(this.renderer != null)
-            renderer.zoom(pScrollY);
+        if(this.activeRenderer != null)
+            activeRenderer.zoom(pScrollY);
 
         return true;
     }
@@ -85,32 +110,32 @@ public class GanderUI extends Screen {
         final float rotateSpeed = 1 / 12f;
 
         if (code == InputConstants.KEY_R) {
-            renderer.camera().resetLook();
-            renderer.recalculateTranslucency();
+            activeRenderer.camera().resetLook();
+            activeRenderer.recalculateTranslucency();
             return true;
         }
 
         if (code == InputConstants.KEY_UP) {
-            renderer.camera().lookUp(rotateSpeed);
-            renderer.recalculateTranslucency();
+            activeRenderer.camera().lookUp(rotateSpeed);
+            activeRenderer.recalculateTranslucency();
             return true;
         }
 
         if (code == InputConstants.KEY_DOWN) {
-            renderer.camera().lookDown(rotateSpeed);
-            renderer.recalculateTranslucency();
+            activeRenderer.camera().lookDown(rotateSpeed);
+            activeRenderer.recalculateTranslucency();
             return true;
         }
 
         if (code == InputConstants.KEY_LEFT) {
-            renderer.camera().lookLeft(rotateSpeed);
-            renderer.recalculateTranslucency();
+            activeRenderer.camera().lookLeft(rotateSpeed);
+            activeRenderer.recalculateTranslucency();
             return true;
         }
 
         if (code == InputConstants.KEY_RIGHT) {
-            renderer.camera().lookRight(rotateSpeed);
-            renderer.recalculateTranslucency();
+            activeRenderer.camera().lookRight(rotateSpeed);
+            activeRenderer.recalculateTranslucency();
             return true;
         }
 
@@ -128,10 +153,35 @@ public class GanderUI extends Screen {
 
     public void setScene(BakedLevel scene) {
         this.scene = scene;
-        if(this.renderer != null) {
-            this.renderables.remove(this.renderer);
-        }
 
-        this.renderer = addRenderableOnly(new SpatialRenderer(this.scene, 100, 40, this.width - 200, this.height - 80));
+        this.renderables.clear();
+
+        if(singlePanel) {
+            this.activeRenderer = addRenderableOnly(new SpatialRenderer(this.scene, 0, 0, width, height));
+            this.activeRenderer.camera().zoom(-10);
+        } else {
+            this.activeRenderer = addRenderableOnly(new SpatialRenderer(this.scene, 100, 20, 200, 100));
+            this.activeRenderer.camera().zoom(-10);
+
+            var s2 = addRenderableOnly(new SpatialRenderer(this.scene, 310, 20, 200, 100));
+            s2.camera().lookDirection(Direction.DOWN);
+            s2.camera().zoom(-10);
+
+            var s3 = addRenderableOnly(new SpatialRenderer(this.scene, 100, 130, 200, 100));
+            s3.camera().lookDirection(Direction.NORTH);
+            s3.camera().zoom(-10);
+
+            var s4 = addRenderableOnly(new SpatialRenderer(this.scene, 310, 130, 200, 100));
+            s4.camera().lookDirection(Direction.SOUTH);
+            s4.camera().zoom(-10);
+
+            var s5 = addRenderableOnly(new SpatialRenderer(this.scene, 100, 240, 200, 100));
+            s5.camera().lookDirection(Direction.WEST);
+            s5.camera().zoom(-10);
+
+            var s6 = addRenderableOnly(new SpatialRenderer(this.scene, 310, 240, 200, 100));
+            s6.camera().lookDirection(Direction.EAST);
+            s6.camera().zoom(-10);
+        }
     }
 }

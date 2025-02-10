@@ -9,11 +9,9 @@ import net.minecraft.client.renderer.RenderType;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-// TODO 1.17: use custom shaders instead of vanilla ones
 public class RenderTypes extends RenderStateShard {
 
     public static final Map<RenderLevelStageEvent.Stage, RenderType> GEOMETRY_STAGES

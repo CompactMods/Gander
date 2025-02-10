@@ -3,6 +3,7 @@ package dev.compactmods.gander.core.camera;
 import net.minecraft.client.Camera;
 
 import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
 import org.joml.Quaternionf;
@@ -26,7 +27,11 @@ public class SceneCamera extends Camera {
 		this.recalcLook();
 	}
 
-	public Vector3f getLookFrom() {
+    public Vector2f cameraRotation() {
+        return new Vector2f(cameraRotation);
+    }
+
+    public Vector3f getLookFrom() {
 		return new Vector3f(lookFrom);
 	}
 
@@ -85,21 +90,23 @@ public class SceneCamera extends Camera {
 				break;
 
 			case DOWN:
-				this.cameraRotation.set(Math.PI / 2, Math.PI);
+                this.cameraRotation.set(-Mth.HALF_PI - 0.001, Math.PI);
 				break;
 
 			case NORTH:
-				this.cameraRotation.set(0, Math.PI);
+				this.cameraRotation.set(-Math.PI, Math.PI);
 				break;
 
 			case SOUTH:
-				this.cameraRotation.set(Math.PI / 2, -Math.PI);
+				this.cameraRotation.set(0, Math.PI);
 				break;
 
 			case WEST:
+                this.cameraRotation.set(-Mth.PI, Mth.HALF_PI);
 				break;
 
 			case EAST:
+                this.cameraRotation.set(-Mth.PI, -Mth.HALF_PI);
 				break;
 		}
 

@@ -2,9 +2,6 @@ package dev.compactmods.gander.render.pipeline;
 
 import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 
-import org.joml.Vector3f;
-import org.joml.Vector3fc;
-
 public class PipelineState {
 
     public record Item<T>(Class<T> type) {}
@@ -27,5 +24,13 @@ public class PipelineState {
 
     public <T> void set(Item<T> property, T value) {
         this.properties.put(property, value);
+    }
+
+    public <T> void remove(Item<T> property) {
+        this.properties.remove(property);
+    }
+
+    public void clear() {
+        this.properties.clear();
     }
 }

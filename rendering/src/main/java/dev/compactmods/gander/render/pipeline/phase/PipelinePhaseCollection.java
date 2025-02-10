@@ -6,44 +6,35 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 
-public record PipelinePhaseCollection<TCtx>(
+public record PipelinePhaseCollection(
     Set<PipelineLifecyclePhase> setupPhases,
-    Set<ContextAwareSetupPhase<TCtx>> contextSetupPhases,
     Set<PipelineLifecyclePhase> beforeGeometryPhases,
-    Set<PipelineGeometryUploadPhase<TCtx>> geometryUploadPhases,
-    Set<PipelineRenderPhase<TCtx>> renderPhases,
+    Set<PipelineGeometryUploadPhase> geometryUploadPhases,
+    Set<PipelineRenderPhase> renderPhases,
     Set<PipelineLifecyclePhase> cleanupPhases
 ) {
 
-
-    public static class Builder<TCtx> implements IPipelinePhaseCollectionBuilder<TCtx> {
-
+    public static class Builder implements IPipelinePhaseCollectionBuilder {
 
         private final Set<PipelineLifecyclePhase> setupPhases = new LinkedHashSet<>();
-        private final Set<ContextAwareSetupPhase<TCtx>> contextSetupPhases = new LinkedHashSet<>();
         private final Set<PipelineLifecyclePhase> cleanupPhases = new LinkedHashSet<>();
         private final Set<PipelineLifecyclePhase> beforeGeometryPhases = new LinkedHashSet<>();
-        private final Set<PipelineGeometryUploadPhase<TCtx>> geometryPhases = new LinkedHashSet<>();
-        private final Set<PipelineRenderPhase<TCtx>> renderPhases = new LinkedHashSet<>();
+        private final Set<PipelineGeometryUploadPhase> geometryPhases = new LinkedHashSet<>();
+        private final Set<PipelineRenderPhase> renderPhases = new LinkedHashSet<>();
 
-        public Builder<TCtx> addSetupPhase(PipelineLifecyclePhase phase) {
+        public Builder addSetupPhase(PipelineLifecyclePhase phase) {
             this.setupPhases.add(phase);
             return this;
         }
 
-        public Builder<TCtx> addContextSetupPhase(ContextAwareSetupPhase<TCtx> phase) {
-            this.contextSetupPhases.add(phase);
-            return this;
-        }
-
-        public Builder<TCtx> addGeometryUploadPhase(PipelineGeometryUploadPhase<TCtx> phase) {
+        public Builder addGeometryUploadPhase(PipelineGeometryUploadPhase phase) {
             this.geometryPhases.add(phase);
             return this;
         }
 
         @Override
-        public IPipelinePhaseCollectionBuilder<TCtx> addGeometryUploadPhase(Predicate<RenderType> predicate, PipelineGeometryUploadPhase<TCtx> phase) {
-            this.geometryPhases.add(new PredicateWrappedGeometryUploadPhase<>(predicate, phase));
+        public IPipelinePhaseCollectionBuilder addGeometryUploadPhase(Predicate<RenderType> predicate, PipelineGeometryUploadPhase phase) {
+            this.geometryPhases.add(new PredicateWrappedGeometryUploadPhase(predicate, phase));
             return this;
         }
 
@@ -53,23 +44,23 @@ public record PipelinePhaseCollection<TCtx>(
          * @param phase
          * @return
          */
-        public Builder<TCtx> addPreGeometryPhase(PipelineLifecyclePhase phase) {
+        public Builder addPreGeometryPhase(PipelineLifecyclePhase phase) {
             this.beforeGeometryPhases.add(phase);
             return this;
         }
 
-        public Builder<TCtx> addRenderPhase(PipelineRenderPhase<TCtx> phase) {
+        public Builder addRenderPhase(PipelineRenderPhase phase) {
             this.renderPhases.add(phase);
             return this;
         }
 
-        public Builder<TCtx> addCleanupPhase(PipelineLifecyclePhase phase) {
+        public Builder addCleanupPhase(PipelineLifecyclePhase phase) {
             this.cleanupPhases.add(phase);
             return this;
         }
 
-        public PipelinePhaseCollection<TCtx> build() {
-            return new PipelinePhaseCollection<>(setupPhases, contextSetupPhases, beforeGeometryPhases, geometryPhases, renderPhases, cleanupPhases);
+        public PipelinePhaseCollection build() {
+            return new PipelinePhaseCollection(setupPhases, beforeGeometryPhases, geometryPhases, renderPhases, cleanupPhases);
         }
     }
 }

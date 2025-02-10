@@ -1,19 +1,17 @@
 package dev.compactmods.gander.render.pipeline;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-
 import dev.compactmods.gander.render.pipeline.phase.PipelinePhaseCollection;
-import net.minecraft.client.Camera;
 import net.minecraft.client.gui.GuiGraphics;
 
-import org.joml.Matrix4f;
+import java.util.function.Consumer;
 
-public record SingleEntrypointRenderPipeline<TCtx>(PipelinePhaseCollection<TCtx> phases)
-    implements SinglePassRenderPipeline<TCtx> {
+public record SingleEntrypointRenderPipeline(PipelinePhaseCollection phases)
+    implements SinglePassRenderPipeline {
 
     @Override
-    public PipelineState setup() {
+    public PipelineState setup(Consumer<PipelineState> stateInitializer) {
         PipelineState state = new PipelineState();
+        stateInitializer.accept(state);
 
         boolean invalid = false;
         for (var phase : phases.setupPhases()) {
@@ -29,29 +27,16 @@ public record SingleEntrypointRenderPipeline<TCtx>(PipelinePhaseCollection<TCtx>
         return state;
     }
 
-    public void setupContext(PipelineState state, TCtx context, Camera camera) {
-        boolean invalid = false;
-        for (var phase : phases.contextSetupPhases()) {
-            if (!phase.setup(state, context, camera)) {
-                invalid = true;
-                break;
-            }
-        }
-
-        if (invalid)
-            throw new RuntimeException("Failed to setup pipeline");
-    }
-
     @Override
-    public void render(PipelineState state, TCtx ctx, GuiGraphics graphics, Camera camera, PoseStack poseStack, Matrix4f projectionMatrix, Matrix4f viewMatrix, float partialTicks) {
+    public void render(PipelineState state, GuiGraphics graphics, float partialTicks) {
         for (var preRenderPhase : phases.beforeGeometryPhases())
             preRenderPhase.run(state);
 
         for (var phase : phases.geometryUploadPhases())
-            phase.upload(state, ctx, graphics, camera, poseStack, projectionMatrix, viewMatrix, partialTicks);
+            phase.upload(state, graphics, partialTicks);
 
         for (var phase : phases.renderPhases())
-            phase.render(state, ctx, graphics, camera, poseStack, projectionMatrix);
+            phase.render(state, graphics);
 
         for (var phase : phases.cleanupPhases())
             phase.run(state);

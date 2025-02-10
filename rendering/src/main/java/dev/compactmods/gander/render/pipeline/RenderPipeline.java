@@ -1,17 +1,13 @@
 package dev.compactmods.gander.render.pipeline;
 
-import net.minecraft.client.Camera;
+import java.util.function.Consumer;
 
 /**
  * A render pipeline is a pre-configured set of rendering steps for rendering a
  * level to a specific target.
  */
-public interface RenderPipeline<TCtx> {
+public interface RenderPipeline {
 
-    PipelineState setup();
-
-    default void setupContext(PipelineState state, TCtx ctx, Camera camera) {
-
-    }
+    PipelineState setup(Consumer<PipelineState> initialStateSetup);
 
 }

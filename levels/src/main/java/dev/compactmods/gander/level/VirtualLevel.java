@@ -4,12 +4,15 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelDataManager;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import dev.compactmods.gander.core.math.WorldMath;
 import dev.compactmods.gander.level.block.VirtualBlockSystem;
 import dev.compactmods.gander.level.chunk.VirtualChunkSource;
 import dev.compactmods.gander.level.entity.VirtualEntitySystem;
@@ -46,7 +49,6 @@ import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.entity.LevelEntityGetter;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
@@ -66,7 +68,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	private final VirtualChunkSource chunkSource;
 	private final VirtualBlockSystem blocks;
 	private final Scoreboard scoreboard;
-	private BoundingBox bounds;
+	private AABB bounds;
 	private VirtualEntitySystem entities;
 	private final Holder<Biome> biome;
     private final Consumer<VirtualLevel> onBlockUpdate;
@@ -95,7 +97,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
         this.chunkSource = new VirtualChunkSource(this);
 		this.blocks = new VirtualBlockSystem(this);
 		this.scoreboard = new Scoreboard();
-		this.bounds = BoundingBox.fromCorners(BlockPos.ZERO, BlockPos.ZERO);
+		this.bounds = AABB.INFINITE;
 		this.entities = new VirtualEntitySystem();
 		this.biome = pRegistryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
         this.modelDataManager = new ModelDataManager(this);
@@ -187,7 +189,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	@Nullable
 	@Override
 	public BlockEntity getBlockEntity(BlockPos pPos) {
-		if (!bounds.isInside(pPos))
+		if (!bounds.contains(Vec3.atCenterOf(pPos)))
 			return null;
 
 		return blocks.blockAndFluidStorage().getBlockEntity(pPos);
@@ -195,7 +197,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	@Override
 	public BlockState getBlockState(BlockPos pPos) {
-		if (!bounds.isInside(pPos))
+		if (!bounds.contains(Vec3.atCenterOf(pPos)))
 			return Blocks.AIR.defaultBlockState();
 
 		return blocks.blockAndFluidStorage().getBlockState(pPos);
@@ -203,17 +205,14 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	@Override
 	public @NotNull FluidState getFluidState(BlockPos pos) {
-		if (!bounds.isInside(pos))
+		if (!bounds.contains(Vec3.atCenterOf(pos)))
 			return Fluids.EMPTY.defaultFluidState();
 
 		return blocks.blockAndFluidStorage().getFluidState(pos);
 	}
 
 	public void animateTick() {
-		animateBlockTick(new BlockPos(
-				random.nextIntBetweenInclusive(bounds.minX(), bounds.maxX()),
-				random.nextIntBetweenInclusive(bounds.minY(), bounds.maxY()),
-				random.nextIntBetweenInclusive(bounds.minZ(), bounds.maxZ())));
+		animateBlockTick(WorldMath.randomPosInAABB(random, bounds));
 	}
 
 	@Override
@@ -387,7 +386,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		return null;
 	}
 
-	public void setBounds(BoundingBox bounds) {
+	public void setBounds(AABB bounds) {
 		this.bounds = bounds;
 	}
 
@@ -413,15 +412,15 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
     @Override
     public int getMaxBuildHeight() {
-        return bounds.maxY() + 1;
+        return Mth.ceil(bounds.maxY) + 1;
     }
 
     @Override
     public int getMinBuildHeight() {
-        return bounds.minY();
+        return Mth.floor(bounds.minY);
     }
 
-    public BoundingBox getBounds() {
+    public AABB getBounds() {
         return bounds;
     }
 

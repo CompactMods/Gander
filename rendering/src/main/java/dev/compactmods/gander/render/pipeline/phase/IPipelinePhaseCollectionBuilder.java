@@ -4,14 +4,12 @@ import net.minecraft.client.renderer.RenderType;
 
 import java.util.function.Predicate;
 
-public interface IPipelinePhaseCollectionBuilder<TCtx> {
-    IPipelinePhaseCollectionBuilder<TCtx> addSetupPhase(PipelineLifecyclePhase phase);
+public interface IPipelinePhaseCollectionBuilder {
+    IPipelinePhaseCollectionBuilder addSetupPhase(PipelineLifecyclePhase phase);
 
-    IPipelinePhaseCollectionBuilder<TCtx> addContextSetupPhase(ContextAwareSetupPhase<TCtx> phase);
+    IPipelinePhaseCollectionBuilder addGeometryUploadPhase(PipelineGeometryUploadPhase phase);
 
-    IPipelinePhaseCollectionBuilder<TCtx> addGeometryUploadPhase(PipelineGeometryUploadPhase<TCtx> phase);
-
-    IPipelinePhaseCollectionBuilder<TCtx> addGeometryUploadPhase(Predicate<RenderType> predicate, PipelineGeometryUploadPhase<TCtx> phase);
+    IPipelinePhaseCollectionBuilder addGeometryUploadPhase(Predicate<RenderType> predicate, PipelineGeometryUploadPhase phase);
 
     /**
      * Called before all geometry upload phases.
@@ -19,9 +17,9 @@ public interface IPipelinePhaseCollectionBuilder<TCtx> {
      * @param phase
      * @return
      */
-    IPipelinePhaseCollectionBuilder<TCtx> addPreGeometryPhase(PipelineLifecyclePhase phase);
+    IPipelinePhaseCollectionBuilder addPreGeometryPhase(PipelineLifecyclePhase phase);
 
-    IPipelinePhaseCollectionBuilder<TCtx> addRenderPhase(PipelineRenderPhase<TCtx> phase);
+    IPipelinePhaseCollectionBuilder addRenderPhase(PipelineRenderPhase phase);
 
-    IPipelinePhaseCollectionBuilder<TCtx> addCleanupPhase(PipelineLifecyclePhase phase);
+    IPipelinePhaseCollectionBuilder addCleanupPhase(PipelineLifecyclePhase phase);
 }

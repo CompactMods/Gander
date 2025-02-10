@@ -6,9 +6,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import com.mojang.blaze3d.vertex.VertexBuffer;
 
-import dev.compactmods.gander.render.geometry.BakedLevel;
+import dev.compactmods.gander.render.geometry.BakedLevelSection;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -22,18 +21,18 @@ import java.util.function.Function;
 
 public class BlockRenderer {
 
-	public static void renderSectionBlocks(BakedLevel bakedLevel, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
+	public static void renderSectionBlocks(BakedLevelSection section, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
                                            Vector3fc camera,
                                            Vector3fc renderOrigin,
                                            Matrix4f pProjectionMatrix) {
-		renderSectionLayer(bakedLevel.blockRenderBuffers(), renderTypeStore::redirectedBlockRenderType, renderType, poseStack, camera, renderOrigin, pProjectionMatrix);
+		renderSectionLayer(section.blockBuffers(), renderTypeStore::redirectedBlockRenderType, renderType, poseStack, camera, renderOrigin, pProjectionMatrix);
 	}
 
-	public static void renderSectionFluids(BakedLevel bakedLevel, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
+	public static void renderSectionFluids(BakedLevelSection section, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
                                            Vector3fc camera,
                                            Vector3fc renderOrigin,
                                            Matrix4f pProjectionMatrix) {
-		renderSectionLayer(bakedLevel.fluidRenderBuffers(), renderTypeStore::redirectedFluidRenderType, renderType, poseStack, camera, renderOrigin, pProjectionMatrix);
+		renderSectionLayer(section.fluidBuffers(), renderTypeStore::redirectedFluidRenderType, renderType, poseStack, camera, renderOrigin, pProjectionMatrix);
 	}
 
 	public static void renderSectionLayer(Map<RenderType, VertexBuffer> renderBuffers,
