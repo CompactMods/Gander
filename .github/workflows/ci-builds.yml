@@ -38,6 +38,8 @@ jobs:
                     search_commit_body: true
                     bump_each_commit: true
                     enable_prerelease_mode: true
+                    debug: true
+                    tag_prefix: v
 
     publish-core:
         name: Publish Core as Github Package - ${{ needs.vars.outputs.version }}
