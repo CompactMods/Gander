@@ -7,6 +7,8 @@ import java.util.function.Predicate;
 public interface IPipelinePhaseCollectionBuilder {
     IPipelinePhaseCollectionBuilder addSetupPhase(PipelineLifecyclePhase phase);
 
+    IPipelinePhaseCollectionBuilder addLazySetupPhase(LazyPipelineLifecyclePhase phase);
+
     IPipelinePhaseCollectionBuilder addGeometryUploadPhase(PipelineGeometryUploadPhase phase);
 
     IPipelinePhaseCollectionBuilder addGeometryUploadPhase(Predicate<RenderType> predicate, PipelineGeometryUploadPhase phase);

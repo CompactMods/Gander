@@ -8,6 +8,7 @@ import java.util.function.Predicate;
 
 public record PipelinePhaseCollection(
     Set<PipelineLifecyclePhase> setupPhases,
+    Set<LazyPipelineLifecyclePhase> lazySetupPhases,
     Set<PipelineLifecyclePhase> beforeGeometryPhases,
     Set<PipelineGeometryUploadPhase> geometryUploadPhases,
     Set<PipelineRenderPhase> renderPhases,
@@ -17,6 +18,7 @@ public record PipelinePhaseCollection(
     public static class Builder implements IPipelinePhaseCollectionBuilder {
 
         private final Set<PipelineLifecyclePhase> setupPhases = new LinkedHashSet<>();
+        private final Set<LazyPipelineLifecyclePhase> lazySetupPhases = new LinkedHashSet<>();
         private final Set<PipelineLifecyclePhase> cleanupPhases = new LinkedHashSet<>();
         private final Set<PipelineLifecyclePhase> beforeGeometryPhases = new LinkedHashSet<>();
         private final Set<PipelineGeometryUploadPhase> geometryPhases = new LinkedHashSet<>();
@@ -24,6 +26,12 @@ public record PipelinePhaseCollection(
 
         public Builder addSetupPhase(PipelineLifecyclePhase phase) {
             this.setupPhases.add(phase);
+            return this;
+        }
+
+        @Override
+        public IPipelinePhaseCollectionBuilder addLazySetupPhase(LazyPipelineLifecyclePhase phase) {
+            this.lazySetupPhases.add(phase);
             return this;
         }
 
@@ -60,7 +68,7 @@ public record PipelinePhaseCollection(
         }
 
         public PipelinePhaseCollection build() {
-            return new PipelinePhaseCollection(setupPhases, beforeGeometryPhases, geometryPhases, renderPhases, cleanupPhases);
+            return new PipelinePhaseCollection(setupPhases, lazySetupPhases, beforeGeometryPhases, geometryPhases, renderPhases, cleanupPhases);
         }
     }
 }

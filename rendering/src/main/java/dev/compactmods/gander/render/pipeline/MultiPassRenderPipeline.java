@@ -8,6 +8,6 @@ import net.minecraft.client.renderer.culling.Frustum;
 
 public interface MultiPassRenderPipeline extends RenderPipeline {
 
-    void renderPass(PipelineState state, RenderType renderType, GuiGraphics graphics, Frustum frustum, float partialTicks);
+    void renderPass(PipelineState state, RenderType renderType, GuiGraphics graphics);
 
 }

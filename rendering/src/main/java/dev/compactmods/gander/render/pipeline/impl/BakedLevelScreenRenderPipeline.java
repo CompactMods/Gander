@@ -20,8 +20,11 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.ShaderInstance;
 
 import net.minecraft.util.Mth;
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public class BakedLevelScreenRenderPipeline {
 
@@ -30,19 +33,57 @@ public class BakedLevelScreenRenderPipeline {
     static {
         var builder = new RenderPipelineBuilder();
         builder.phases()
+            .addSetupPhase(GanderRenderToolkit::makeDeltaTracker)
             .addSetupPhase(GanderScreenToolkit::setupRenderTarget)
             .addSetupPhase(GanderScreenToolkit::setupTranslucencyChain)
             .addSetupPhase(BakedLevelScreenRenderPipeline::setup)
+            .addLazySetupPhase(BakedLevelScreenRenderPipeline::setupLevelRenderer)
 
             .addPreGeometryPhase(GanderScreenToolkit::switchToFabulous)
+            .addPreGeometryPhase(BakedLevelScreenRenderPipeline::setupCullFrustum)
             .addGeometryUploadPhase(GanderScreenPipelinePhases.STATIC_GEOMETRY_UPLOAD)
+            .addGeometryUploadPhase(BakedLevelScreenRenderPipeline::fireStaticLevelStageEvent)
             .addGeometryUploadPhase(GanderScreenPipelinePhases.BLOCK_ENTITIES_GEOMETRY_UPLOAD)
             .addGeometryUploadPhase(GanderScreenPipelinePhases.TRANSLUCENT_GEOMETRY_UPLOAD)
+            .addGeometryUploadPhase(BakedLevelScreenRenderPipeline::fireAfterTranslucentLevelStageEvent)
             .addRenderPhase(BakedLevelScreenRenderPipeline::render)
             .addCleanupPhase(GanderScreenToolkit::revertGraphicsMode)
             .addCleanupPhase(BakedLevelScreenRenderPipeline::teardown);
 
         INSTANCE = builder.singlePass();
+    }
+
+    private static boolean setupCullFrustum(PipelineState state) {
+        final var frustum = GanderScreenToolkit.makeCullFrustum(state);
+        state.set(GanderRenderToolkit.CULLING_FRUSTUM, frustum);
+        return true;
+    }
+
+    private static boolean setupLevelRenderer(Supplier<PipelineState> pipelineStateSupplier) {
+        final var state = pipelineStateSupplier.get();
+        final var levelRenderer = GanderScreenToolkit.makeLevelRenderer(pipelineStateSupplier);
+        state.set(GanderRenderToolkit.LEVEL_RENDERER, levelRenderer);
+        return true;
+    }
+
+    private static void fireStaticLevelStageEvent(PipelineState state, GuiGraphics graphics) {
+        final var event = GanderScreenToolkit
+            .makeRenderStageEvent(RenderLevelStageEvent.Stage.AFTER_SOLID_BLOCKS, state);
+
+        NeoForge.EVENT_BUS.post(event);
+    }
+
+    private static void fireAfterTranslucentLevelStageEvent(PipelineState state, GuiGraphics graphics) {
+//        try {
+            final var event = GanderScreenToolkit
+                .makeRenderStageEvent(RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS, state);
+
+            NeoForge.EVENT_BUS.post(event);
+//        }
+//
+//        catch(Exception e) {
+//            //
+//        }
     }
 
     private static boolean setup(PipelineState state) {
@@ -63,6 +104,8 @@ public class BakedLevelScreenRenderPipeline {
         }
 
         GanderScreenToolkit.backupProjectionMatrix(state);
+
+        state.set(GanderRenderToolkit.MODEL_VIEW_MATRIX, GanderScreenToolkit.getViewMatrix(camera));
 
         // Setup Render Target
         var mainTarget = mc.getMainRenderTarget();

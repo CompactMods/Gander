@@ -6,18 +6,18 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.culling.Frustum;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public record StagedMultipassRenderPipeline(PipelinePhaseCollection phaseCollection) implements MultiPassRenderPipeline {
 
     @Override
-    public void renderPass(PipelineState state, RenderType renderType, GuiGraphics graphics,
-                           Frustum frustum, float partialTicks) {
+    public void renderPass(PipelineState state, RenderType renderType, GuiGraphics graphics) {
         for (var preRenderPhase : phaseCollection.beforeGeometryPhases())
             preRenderPhase.run(state);
 
         for (var phase : phaseCollection.geometryUploadPhases()) {
             if(phase.shouldRun(renderType))
-                phase.upload(state, graphics, partialTicks);
+                phase.upload(state, graphics);
         }
 
         for (var phase : phaseCollection.renderPhases())
@@ -31,6 +31,10 @@ public record StagedMultipassRenderPipeline(PipelinePhaseCollection phaseCollect
     public PipelineState setup(Consumer<PipelineState> initializer) {
         final var state = new PipelineState();
         initializer.accept(state);
+
+        if (!PipelineHelper.runStandardPipelineSetup(phaseCollection, state))
+            throw new RuntimeException("Failed to setup pipeline");
+
         return state;
     }
 }

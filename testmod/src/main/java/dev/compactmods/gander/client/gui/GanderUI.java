@@ -23,7 +23,7 @@ public class GanderUI extends Screen {
     private SpatialRenderer activeRenderer;
     private Component sceneSource;
 
-    private boolean singlePanel = false;
+    private boolean singlePanel = true;
 
     GanderUI() {
         super(Component.empty());

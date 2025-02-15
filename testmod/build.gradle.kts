@@ -105,7 +105,8 @@ neoForge {
 //        }
         }
 
-        if(System.getenv("RENDERDOC_LIB") != null) {
+        if(properties.containsKey("renderdoc.lib")) {
+            var LIB = properties["renderdoc.lib"] as String;
             create("renderDoc") {
                 client()
                 gameDirectory.set(file("runs/client"))
@@ -114,10 +115,10 @@ neoForge {
                 programArguments.addAll("--width", "1920")
                 programArguments.addAll("--height", "1080")
 
-                systemProperty("neoforge.rendernurse.renderdoc.library", System.getenv("RENDERDOC_LIB"))
+                systemProperty("neoforge.rendernurse.renderdoc.library", LIB)
 
                 if(org.gradle.internal.os.OperatingSystem.current().isLinux) {
-                    environment("LD_PRELOAD", System.getenv("RENDERDOC_LIB"))
+                    environment("LD_PRELOAD", LIB)
                 } else {
                     // parses out the render nurse jar path and adds as `-javaagent:${path}`
                     jvmArguments.addAll(renderNurseCfg.incoming.files.elements.map { it.map { "-javaagent:${it.asFile.absolutePath}" } })

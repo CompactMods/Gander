@@ -136,7 +136,7 @@ public class GanderScreenCommand {
 
         final var nearbyPlayers = source.getLevel()
                 .getPlayers(player -> player.position()
-                    .closerThan(source.getPosition(), 5, 5));
+                    .closerThan(source.getPosition(), 15, 15));
 
         for(var nearby : nearbyPlayers) {
             PacketDistributor.sendToPlayer(nearby, new OpenGanderUiForStructureRequest(Component.literal("Nearby: " + distance + " blocks"), finalStructure));

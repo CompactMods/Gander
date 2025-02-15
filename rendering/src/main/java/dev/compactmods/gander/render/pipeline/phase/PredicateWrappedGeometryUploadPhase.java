@@ -16,7 +16,7 @@ public record PredicateWrappedGeometryUploadPhase(Predicate<RenderType> predicat
     }
 
     @Override
-    public void upload(PipelineState state, GuiGraphics graphics, float partialTicks) {
-        phase.upload(state, graphics, partialTicks);
+    public void upload(PipelineState state, GuiGraphics graphics) {
+        phase.upload(state, graphics);
     }
 }

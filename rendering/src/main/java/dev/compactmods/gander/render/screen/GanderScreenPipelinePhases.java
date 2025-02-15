@@ -21,7 +21,7 @@ public class GanderScreenPipelinePhases {
     public static final PipelineGeometryUploadPhase BLOCK_ENTITIES_GEOMETRY_UPLOAD = GanderScreenPipelinePhases::blockEntitiesPass;
     public static final PipelineGeometryUploadPhase TRANSLUCENT_GEOMETRY_UPLOAD = GanderScreenPipelinePhases::translucentPass;
 
-    private static void staticPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
+    private static void staticPass(PipelineState state, GuiGraphics graphics) {
         final var bakedLevel = state.get(GanderRenderToolkit.BAKED_LEVEL);
         final var chain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
         final var renderTypeStore = state.get(GanderRenderToolkit.RENDER_TYPE_STORE);
@@ -45,7 +45,7 @@ public class GanderScreenPipelinePhases {
         }
     }
 
-    private static void blockEntitiesPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
+    private static void blockEntitiesPass(PipelineState state, GuiGraphics graphics) {
         final var mc = Minecraft.getInstance();
         final var camera = state.get(GanderRenderToolkit.CAMERA);
         final var lookFrom = camera.getPosition().toVector3f();
@@ -69,7 +69,7 @@ public class GanderScreenPipelinePhases {
         BlockEntityRender.render(bakedLevel.originalLevel(), blockEntities, graphics.pose(), lookFrom, renderTypeStore, graphics.bufferSource(), partialTick);
     }
 
-    private static void translucentPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
+    private static void translucentPass(PipelineState state, GuiGraphics graphics) {
         final var chain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
         final var renderTypeStore = state.get(GanderRenderToolkit.RENDER_TYPE_STORE);
         final var renderOrigin = state.getOrDefault(GanderRenderToolkit.RENDER_ORIGIN, new Vector3f());

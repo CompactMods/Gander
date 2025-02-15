@@ -13,27 +13,19 @@ public record SingleEntrypointRenderPipeline(PipelinePhaseCollection phases)
         PipelineState state = new PipelineState();
         stateInitializer.accept(state);
 
-        boolean invalid = false;
-        for (var phase : phases.setupPhases()) {
-            if (!phase.run(state)) {
-                invalid = true;
-                break;
-            }
-        }
-
-        if (invalid)
+        if (!PipelineHelper.runStandardPipelineSetup(phases, state))
             throw new RuntimeException("Failed to setup pipeline");
 
         return state;
     }
 
     @Override
-    public void render(PipelineState state, GuiGraphics graphics, float partialTicks) {
+    public void render(PipelineState state, GuiGraphics graphics) {
         for (var preRenderPhase : phases.beforeGeometryPhases())
             preRenderPhase.run(state);
 
         for (var phase : phases.geometryUploadPhases())
-            phase.upload(state, graphics, partialTicks);
+            phase.upload(state, graphics);
 
         for (var phase : phases.renderPhases())
             phase.render(state, graphics);

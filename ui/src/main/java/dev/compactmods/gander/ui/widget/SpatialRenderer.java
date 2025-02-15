@@ -3,6 +3,7 @@ package dev.compactmods.gander.ui.widget;
 import dev.compactmods.gander.core.camera.SceneCamera;
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.pipeline.PipelineState;
+import dev.compactmods.gander.render.screen.GanderScreenToolkit;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import dev.compactmods.gander.render.pipeline.impl.BakedLevelScreenRenderPipeline;
 import dev.compactmods.gander.render.screen.GanderScreenRenderHelper;
@@ -69,7 +70,7 @@ public class SpatialRenderer implements Renderable {
 
             state.set(GanderRenderToolkit.PROJECTION_MATRIX, projMatrix);
 
-            BakedLevelScreenRenderPipeline.INSTANCE.render(state, graphics, partialTicks);
+            BakedLevelScreenRenderPipeline.INSTANCE.render(state, graphics);
 
             poseStack.popPose();
         });

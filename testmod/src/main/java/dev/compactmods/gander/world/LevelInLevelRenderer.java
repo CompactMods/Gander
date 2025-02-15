@@ -60,14 +60,13 @@ public record LevelInLevelRenderer(UUID id, PipelineState state) {
         final var graphics = new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().renderBuffers().bufferSource());
 
         final var renderTypeForStage = RenderTypes.GEOMETRY_STAGES.get(evt.getStage());
-        final var partialTick = evt.getPartialTick().getGameTimeDeltaPartialTick(true);
 
         if (renderTypeForStage != null) {
             state.set(GanderRenderToolkit.PROJECTION_MATRIX, evt.getProjectionMatrix());
             state.set(GanderRenderToolkit.MODEL_VIEW_MATRIX, evt.getModelViewMatrix());
+            state.set(GanderRenderToolkit.CULLING_FRUSTUM, evt.getFrustum());
 
-            BakedLevelOverlayPipeline.INSTANCE.renderPass(state, renderTypeForStage, graphics,
-                evt.getFrustum(), partialTick);
+            BakedLevelOverlayPipeline.INSTANCE.renderPass(state, renderTypeForStage, graphics);
         }
     }
 

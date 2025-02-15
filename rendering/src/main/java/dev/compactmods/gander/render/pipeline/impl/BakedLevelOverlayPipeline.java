@@ -30,9 +30,11 @@ public final class BakedLevelOverlayPipeline {
     private static final Set<RenderType> STATIC_GEOMETRY = Set.of(RenderType.solid(), RenderType.cutoutMipped(), RenderType.cutout());
 
     public static MultiPassRenderPipeline INSTANCE;
+
     static {
         var builder = new RenderPipelineBuilder();
         builder.phases()
+            .addSetupPhase(GanderRenderToolkit::makeDeltaTracker)
             .addGeometryUploadPhase(STATIC_GEOMETRY::contains, BakedLevelOverlayPipeline::staticGeometryPass)
             .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::blockEntitiesPass)
             .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::translucentGeometryPass);
@@ -40,7 +42,10 @@ public final class BakedLevelOverlayPipeline {
         INSTANCE = builder.stagedMultiPass();
     }
 
-    private static void staticGeometryPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
+    private static void staticGeometryPass(PipelineState state, GuiGraphics graphics) {
+        final var deltaTracker = state.get(GanderRenderToolkit.DELTA_TRACKER);
+        final var partialTicks = deltaTracker.getGameTimeDeltaPartialTick(true);
+
         var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
         final var camera = state.get(GanderRenderToolkit.CAMERA);
 
@@ -55,7 +60,7 @@ public final class BakedLevelOverlayPipeline {
         poseStack.mulPose(modelViewMatrix);
 
         for (RenderType renderType : STATIC_GEOMETRY) {
-            for(var section : bakedLevel.sections().values()) {
+            for (var section : bakedLevel.sections().values()) {
                 BlockRenderer.renderSectionLayer(
                     section.blockBuffers(),
                     Function.identity(),
@@ -88,12 +93,14 @@ public final class BakedLevelOverlayPipeline {
         );
     }
 
-    public static void blockEntitiesPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
-
+    public static void blockEntitiesPass(PipelineState state, GuiGraphics graphics) {
         final var camera = state.get(GanderRenderToolkit.CAMERA);
         final var camPos = camera.getPosition().toVector3f();
         final var bakedLevel = state.get(GanderRenderToolkit.BAKED_LEVEL);
         final var blockEntities = state.get(GanderRenderToolkit.BLOCK_ENTITY_POSITIONS);
+
+        final var deltaTracker = state.get(GanderRenderToolkit.DELTA_TRACKER);
+        final var partialTicks = deltaTracker.getGameTimeDeltaPartialTick(true);
 
         var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
 
@@ -119,7 +126,7 @@ public final class BakedLevelOverlayPipeline {
     }
 
     private static void renderSingleBlockEntity(float partialTick, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
-                                         BlockEntity blockEnt, BlockEntityRenderDispatcher blockEntityRenderDispatcher) {
+                                                BlockEntity blockEnt, BlockEntityRenderDispatcher blockEntityRenderDispatcher) {
         poseStack.pushPose();
         final var offset = Vec3.atLowerCornerOf(blockEnt.getBlockPos());
         poseStack.translate(offset.x, offset.y, offset.z);
@@ -127,8 +134,11 @@ public final class BakedLevelOverlayPipeline {
         poseStack.popPose();
     }
 
-    public static void translucentGeometryPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
+    public static void translucentGeometryPass(PipelineState state, GuiGraphics graphics) {
         final var camera = state.get(GanderRenderToolkit.CAMERA);
+        final var deltaTracker = state.get(GanderRenderToolkit.DELTA_TRACKER);
+        final var partialTicks = deltaTracker.getGameTimeDeltaPartialTick(true);
+
         var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
         final var camPos = camera.getPosition().toVector3f();
         final var bakedLevel = state.get(GanderRenderToolkit.BAKED_LEVEL);
