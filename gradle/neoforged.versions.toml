@@ -1,7 +1,7 @@
 [versions]
-neoforge = "21.1.79"
+neoforge = "21.5.67-beta"
 mdg = "2.0.42-beta"
-neoforgeRange = { require = "[21.1.79,)", prefer = "21.1.79" }
+neoforgeRange = { require = "[21.1.67-beta,)", prefer = "21.1.67-beta" }
 
 [libraries.testframework]
 module = "net.neoforged:testframework"
