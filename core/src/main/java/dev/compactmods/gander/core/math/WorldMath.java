@@ -26,8 +26,8 @@ public class WorldMath {
     }
 
     public static AABB chunkAABB(Level level, ChunkPos chunkPos) {
-        var minBlock = new BlockPos(chunkPos.getMinBlockX(), level.getMinBuildHeight(), chunkPos.getMinBlockZ());
-        var maxBlock = new BlockPos(chunkPos.getMaxBlockX(), level.getMaxBuildHeight(), chunkPos.getMaxBlockZ());
+        var minBlock = new BlockPos(chunkPos.getMinBlockX(), level.getMinY(), chunkPos.getMinBlockZ());
+        var maxBlock = new BlockPos(chunkPos.getMaxBlockX(), level.getMaxY(), chunkPos.getMaxBlockZ());
         return AABB.encapsulatingFullBlocks(minBlock, maxBlock);
     }
 
@@ -53,7 +53,7 @@ public class WorldMath {
         final var maxChunk = WorldMath.maxCornerChunk(area);
         return ChunkPos.rangeClosed(minChunk, maxChunk)
             .mapMulti((ChunkPos cp, Consumer<SectionPos> nums) -> {
-                for (int y = level.getMinSection(); y <= level.getMaxSection(); ++y)
+                for (int y = level.getMinSectionY(); y <= level.getMaxSectionY(); ++y)
                     nums.accept(SectionPos.of(cp, y));
             });
     }
