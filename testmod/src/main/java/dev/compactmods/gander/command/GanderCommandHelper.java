@@ -142,13 +142,13 @@ public class GanderCommandHelper {
         var registryAccess = source.registryAccess();
         var level = new VirtualLevel(registryAccess, false) {
             @Override
-            public int getMinBuildHeight() {
+            public int getMinY() {
                 return this.dimensionType().minY();
             }
 
             @Override
-            public int getMaxBuildHeight() {
-                return this.getMinBuildHeight() + this.getHeight();
+            public int getMaxY() {
+                return this.getMinY() + this.getHeight();
             }
         };
 

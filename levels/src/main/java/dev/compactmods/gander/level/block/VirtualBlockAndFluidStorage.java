@@ -69,7 +69,7 @@ public class VirtualBlockAndFluidStorage {
 
         var longPos = pos.asLong();
         // notify old block of removal
-        oldBlockState.onRemove(owningLevel, pos, state, false);
+        // TODO Port 21.5: Possible side effect from oldBlockState.onRemove(owningLevel, pos, state, false);
 
         // store new block state (remove if air)
         if(state.isAir())

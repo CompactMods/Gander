@@ -1,16 +1,12 @@
 package dev.compactmods.gander.level.chunk;
 
-import static net.minecraft.world.level.chunk.ProtoChunk.packOffsetCoordinates;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
-
-import javax.annotation.Nullable;
-
+import java.util.function.Predicate;
 import dev.compactmods.gander.level.VirtualLevel;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.longs.LongSets;
@@ -34,6 +30,10 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.TickContainerAccess;
 
+import org.jetbrains.annotations.Nullable;
+
+import static net.minecraft.world.level.chunk.ProtoChunk.packOffsetCoordinates;
+
 public class VirtualChunk extends EmptyLevelChunk {
 
 	private final VirtualLevel virtualLevel;
@@ -56,14 +56,13 @@ public class VirtualChunk extends EmptyLevelChunk {
 		this.needsLight = true;
 	}
 
-	@Override
-	@Nullable
-	public BlockState setBlockState(BlockPos pos, BlockState state, boolean isMoving) {
-		if (virtualLevel.setBlockAndUpdate(pos, state))
-			return state;
+    @Override
+    public @Nullable BlockState setBlockState(BlockPos pos, BlockState state, int flags) {
+        if (virtualLevel.setBlockAndUpdate(pos, state))
+            return state;
 
-		return virtualLevel.getBlockState(pos);
-	}
+        return virtualLevel.getBlockState(pos);
+    }
 
 	@Override
 	public void markPosForPostprocessing(BlockPos pPos) {
@@ -75,10 +74,6 @@ public class VirtualChunk extends EmptyLevelChunk {
 	@Override
 	public void setBlockEntity(BlockEntity blockEntity) {
 		virtualLevel.setBlockEntity(blockEntity);
-	}
-
-	@Override
-	public void addEntity(Entity entity) {
 	}
 
 	@Override
@@ -135,28 +130,6 @@ public class VirtualChunk extends EmptyLevelChunk {
 	}
 
 	@Override
-	public void addReferenceForStructure(Structure structure, long reference) {
-	}
-
-	@Override
-	public Map<Structure, LongSet> getAllReferences() {
-		return Collections.emptyMap();
-	}
-
-	@Override
-	public void setAllReferences(Map<Structure, LongSet> structureReferencesMap) {
-	}
-
-	@Override
-	public void setUnsaved(boolean unsaved) {
-	}
-
-	@Override
-	public boolean isUnsaved() {
-		return false;
-	}
-
-	@Override
 	public void removeBlockEntity(BlockPos pos) {
 		virtualLevel.removeBlockEntity(pos);
 	}
@@ -178,16 +151,14 @@ public class VirtualChunk extends EmptyLevelChunk {
 		return null;
 	}
 
-	@Override
-	@Deprecated(forRemoval = true)
-	@SuppressWarnings("removal") // The superclass has logic we don't desire here
-	public void findBlocks(BiPredicate<BlockState, BlockPos> predicate, BiConsumer<BlockPos, BlockState> consumer) {
-		BlockPos.betweenClosedStream(
-			chunkPos.getMinBlockX(), virtualLevel.getMinBuildHeight(), chunkPos.getMinBlockZ(),
-			chunkPos.getMaxBlockX(), virtualLevel.getMaxBuildHeight(), chunkPos.getMaxBlockZ())
-			.filter(pos -> predicate.test(getBlockState(pos), pos))
-			.forEach(pos -> consumer.accept(pos, getBlockState(pos)));
-	}
+    @Override
+    public void findBlocks(Predicate<BlockState> p_285343_, BiPredicate<BlockState, BlockPos> predicate, BiConsumer<BlockPos, BlockState> consumer) {
+        BlockPos.betweenClosedStream(
+                chunkPos.getMinBlockX(), virtualLevel.getMinY(), chunkPos.getMinBlockZ(),
+                chunkPos.getMaxBlockX(), virtualLevel.getMaxY(), chunkPos.getMaxBlockZ())
+            .filter(pos -> predicate.test(getBlockState(pos), pos))
+            .forEach(pos -> consumer.accept(pos, getBlockState(pos)));
+    }
 
 	@Override
 	public TickContainerAccess<Block> getBlockTicks() {
@@ -197,11 +168,6 @@ public class VirtualChunk extends EmptyLevelChunk {
 	@Override
 	public TickContainerAccess<Fluid> getFluidTicks() {
 		return BlackholeTickAccess.emptyContainer();
-	}
-
-	@Override
-	public TicksToSave getTicksForSerialization() {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override

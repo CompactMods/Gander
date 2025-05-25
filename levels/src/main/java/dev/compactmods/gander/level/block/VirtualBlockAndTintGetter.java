@@ -27,8 +27,8 @@ public class VirtualBlockAndTintGetter extends VirtualBlockGetter implements Blo
 		super(heightAccessor, blockAndFluidStorage);
 		this.lightEngine = lightEngine;
 		this.PLAINS = Minecraft.getInstance().level.registryAccess()
-				.registryOrThrow(Registries.BIOME)
-				.get(Biomes.PLAINS);
+				.getOrThrow(Biomes.PLAINS)
+                .value();
 	}
 
 	@Override

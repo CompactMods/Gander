@@ -1,13 +1,21 @@
 package dev.compactmods.gander.level;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.item.crafting.RecipeAccess;
+import net.minecraft.world.level.ExplosionDamageCalculator;
+import net.minecraft.world.level.block.entity.FuelValues;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.client.model.data.ModelDataManager;
+
+import net.neoforged.neoforge.entity.PartEntity;
+import net.neoforged.neoforge.model.data.ModelData;
+import net.neoforged.neoforge.model.data.ModelDataManager;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -81,16 +89,16 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	public VirtualLevel(RegistryAccess access, boolean isClientside, Consumer<VirtualLevel> onBlockUpdate) {
 		this(
 				VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
-				access.registryOrThrow(Registries.DIMENSION_TYPE).getHolderOrThrow(BuiltinDimensionTypes.OVERWORLD),
-				VirtualLevelUtils.PROFILER, isClientside, false,
+				access.holderOrThrow(BuiltinDimensionTypes.OVERWORLD),
+				isClientside, false,
 				0, 0, onBlockUpdate);
 	}
 
 	private VirtualLevel(WritableLevelData pLevelData, ResourceKey<Level> pDimension,
                          RegistryAccess pRegistryAccess, Holder<DimensionType> pDimensionTypeRegistration,
-                         Supplier<ProfilerFiller> pProfiler, boolean pIsClientSide, boolean pIsDebug, long pBiomeZoomSeed,
+                         boolean pIsClientSide, boolean pIsDebug, long pBiomeZoomSeed,
                          int pMaxChainedNeighborUpdates, Consumer<VirtualLevel> onBlockUpdate) {
-		super(pLevelData, pDimension, pRegistryAccess, pDimensionTypeRegistration, pProfiler, pIsClientSide, pIsDebug,
+		super(pLevelData, pDimension, pRegistryAccess, pDimensionTypeRegistration, pIsClientSide, pIsDebug,
 				pBiomeZoomSeed, pMaxChainedNeighborUpdates);
 		this.access = pRegistryAccess;
         this.onBlockUpdate = onBlockUpdate;
@@ -99,7 +107,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		this.scoreboard = new Scoreboard();
 		this.bounds = AABB.INFINITE;
 		this.entities = new VirtualEntitySystem();
-		this.biome = pRegistryAccess.registryOrThrow(Registries.BIOME).getHolderOrThrow(Biomes.PLAINS);
+		this.biome = pRegistryAccess.holderOrThrow(Biomes.PLAINS);
         this.modelDataManager = new ModelDataManager(this);
 	}
 
@@ -124,6 +132,11 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	}
 
     @Override
+    public FuelValues fuelValues() {
+        return null;
+    }
+
+    @Override
     public void setDayTimeFraction(float v) {
 
     }
@@ -143,17 +156,17 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
     }
 
-    @Override
-	public MapId getFreeMapId() {
-		return new MapId(0);
-	}
-
 	@Override
 	public ChunkSource getChunkSource() {
 		return chunkSource;
 	}
 
-	public VirtualBlockSystem blockSystem() {
+    @Override
+    public void levelEvent(@Nullable Entity entity, int i, BlockPos blockPos, int i1) {
+
+    }
+
+    public VirtualBlockSystem blockSystem() {
 		return this.blocks;
 	}
 
@@ -211,7 +224,17 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		return blocks.blockAndFluidStorage().getFluidState(pos);
 	}
 
-	public void animateTick() {
+    @Override
+    public void playSeededSound(@Nullable Entity entity, double v, double v1, double v2, Holder<SoundEvent> holder, SoundSource soundSource, float v3, float v4, long l) {
+
+    }
+
+    @Override
+    public void playSeededSound(@Nullable Entity entity, Entity entity1, Holder<SoundEvent> holder, SoundSource soundSource, float v, float v1, long l) {
+
+    }
+
+    public void animateTick() {
 		animateBlockTick(WorldMath.randomPosInAABB(random, bounds));
 	}
 
@@ -256,15 +279,16 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		}
 	}
 
-	private <T extends BlockEntity> void tickBlockEntity(T blockEntity, BlockEntityTicker<T> ticker) {
+    @Override
+    public void explode(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionDamageCalculator explosionDamageCalculator, double v, double v1, double v2, float v3, boolean b, ExplosionInteraction explosionInteraction, ParticleOptions particleOptions, ParticleOptions particleOptions1, Holder<SoundEvent> holder) {
+
+    }
+
+    private <T extends BlockEntity> void tickBlockEntity(T blockEntity, BlockEntityTicker<T> ticker) {
 		ticker.tick(this, blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity);
 	}
 
-	@Override
-	public void levelEvent(Player pPlayer, int pType, BlockPos pPos, int pData) {
-	}
-
-	@Override
+    @Override
 	public void gameEvent(Entity pEntity, Holder<GameEvent> pEvent, BlockPos pPos) {
 	}
 
@@ -287,7 +311,12 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		return biome;
 	}
 
-	@Override
+    @Override
+    public int getSeaLevel() {
+        return 0;
+    }
+
+    @Override
 	public float getShade(Direction pDirection, boolean pShade) {
 		return 1f;
 	}
@@ -295,26 +324,6 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	@Override
 	public void sendBlockUpdated(BlockPos pPos, BlockState pOldState, BlockState pNewState, int pFlags) {
         this.onBlockUpdate.accept(this);
-	}
-
-	@Override
-	public void playSound(Player pPlayer, double pX, double pY, double pZ, SoundEvent pSound,
-						  SoundSource pCategory, float pVolume, float pPitch) {
-	}
-
-	@Override
-	public void playSound(Player pPlayer, Entity pEntity, SoundEvent pEvent, SoundSource pCategory,
-						  float pVolume, float pPitch) {
-	}
-
-	@Override
-	public void playSeededSound(Player p_220363_, double p_220364_, double p_220365_, double p_220366_,
-								SoundEvent p_220367_, SoundSource p_220368_, float p_220369_, float p_220370_, long p_220371_) {
-	}
-
-	@Override
-	public void playSeededSound(Player p_220372_, Entity p_220373_, Holder<SoundEvent> p_220374_, SoundSource p_220375_,
-								float p_220376_, float p_220377_, long p_220378_) {
 	}
 
 	@Override
@@ -327,7 +336,12 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		return entities.getEntity(pId);
 	}
 
-	@Override
+    @Override
+    public Collection<PartEntity<?>> dragonParts() {
+        return List.of();
+    }
+
+    @Override
 	public TickRateManager tickRateManager() {
 		return tickManager;
 	}
@@ -335,10 +349,6 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	@Override
 	public MapItemSavedData getMapData(MapId pMapName) {
 		return null;
-	}
-
-	@Override
-	public void setMapData(MapId pMapId, MapItemSavedData pData) {
 	}
 
 	@Override
@@ -350,10 +360,10 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		return scoreboard;
 	}
 
-	@Override
-	public RecipeManager getRecipeManager() {
-		return null;
-	}
+    @Override
+    public RecipeAccess recipeAccess() {
+        return null;
+    }
 
 	@Override
 	protected LevelEntityGetter<Entity> getEntities() {
@@ -373,11 +383,6 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	@Override
 	public FeatureFlagSet enabledFeatures() {
 		return FeatureFlags.REGISTRY.allFlags();
-	}
-
-	@Override
-	public void playSeededSound(Player pPlayer, double pX, double pY, double pZ, Holder<SoundEvent> pSound,
-								SoundSource pSource, float pVolume, float pPitch, long pSeed) {
 	}
 
 	@Override
@@ -404,21 +409,6 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	public long getSeed() {
 		return 0;
 	}
-
-	@Override
-	public void blockUpdated(BlockPos pPos, Block pBlock) {
-		super.blockUpdated(pPos, pBlock);
-	}
-
-    @Override
-    public int getMaxBuildHeight() {
-        return Mth.ceil(bounds.maxY) + 1;
-    }
-
-    @Override
-    public int getMinBuildHeight() {
-        return Mth.floor(bounds.minY);
-    }
 
     public AABB getBounds() {
         return bounds;

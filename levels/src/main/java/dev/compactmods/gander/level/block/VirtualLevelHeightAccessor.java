@@ -9,8 +9,8 @@ public class VirtualLevelHeightAccessor implements LevelHeightAccessor {
 		return 255;
 	}
 
-	@Override
-	public int getMinBuildHeight() {
-		return 0;
-	}
+    @Override
+    public int getMinY() {
+        return 0;
+    }
 }

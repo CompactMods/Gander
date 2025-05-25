@@ -17,7 +17,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
-import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
@@ -28,27 +27,27 @@ public class VirtualChunkGenerator extends ChunkGenerator {
 		super(bs);
 	}
 
-	@Override
-	protected MapCodec<? extends ChunkGenerator> codec() {
-		return null;
-	}
+    @Override
+    protected MapCodec<? extends ChunkGenerator> codec() {
+        return null;
+    }
 
-	@Override
-	public void applyCarvers(WorldGenRegion pLevel, long pSeed, RandomState pRandom, BiomeManager pBiomeManager, StructureManager pStructureManager, ChunkAccess pChunk, GenerationStep.Carving pStep) {
+    @Override
+    public void applyCarvers(WorldGenRegion worldGenRegion, long l, RandomState randomState, BiomeManager biomeManager, StructureManager structureManager, ChunkAccess chunkAccess) {
 
-	}
+    }
 
-	@Override
-	public void buildSurface(WorldGenRegion pLevel, StructureManager pStructureManager, RandomState pRandom, ChunkAccess pChunk) {
+    @Override
+    public void buildSurface(WorldGenRegion worldGenRegion, StructureManager structureManager, RandomState randomState, ChunkAccess chunkAccess) {
 
-	}
+    }
 
-	@Override
-	public void spawnOriginalMobs(WorldGenRegion pLevel) {
+    @Override
+    public void spawnOriginalMobs(WorldGenRegion worldGenRegion) {
 
-	}
+    }
 
-	@Override
+    @Override
 	public int getGenDepth() {
 		return 384;
 	}
@@ -77,15 +76,15 @@ public class VirtualChunkGenerator extends ChunkGenerator {
 	@Override
 	public NoiseColumn getBaseColumn(int pX, int pZ, LevelHeightAccessor pHeight, RandomState pRandom) {
 		return new NoiseColumn(
-				pHeight.getMinBuildHeight(),
+				pHeight.getMinY(),
 				IntStream.range(0, pHeight.getHeight())
 						.mapToObj(i -> Blocks.AIR.defaultBlockState())
 						.toArray(BlockState[]::new)
 		);
 	}
 
-	@Override
-	public void addDebugScreenInfo(List<String> pInfo, RandomState pRandom, BlockPos pPos) {
+    @Override
+    public void addDebugScreenInfo(List<String> list, RandomState randomState, BlockPos blockPos) {
 
-	}
+    }
 }
