@@ -1,16 +1,23 @@
 package dev.compactmods.gander.command;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 
 import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.level.chunk.VirtualChunkGenerator;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.StructureManager;
@@ -35,6 +42,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public class GanderCommandHelper {
 
@@ -176,5 +184,29 @@ public class GanderCommandHelper {
         var structure = new StructureTemplate();
         structure.fillFromWorld(level, new BlockPos(bounds.minX(), bounds.minY(), bounds.minZ()), new Vec3i(bounds.maxX(), bounds.maxY(), bounds.maxZ()), false, Blocks.AIR);
         return structure;
+    }
+
+    static LiteralArgumentBuilder<CommandSourceStack> makeAreaCommand(Command<CommandSourceStack> func) {
+        return Commands.literal("area")
+            .then(Commands.argument("minCorner", BlockPosArgument.blockPos())
+                .then(Commands.argument("maxCorner", BlockPosArgument.blockPos())
+                    .executes(func)));
+    }
+
+    static AABB getAreaFromCommand(CommandContext<CommandSourceStack> ctx) {
+        final var minCorner = BlockPosArgument.getBlockPos(ctx, "minCorner");
+        final var maxCorner = BlockPosArgument.getBlockPos(ctx, "maxCorner");
+
+        return AABB.encapsulatingFullBlocks(minCorner, maxCorner);
+    }
+
+    static StructureTemplate makeAreaStructure(CommandSourceStack source, AABB area) {
+        StructureTemplate finalStructure = new StructureTemplate();
+        finalStructure.fillFromWorld(source.getLevel(),
+            BlockPos.containing(area.getMinPosition()),
+            new Vec3i(Mth.floor(area.getXsize()), Mth.floor(area.getYsize()), Mth.floor(area.getZsize())),
+            false, null);
+
+        return finalStructure;
     }
 }

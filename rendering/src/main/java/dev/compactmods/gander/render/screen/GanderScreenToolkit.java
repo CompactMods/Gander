@@ -119,17 +119,4 @@ public class GanderScreenToolkit {
             stateSupplier
         );
     }
-
-    public static RenderLevelStageEvent makeRenderStageEvent(RenderLevelStageEvent.Stage stage, PipelineState state) {
-        final var mc = Minecraft.getInstance();
-        final var levelRenderer = state.get(GanderRenderToolkit.LEVEL_RENDERER);
-        final var poseStack = new PoseStack();
-        final var camera = state.get(GanderRenderToolkit.CAMERA);
-        final var projMatrix = state.get(GanderRenderToolkit.PROJECTION_MATRIX);
-        final var viewMatrix = state.get(GanderRenderToolkit.MODEL_VIEW_MATRIX);
-        final var frustum = state.get(GanderRenderToolkit.CULLING_FRUSTUM);
-
-        return new RenderLevelStageEvent(stage, levelRenderer, poseStack, viewMatrix, projMatrix,
-            levelRenderer.getTicks(), mc.getTimer(), camera, frustum);
-    }
 }

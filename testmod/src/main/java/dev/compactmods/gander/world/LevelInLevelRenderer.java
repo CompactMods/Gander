@@ -6,6 +6,7 @@ import dev.compactmods.gander.core.camera.SceneCamera;
 import dev.compactmods.gander.level.TickingLevel;
 
 import dev.compactmods.gander.render.RenderTypes;
+import dev.compactmods.gander.render.event.GanderRenderLevelStageEvent;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.pipeline.impl.BakedLevelOverlayPipeline;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
@@ -57,17 +58,10 @@ public record LevelInLevelRenderer(UUID id, PipelineState state) {
     }
 
     public void onRenderStage(RenderLevelStageEvent evt) {
-        final var graphics = new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().renderBuffers().bufferSource());
+        // Do not recursively handle our event
+        if(evt instanceof GanderRenderLevelStageEvent) return;
 
-        final var renderTypeForStage = RenderTypes.GEOMETRY_STAGES.get(evt.getStage());
-
-        if (renderTypeForStage != null) {
-            state.set(GanderRenderToolkit.PROJECTION_MATRIX, evt.getProjectionMatrix());
-            state.set(GanderRenderToolkit.MODEL_VIEW_MATRIX, evt.getModelViewMatrix());
-            state.set(GanderRenderToolkit.CULLING_FRUSTUM, evt.getFrustum());
-
-            BakedLevelOverlayPipeline.INSTANCE.renderPass(state, renderTypeForStage, graphics);
-        }
+        BakedLevelOverlayPipeline.INSTANCE.handleStageEvent(evt, state);
     }
 
     public void onClientTick(ClientTickEvent.Post event) {

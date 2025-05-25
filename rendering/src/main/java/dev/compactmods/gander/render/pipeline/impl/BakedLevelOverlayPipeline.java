@@ -2,9 +2,13 @@ package dev.compactmods.gander.render.pipeline.impl;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import dev.compactmods.gander.render.RenderTypes;
+import dev.compactmods.gander.render.event.GanderRenderLevelStageEvent;
 import dev.compactmods.gander.render.pipeline.MultiPassRenderPipeline;
+import dev.compactmods.gander.render.pipeline.PipelineHelper;
 import dev.compactmods.gander.render.pipeline.PipelineState;
-import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
+import dev.compactmods.gander.render.pipeline.StageAwareRenderPipeline;
+import dev.compactmods.gander.render.pipeline.phase.PipelinePhaseCollection;
 import dev.compactmods.gander.render.toolkit.BlockRenderer;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import net.minecraft.client.Minecraft;
@@ -16,30 +20,85 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 
+import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+
+import net.neoforged.neoforge.common.NeoForge;
+
 import org.joml.Vector3f;
 
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public final class BakedLevelOverlayPipeline {
+public record BakedLevelOverlayPipeline(PipelinePhaseCollection phaseCollection) implements StageAwareRenderPipeline, MultiPassRenderPipeline {
 
     private static final Predicate<RenderType> IS_TRANSLUCENT = renderType -> renderType == RenderType.TRANSLUCENT;
     private static final Set<RenderType> STATIC_GEOMETRY = Set.of(RenderType.solid(), RenderType.cutoutMipped(), RenderType.cutout());
 
-    public static MultiPassRenderPipeline INSTANCE;
+    public static BakedLevelOverlayPipeline INSTANCE;
 
     static {
-        var builder = new RenderPipelineBuilder();
-        builder.phases()
+        final var phases = new PipelinePhaseCollection.Builder()
             .addSetupPhase(GanderRenderToolkit::makeDeltaTracker)
             .addGeometryUploadPhase(STATIC_GEOMETRY::contains, BakedLevelOverlayPipeline::staticGeometryPass)
             .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::blockEntitiesPass)
-            .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::translucentGeometryPass);
+            .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::translucentGeometryPass)
+            .build();
 
-        INSTANCE = builder.stagedMultiPass();
+        INSTANCE = new BakedLevelOverlayPipeline(phases);
+    }
+
+    @Override
+    public void renderPass(PipelineState state, RenderType renderType, GuiGraphics graphics) {
+        for (var preRenderPhase : phaseCollection.beforeGeometryPhases())
+            preRenderPhase.run(state);
+
+        for (var phase : phaseCollection.geometryUploadPhases()) {
+            if(phase.shouldRun(renderType))
+                phase.upload(state, graphics);
+        }
+
+        for (var phase : phaseCollection.renderPhases())
+            phase.render(state, graphics);
+
+        for (var phase : phaseCollection.cleanupPhases())
+            phase.run(state);
+    }
+
+    @Override
+    public PipelineState setup(Consumer<PipelineState> initializer) {
+        final var state = new PipelineState();
+        initializer.accept(state);
+
+        if (!PipelineHelper.runStandardPipelineSetup(phaseCollection, state))
+            throw new RuntimeException("Failed to setup pipeline");
+
+        return state;
+    }
+
+    @Override
+    public void handleStageEvent(RenderLevelStageEvent event, PipelineState state) {
+        final var graphics = new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().renderBuffers().bufferSource());
+
+        final var stage = event.getStage();
+        final var renderTypeForStage = RenderTypes.GEOMETRY_STAGES.get(stage);
+
+        state.set(GanderRenderToolkit.CAMERA, event.getCamera());
+        state.set(GanderRenderToolkit.LEVEL_RENDERER, event.getLevelRenderer());
+        state.set(GanderRenderToolkit.POSE_STACK, event.getPoseStack());
+        state.set(GanderRenderToolkit.PROJECTION_MATRIX, event.getProjectionMatrix());
+        state.set(GanderRenderToolkit.MODEL_VIEW_MATRIX, event.getModelViewMatrix());
+        state.set(GanderRenderToolkit.CULLING_FRUSTUM, event.getFrustum());
+
+        if (renderTypeForStage != null) {
+            renderPass(state, renderTypeForStage, graphics);
+        }
+
+        var evt = GanderRenderLevelStageEvent.make(stage, state);
+        NeoForge.EVENT_BUS.post(evt);
     }
 
     private static void staticGeometryPass(PipelineState state, GuiGraphics graphics) {

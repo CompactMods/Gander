@@ -8,6 +8,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import dev.compactmods.gander.CommonEvents;
 import dev.compactmods.gander.GanderTestMod;
+import dev.compactmods.gander.network.OpenGanderUiForStructureRequest;
 import dev.compactmods.gander.network.RenderInWorldForDeferredStructureRequest;
 import dev.compactmods.gander.network.RenderInWorldForStructureRequest;
 import net.minecraft.commands.CommandBuildContext;
@@ -17,6 +18,7 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceKeyArgument;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -24,6 +26,7 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -53,14 +56,17 @@ public class GanderInWorldCommand {
         var debug = Commands.literal("debug")
             .executes(GanderInWorldCommand::generateDebug);
 
+        var area = GanderCommandHelper.makeAreaCommand(GanderInWorldCommand::areaRenderer);
+
         var clearInWorld = Commands.literal("clear")
                 .executes(GanderInWorldCommand::clearInWorldRenderers);
 
         var inWorldRoot = Commands.literal("world")
-            .then(scene)
-            .then(structure)
+            .then(area)
+            .then(clearInWorld)
             .then(debug)
-            .then(clearInWorld);
+            .then(scene)
+            .then(structure);
 
         root.then(inWorldRoot);
     }
@@ -125,6 +131,24 @@ public class GanderInWorldCommand {
         final var renderLocation = Vec3.atLowerCornerOf(player.blockPosition().below()).toVector3f();
 
         PacketDistributor.sendToPlayer(player, new RenderInWorldForStructureRequest(Component.literal("Generated: minecraft:debug"), structure, renderLocation));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static int areaRenderer(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        final var source = ctx.getSource();
+        final var player = source.getPlayerOrException();
+
+        if (player instanceof FakePlayer)
+            return -1;
+
+        final var area = GanderCommandHelper.getAreaFromCommand(ctx);
+
+        final var finalStructure = GanderCommandHelper.makeAreaStructure(source, area);
+
+        final var renderLocation = Vec3.atLowerCornerOf(player.blockPosition().below()).toVector3f();
+
+        PacketDistributor.sendToPlayer(player, new RenderInWorldForStructureRequest(Component.literal("Area Render"), finalStructure, renderLocation));
+
         return Command.SINGLE_SUCCESS;
     }
 }

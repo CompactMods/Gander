@@ -12,6 +12,7 @@ public class GanderCommand {
         final var root = Commands.literal("gander")
             .requires(cs -> cs.hasPermission(Commands.LEVEL_ALL));
 
+        GanderTestCommand.addTestSubtree(buildContext, root);
         GanderInWorldCommand.addInWorldSubtree(buildContext, root);
         GanderScreenCommand.addScreenSubtree(buildContext, root);
         return root;

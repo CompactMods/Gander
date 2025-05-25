@@ -1,13 +1,21 @@
 package dev.compactmods.gander.core.math;
 
+import com.google.common.collect.AbstractIterator;
+
+import com.google.common.collect.Iterators;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -56,5 +64,26 @@ public class WorldMath {
                 for (int y = level.getMinSection(); y <= level.getMaxSection(); ++y)
                     nums.accept(SectionPos.of(cp, y));
             });
+    }
+
+    public static Stream<BlockPos> blockPosRing(BlockPos center, int radius) {
+        if (radius == 0)
+            return Stream.of(center);
+
+        int y = center.getY();
+        int width = (radius * 2) + 1;
+        BlockPos offset = center.mutable()
+            .setY(0)
+            .offset(-radius, 0, -radius)
+            .immutable();
+
+        final var builder = Stream.<BlockPos>builder();
+        for (int x = 0; x < width; x++)
+            for (int z = 0; z < width; z++) {
+                if (x == 0 || x == width - 1 || z == 0 || z == width - 1) {
+                    builder.add(new BlockPos(x, y, z).offset(offset));
+                }
+            }
+        return builder.build();
     }
 }

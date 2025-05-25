@@ -133,7 +133,7 @@ public class GanderLevelRenderer extends LevelRenderer {
 
     @Override
     public double getLastViewDistance() {
-        return 0;
+        return 32;
     }
 
     @Override

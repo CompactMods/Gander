@@ -30,7 +30,7 @@ public record PipelinePhaseCollection(
         }
 
         @Override
-        public IPipelinePhaseCollectionBuilder addLazySetupPhase(LazyPipelineLifecyclePhase phase) {
+        public Builder addLazySetupPhase(LazyPipelineLifecyclePhase phase) {
             this.lazySetupPhases.add(phase);
             return this;
         }
@@ -41,7 +41,7 @@ public record PipelinePhaseCollection(
         }
 
         @Override
-        public IPipelinePhaseCollectionBuilder addGeometryUploadPhase(Predicate<RenderType> predicate, PipelineGeometryUploadPhase phase) {
+        public Builder addGeometryUploadPhase(Predicate<RenderType> predicate, PipelineGeometryUploadPhase phase) {
             this.geometryPhases.add(new PredicateWrappedGeometryUploadPhase(predicate, phase));
             return this;
         }

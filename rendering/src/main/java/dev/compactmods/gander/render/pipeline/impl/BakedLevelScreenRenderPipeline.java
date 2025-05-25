@@ -8,9 +8,11 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
 
+import dev.compactmods.gander.render.event.GanderRenderLevelStageEvent;
+import dev.compactmods.gander.render.pipeline.PipelineHelper;
 import dev.compactmods.gander.render.pipeline.PipelineState;
-import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
 import dev.compactmods.gander.render.pipeline.SinglePassRenderPipeline;
+import dev.compactmods.gander.render.pipeline.phase.PipelinePhaseCollection;
 import dev.compactmods.gander.render.screen.GanderScreenPipelinePhases;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import dev.compactmods.gander.render.screen.GanderScreenToolkit;
@@ -24,15 +26,15 @@ import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class BakedLevelScreenRenderPipeline {
+public record BakedLevelScreenRenderPipeline(PipelinePhaseCollection phases) implements SinglePassRenderPipeline {
 
     public static SinglePassRenderPipeline INSTANCE;
 
     static {
-        var builder = new RenderPipelineBuilder();
-        builder.phases()
+        final var phases = new PipelinePhaseCollection.Builder()
             .addSetupPhase(GanderRenderToolkit::makeDeltaTracker)
             .addSetupPhase(GanderScreenToolkit::setupRenderTarget)
             .addSetupPhase(GanderScreenToolkit::setupTranslucencyChain)
@@ -46,11 +48,13 @@ public class BakedLevelScreenRenderPipeline {
             .addGeometryUploadPhase(GanderScreenPipelinePhases.BLOCK_ENTITIES_GEOMETRY_UPLOAD)
             .addGeometryUploadPhase(GanderScreenPipelinePhases.TRANSLUCENT_GEOMETRY_UPLOAD)
             .addGeometryUploadPhase(BakedLevelScreenRenderPipeline::fireAfterTranslucentLevelStageEvent)
-            .addRenderPhase(BakedLevelScreenRenderPipeline::render)
+            .addGeometryUploadPhase(BakedLevelScreenRenderPipeline::fireAfterParticlesLevelStageEvent)
+            .addRenderPhase(BakedLevelScreenRenderPipeline::uploadBuffer)
             .addCleanupPhase(GanderScreenToolkit::revertGraphicsMode)
-            .addCleanupPhase(BakedLevelScreenRenderPipeline::teardown);
+            .addCleanupPhase(BakedLevelScreenRenderPipeline::teardown)
+            .build();
 
-        INSTANCE = builder.singlePass();
+        INSTANCE = new BakedLevelScreenRenderPipeline(phases);
     }
 
     private static boolean setupCullFrustum(PipelineState state) {
@@ -67,16 +71,20 @@ public class BakedLevelScreenRenderPipeline {
     }
 
     private static void fireStaticLevelStageEvent(PipelineState state, GuiGraphics graphics) {
-        final var event = GanderScreenToolkit
-            .makeRenderStageEvent(RenderLevelStageEvent.Stage.AFTER_SOLID_BLOCKS, state);
+        final var event = GanderRenderLevelStageEvent.make(RenderLevelStageEvent.Stage.AFTER_SOLID_BLOCKS, state);
+
+        NeoForge.EVENT_BUS.post(event);
+    }
+
+    private static void fireAfterParticlesLevelStageEvent(PipelineState state, GuiGraphics graphics) {
+        final var event = GanderRenderLevelStageEvent.make(RenderLevelStageEvent.Stage.AFTER_PARTICLES, state);
 
         NeoForge.EVENT_BUS.post(event);
     }
 
     private static void fireAfterTranslucentLevelStageEvent(PipelineState state, GuiGraphics graphics) {
 //        try {
-            final var event = GanderScreenToolkit
-                .makeRenderStageEvent(RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS, state);
+            final var event = GanderRenderLevelStageEvent.make(RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS, state);
 
             NeoForge.EVENT_BUS.post(event);
 //        }
@@ -116,7 +124,7 @@ public class BakedLevelScreenRenderPipeline {
         return true;
     }
 
-    private static void render(PipelineState state, GuiGraphics graphics) {
+    private static void uploadBuffer(PipelineState state, GuiGraphics graphics) {
         final var mc = Minecraft.getInstance();
 
         final var projectionMatrix = state.get(GanderRenderToolkit.PROJECTION_MATRIX);
@@ -143,16 +151,19 @@ public class BakedLevelScreenRenderPipeline {
         );
 
         Minecraft minecraft = Minecraft.getInstance();
-        ShaderInstance shaderinstance = (ShaderInstance) Objects.requireNonNull(minecraft.gameRenderer.blitShader, "Blit shader not loaded");
+        ShaderInstance shaderinstance = Objects.requireNonNull(minecraft.gameRenderer.blitShader, "Blit shader not loaded");
         shaderinstance.setSampler("DiffuseSampler", renderTarget.getColorTextureId());
         shaderinstance.apply();
-        BufferBuilder bufferbuilder = RenderSystem.renderThreadTesselator().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLIT_SCREEN);
+        BufferBuilder bufferbuilder = RenderSystem.renderThreadTesselator()
+            .begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLIT_SCREEN);
+
         bufferbuilder.addVertex(0.0F, 0.0F, 0.0F);
         bufferbuilder.addVertex(1.0F, 0.0F, 0.0F);
         bufferbuilder.addVertex(1.0F, 1.0F, 0.0F);
         bufferbuilder.addVertex(0.0F, 1.0F, 0.0F);
         BufferUploader.draw(bufferbuilder.buildOrThrow());
         shaderinstance.clear();
+
         GlStateManager._depthMask(true);
         GlStateManager._colorMask(true, true, true, true);
     }
@@ -166,5 +177,31 @@ public class BakedLevelScreenRenderPipeline {
 
         GanderScreenToolkit.restoreProjectionMatrix(state);
         return true;
+    }
+
+    @Override
+    public PipelineState setup(Consumer<PipelineState> initialStateSetup) {
+        PipelineState state = new PipelineState();
+        initialStateSetup.accept(state);
+
+        if (!PipelineHelper.runStandardPipelineSetup(phases, state))
+            throw new RuntimeException("Failed to setup pipeline");
+
+        return state;
+    }
+
+    @Override
+    public void render(PipelineState state, GuiGraphics graphics) {
+        for (var preRenderPhase : phases.beforeGeometryPhases())
+            preRenderPhase.run(state);
+
+        for (var phase : phases.geometryUploadPhases())
+            phase.upload(state, graphics);
+
+        for (var phase : phases.renderPhases())
+            phase.render(state, graphics);
+
+        for (var phase : phases.cleanupPhases())
+            phase.run(state);
     }
 }
