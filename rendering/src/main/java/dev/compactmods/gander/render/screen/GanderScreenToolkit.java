@@ -7,7 +7,6 @@ import dev.compactmods.gander.core.Gander;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
-import dev.compactmods.gander.render.translucency.TranslucencyChain;
 import net.minecraft.client.GraphicsStatus;
 import net.minecraft.client.Minecraft;
 

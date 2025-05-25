@@ -1,24 +1,22 @@
 package dev.compactmods.gander.render.geometry;
 
-import com.mojang.blaze3d.vertex.MeshData;
-import com.mojang.blaze3d.vertex.VertexBuffer;
+import java.util.Map;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
+
+import org.joml.Vector3f;
+
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.VertexSorting;
 
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.SectionBufferBuilderPack;
-
 import net.minecraft.world.phys.AABB;
-
-import org.joml.Vector3f;
-
-import java.util.Map;
-import java.util.function.Function;
 
 public record BakedLevelSection(SectionBufferBuilderPack blockBuilders,
                                 SectionBufferBuilderPack fluidBuilders,
-                                Map<RenderType, VertexBuffer> blockBuffers,
-                                Map<RenderType, VertexBuffer> fluidBuffers,
+                                Map<RenderType, GpuBuffer> blockBuffers,
+                                Map<RenderType, GpuBuffer> fluidBuffers,
                                 Map<RenderType, MeshData.SortState> blockSortStates,
                                 Map<RenderType, MeshData.SortState> fluidSortStates,
                                 AABB blockBoundaries) {
@@ -32,7 +30,7 @@ public record BakedLevelSection(SectionBufferBuilderPack blockBuilders,
     private void resortTranslucency(
         VertexSorting vertexSorting,
         SectionBufferBuilderPack pack,
-        Map<RenderType, VertexBuffer> buffers,
+        Map<RenderType, GpuBuffer> buffers,
         Map<RenderType, MeshData.SortState> sortStates) {
 
         sortStates.forEach((type, state) -> {
@@ -42,9 +40,10 @@ public record BakedLevelSection(SectionBufferBuilderPack blockBuilders,
 
             var buffer = buffers.get(type);
             if(buffer != null) {
-                buffer.bind();
-                buffer.uploadIndexBuffer(result);
-                VertexBuffer.unbind();
+                // TODO Port 21.5 - Buffer changes
+//                buffer.bind();
+//                buffer.uploadIndexBuffer(result);
+//                VertexBuffer.unbind();
             }
         });
     }

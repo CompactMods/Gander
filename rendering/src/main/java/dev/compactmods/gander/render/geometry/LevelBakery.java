@@ -5,7 +5,6 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import com.mojang.blaze3d.vertex.VertexBuffer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import com.mojang.blaze3d.vertex.VertexSorting;
@@ -19,26 +18,24 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.SectionBufferBuilderPack;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 
 import net.minecraft.world.phys.AABB;
-import net.neoforged.neoforge.client.model.data.ModelData;
+
+import net.neoforged.neoforge.model.data.ModelData;
 
 import org.joml.Vector3f;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class LevelBakery {
@@ -98,10 +95,10 @@ public class LevelBakery {
 
         ModelData modelData;
         if (state.getRenderShape() == RenderShape.MODEL) {
-            BakedModel model = dispatcher.getBlockModel(state);
+            BlockStateModel model = dispatcher.getBlockModel(state);
 
             modelData = level.getModelData(pos);
-            modelData = model.getModelData(level, pos, state, modelData);
+// TODO 21.5 Port            modelData = model.(level, pos, state, modelData);
 
             long seed = state.getSeed(pos);
             random.setSeed(seed);

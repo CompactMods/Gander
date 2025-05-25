@@ -1,16 +1,13 @@
 package dev.compactmods.gander.render.toolkit;
 
-import com.mojang.blaze3d.shaders.Uniform;
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-
-import com.mojang.blaze3d.vertex.VertexBuffer;
 
 import dev.compactmods.gander.render.geometry.BakedLevelSection;
 import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.ShaderInstance;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -35,7 +32,7 @@ public class BlockRenderer {
 		renderSectionLayer(section.fluidBuffers(), renderTypeStore::redirectedFluidRenderType, renderType, poseStack, camera, renderOrigin, pProjectionMatrix);
 	}
 
-	public static void renderSectionLayer(Map<RenderType, VertexBuffer> renderBuffers,
+	public static void renderSectionLayer(Map<RenderType, GpuBuffer> renderBuffers,
                                           Function<RenderType, RenderType> redirector,
                                           RenderType renderType,
                                           PoseStack poseStack,
@@ -50,10 +47,10 @@ public class BlockRenderer {
 		RenderSystem.assertOnRenderThread();
 		retargetedRenderType.setupRenderState();
 
-		mc.getProfiler().popPush(() -> "render_" + renderType);
+//		mc.getProfiler().popPush(() -> "render_" + renderType);
 
-		ShaderInstance shaderinstance = RenderSystem.getShader();
-		Uniform uniform = shaderinstance.CHUNK_OFFSET;
+//		ShaderInstance shaderinstance = RenderSystem.getShader();
+//		Uniform uniform = shaderinstance.CHUNK_OFFSET;
 
 		final var vertexbuffer = renderBuffers.get(renderType);
 
@@ -61,21 +58,21 @@ public class BlockRenderer {
         renderOrigin.sub(cameraPosition, renderAt);
 
 		if (vertexbuffer != null) {
-			if (uniform != null) {
-				shaderinstance.apply();
-				uniform.set(renderAt.x(), renderAt.y(), renderAt.z());
-				uniform.upload();
-			}
+//			if (uniform != null) {
+//				shaderinstance.apply();
+//				uniform.set(renderAt.x(), renderAt.y(), renderAt.z());
+//				uniform.upload();
+//			}
 
-			vertexbuffer.bind();
-			vertexbuffer.drawWithShader(poseStack.last().pose(), pProjectionMatrix, shaderinstance);
+//			vertexbuffer.bind();
+//			vertexbuffer.drawWithShader(poseStack.last().pose(), pProjectionMatrix, shaderinstance);
 		}
 
-		if (uniform != null) {
-			uniform.set(0.0F, 0.0F, 0.0F);
-		}
+//		if (uniform != null) {
+//			uniform.set(0.0F, 0.0F, 0.0F);
+//		}
 
-		mc.getProfiler().pop();
+//		mc.getProfiler().pop();
 		// net.neoforged.neoforge.client.ClientHooks.dispatchRenderStage(pRenderType, this, pPoseStack, pProjectionMatrix, this.ticks, mc.gameRenderer.getMainCamera(), this.getFrustum());
 		retargetedRenderType.clearRenderState();
 	}
