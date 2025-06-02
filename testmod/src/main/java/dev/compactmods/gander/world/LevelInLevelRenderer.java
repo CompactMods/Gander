@@ -62,13 +62,13 @@ public record LevelInLevelRenderer(UUID id, PipelineState state) {
         final var renderTypeForStage = RenderTypes.GEOMETRY_STAGES.get(evt.getStage());
         final var partialTick = evt.getPartialTick().getGameTimeDeltaPartialTick(true);
 
-        if (renderTypeForStage != null) {
-            state.set(GanderRenderToolkit.PROJECTION_MATRIX, evt.getProjectionMatrix());
-            state.set(GanderRenderToolkit.MODEL_VIEW_MATRIX, evt.getModelViewMatrix());
-
-            BakedLevelOverlayPipeline.INSTANCE.renderPass(state, renderTypeForStage, graphics,
-                evt.getFrustum(), partialTick);
-        }
+//        if (renderTypeForStage != null) {
+//            state.set(GanderRenderToolkit.PROJECTION_MATRIX, evt.getProjectionMatrix());
+//            state.set(GanderRenderToolkit.MODEL_VIEW_MATRIX, evt.getModelViewMatrix());
+//
+//            BakedLevelOverlayPipeline.INSTANCE.renderPass(state, renderTypeForStage, graphics,
+//                evt.getFrustum(), partialTick);
+//        }
     }
 
     public void onClientTick(ClientTickEvent.Post event) {

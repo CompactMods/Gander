@@ -67,7 +67,7 @@ public class GanderScreenPipelinePhases {
         final var dispatcher = mc.getBlockEntityRenderDispatcher();
         dispatcher.prepare(bakedLevel.originalLevel(), camera, null);
 
-        BlockEntityRender.render(bakedLevel.originalLevel(), blockEntities, graphics.pose(), lookFrom, renderTypeStore, bufferSource, partialTick);
+//        BlockEntityRender.render(bakedLevel.originalLevel(), blockEntities, graphics.pose(), lookFrom, renderTypeStore, bufferSource, partialTick);
     }
 
     private static void translucentPass(PipelineState state, GuiGraphics graphics, float partialTicks) {

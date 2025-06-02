@@ -22,15 +22,22 @@ public class LevelOverlayRenderSystem
 	public static void createAndAddRenderer(Component source, StructureTemplate data, Vector3f renderLocation) {
 		CommonEvents.setTitle(source);
 
-        var bounds = AABB.of(data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO));
-		var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess(), true);
+        try {
+            var bounds = AABB.of(data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO));
+            var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess(), true);
 
-		virtualLevel.setBounds(bounds);
-		data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings().setKnownShape(true), RandomSource.create(), Block.UPDATE_CLIENTS);
+            virtualLevel.setBounds(bounds);
+            data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings().setKnownShape(true), RandomSource.create(), Block.UPDATE_CLIENTS);
 
-		var bakedLevel = LevelBakery.bakeVertices(virtualLevel, bounds, new Vector3f());
-		final var newRenderer = LevelInLevelRenderer.create(bakedLevel, virtualLevel, renderLocation);
+		    var bakedLevel = LevelBakery.bakeVertices(virtualLevel, bounds, new Vector3f());
 
-        GanderTestMod.addLevelInLevelRenderer(newRenderer);
+            GanderTestMod.LOGGER.debug("Created virtual level for source: " + source.getString());
+//		final var newRenderer = LevelInLevelRenderer.create(bakedLevel, virtualLevel, renderLocation);
+//        GanderTestMod.addLevelInLevelRenderer(newRenderer);
+        }
+
+        catch(Exception ex) {
+            GanderTestMod.LOGGER.error(ex.getMessage(), ex);
+        }
 	}
 }

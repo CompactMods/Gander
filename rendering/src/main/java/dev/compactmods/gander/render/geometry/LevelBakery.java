@@ -6,8 +6,8 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
-
 import com.mojang.blaze3d.vertex.VertexSorting;
 
 import dev.compactmods.gander.core.math.WorldMath;
@@ -19,11 +19,14 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.SectionBufferBuilderPack;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
-import net.minecraft.client.renderer.block.ModelBlockRenderer;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
@@ -33,11 +36,10 @@ import net.minecraft.world.level.material.FluidState;
 
 import net.minecraft.world.phys.AABB;
 
-import net.neoforged.neoforge.model.data.ModelData;
-
 import org.joml.Vector3f;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -52,36 +54,42 @@ public class LevelBakery {
         MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
 
         Map<SectionPos, BakedLevelSection> bakedSections = new Reference2ObjectArrayMap<>();
-        for (var sectionPos : allSections) {
+        try {
+            for (var sectionPos : allSections) {
 
-            final AABB chunkArea = WorldMath.sectionABB(sectionPos);
+                final AABB chunkArea = WorldMath.sectionABB(sectionPos);
 
-            final SectionBufferBuilderPack blockPack = new SectionBufferBuilderPack();
-            final SectionBufferBuilderPack fluidPack = new SectionBufferBuilderPack();
+                final SectionBufferBuilderPack blockPack = new SectionBufferBuilderPack();
+                final SectionBufferBuilderPack fluidPack = new SectionBufferBuilderPack();
 
-            final Map<RenderType, BufferBuilder> blockBufferBuilders = new HashMap<>();
-            final Map<RenderType, BufferBuilder> fluidBufferBuilders = new HashMap<>();
+                final Map<RenderType, BufferBuilder> blockBufferBuilders = new HashMap<>();
+                final Map<RenderType, BufferBuilder> fluidBufferBuilders = new HashMap<>();
 
-            PoseStack pose = new PoseStack();
-            RandomSource random = RandomSource.createNewThreadLocalInstance();
-            BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
+                PoseStack pose = new PoseStack();
+                RandomSource random = RandomSource.createNewThreadLocalInstance();
+                BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
 
-            ModelBlockRenderer.enableCaching();
-            BlockPos.betweenClosedStream(blockBoundaries).forEach(pos -> {
-                createBlockGeometry(level, pos, pose, buffers, dispatcher, random, blockPack, fluidBufferBuilders);
-            });
+//                ModelBlockRenderer.enableCaching();
+                BlockPos.betweenClosedStream(blockBoundaries).forEach(pos -> {
+                    createBlockGeometry(level, pos, pose, buffers, dispatcher, random, blockPack, fluidBufferBuilders);
+                });
 
-            final var sorting = VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+//            final var sorting = VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+//
+//            final var blockVertices = buildSortedGeometryBuffers(blockPack, sorting, blockBufferBuilders);
+//            final var fluidVertices = buildSortedGeometryBuffers(fluidPack, sorting, fluidBufferBuilders);
+//
+//            final var bakedSection = new BakedLevelSection(blockPack, fluidPack,
+//                blockVertices.buffers(), fluidVertices.buffers(),
+//                blockVertices.meshStates(), fluidVertices.meshStates(),
+//                chunkArea);
+//
+//            bakedSections.put(sectionPos, bakedSection);
+            }
+        }
 
-            final var blockVertices = buildSortedGeometryBuffers(blockPack, sorting, blockBufferBuilders);
-            final var fluidVertices = buildSortedGeometryBuffers(fluidPack, sorting, fluidBufferBuilders);
-
-            final var bakedSection = new BakedLevelSection(blockPack, fluidPack,
-                blockVertices.buffers(), fluidVertices.buffers(),
-                blockVertices.meshStates(), fluidVertices.meshStates(),
-                chunkArea);
-
-            bakedSections.put(sectionPos, bakedSection);
+        catch (Exception e) {
+            e.printStackTrace();
         }
 
         return new BakedLevel(level, blockBoundaries, bakedSections);
@@ -106,7 +114,30 @@ public class LevelBakery {
             // float red, float green, float blue, int light, int overlay, BlockAndTintGetter level, BlockPos pos, BlockState state)
 
             int light = Math.max(level.getBrightness(LightLayer.BLOCK, pos), level.getBrightness(LightLayer.SKY, pos));
-            ModelBlockRenderer.renderModel(pose.last(), buffers, model, 1, 1, 1, light, OverlayTexture.NO_OVERLAY, level, pos, state);
+
+            try {
+                for (BlockModelPart blockmodelpart : model.collectParts(level, pos, state, RandomSource.create(42L))) {
+                    final var renderType = blockmodelpart.getRenderType(state);
+                    if(renderType == null)
+                        continue;
+
+//                    final var entRenderType = net.neoforged.neoforge.client.RenderTypeHelper.getEntityRenderType(renderType);
+//                    if(entRenderType == null)
+//                        continue;
+
+                    VertexConsumer vertices = buffers.getBuffer(renderType);
+
+                    for (Direction direction : Direction.values()) {
+                        renderQuadList(pose.last(), vertices, 1, 1, 1, blockmodelpart.getQuads(direction), light, OverlayTexture.NO_OVERLAY);
+                    }
+
+                    renderQuadList(pose.last(), vertices, 1, 1, 1, blockmodelpart.getQuads(null), light, OverlayTexture.NO_OVERLAY);
+                }
+            }
+
+            catch (Exception e) {
+
+            }
 
             // 21.1 Code
 //            model.getRenderTypes(state, random, modelData).forEach(type -> {
@@ -130,9 +161,37 @@ public class LevelBakery {
         }
 
         pose.popPose();
-        ModelBlockRenderer.clearCache();
+//        ModelBlockRenderer.clearCache();
 
 //        TODO: Make Result Record so this can be immutable
+    }
+
+    private static void renderQuadList(
+        PoseStack.Pose pose,
+        VertexConsumer consumer,
+        float red,
+        float green,
+        float blue,
+        List<BakedQuad> quads,
+        int packedLight,
+        int packedOverlay
+    ) {
+        for (BakedQuad bakedquad : quads) {
+            float f;
+            float f1;
+            float f2;
+            if (bakedquad.isTinted()) {
+                f = Mth.clamp(red, 0.0F, 1.0F);
+                f1 = Mth.clamp(green, 0.0F, 1.0F);
+                f2 = Mth.clamp(blue, 0.0F, 1.0F);
+            } else {
+                f = 1.0F;
+                f1 = 1.0F;
+                f2 = 1.0F;
+            }
+
+            consumer.putBulkData(pose, bakedquad, f, f1, f2, 1.0F, packedLight, packedOverlay);
+        }
     }
 
     private static SortedGeometryBufferResult buildSortedGeometryBuffers(SectionBufferBuilderPack blockPack,

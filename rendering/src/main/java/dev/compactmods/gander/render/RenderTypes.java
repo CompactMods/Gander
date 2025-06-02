@@ -17,7 +17,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class RenderTypes extends RenderStateShard {
+public class RenderTypes {
 
     public static final Map<RenderLevelStageEvent.Stage, RenderType> GEOMETRY_STAGES
         = RenderType.chunkBufferLayers()
@@ -54,9 +54,4 @@ public class RenderTypes extends RenderStateShard {
 	public static RenderType getFluid() {
 		return FLUID;
 	}
-
-    // Mmm gimme those protected fields
-    private RenderTypes() {
-        super(null, null, null);
-    }
 }

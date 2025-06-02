@@ -1,13 +1,19 @@
 package dev.compactmods.gander.render.pipeline.impl;
 
+import com.mojang.blaze3d.buffers.BufferType;
+import com.mojang.blaze3d.buffers.BufferUsage;
 import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 
+import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
 import dev.compactmods.gander.render.pipeline.PipelineState;
+import dev.compactmods.gander.render.pipeline.RenderPipeline;
 import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
 import dev.compactmods.gander.render.pipeline.SinglePassRenderPipeline;
 import dev.compactmods.gander.render.screen.GanderScreenPipelinePhases;
@@ -16,9 +22,11 @@ import dev.compactmods.gander.render.screen.GanderScreenToolkit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Mth;
 
 import java.util.Objects;
+import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
 public class BakedLevelScreenRenderPipeline {
@@ -85,9 +93,9 @@ public class BakedLevelScreenRenderPipeline {
 //        mc.getMainRenderTarget().bindWrite(true);
 
         RenderSystem.assertOnRenderThread();
-        GlStateManager._colorMask(true, true, true, false);
-        GlStateManager._disableDepthTest();
-        GlStateManager._depthMask(false);
+//        GlStateManager._colorMask(true, true, true, false);
+//        GlStateManager._disableDepthTest();
+//        GlStateManager._depthMask(false);
 
         var guiScale = mc.getWindow().getGuiScale();
 
@@ -103,20 +111,28 @@ public class BakedLevelScreenRenderPipeline {
 //        shaderinstance.setSampler("DiffuseSampler", renderTarget.getColorTextureId());
 //        shaderinstance.apply();
 
-        try(var pass = RenderSystem.getDevice().createCommandEncoder()
-            .createRenderPass(renderTarget.getColorTexture(), OptionalInt.empty())) {
-            // TODO: 21.5 port
-        }
+            var bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLIT_SCREEN);
+            bufferbuilder.addVertex(0.0F, 0.0F, 0.0F);
+            bufferbuilder.addVertex(1.0F, 0.0F, 0.0F);
+            bufferbuilder.addVertex(1.0F, 1.0F, 0.0F);
+            bufferbuilder.addVertex(0.0F, 1.0F, 0.0F);
+            try(final var mesh = bufferbuilder.build()) {
+
+                final var buffer = RenderSystem.getDevice()
+                    .createBuffer(() -> "Gander Render Buffer", BufferType.VERTICES, BufferUsage.STATIC_WRITE, mesh.vertexBuffer());
+
+                try (RenderPass renderpass = RenderSystem.getDevice()
+                    .createCommandEncoder()
+                    .createRenderPass(renderTarget.getColorTexture(), OptionalInt.empty(), renderTarget.getDepthTexture(), OptionalDouble.empty())) {
+
+                    renderpass.setPipeline(RenderPipelines.GUI);
+                    renderpass.setVertexBuffer(0, buffer);
+                    renderpass.draw(0, 10);
+                }
+            }
 
 //        BufferBuilder bufferbuilder = RenderSystem.renderThreadTesselator().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLIT_SCREEN);
-//        bufferbuilder.addVertex(0.0F, 0.0F, 0.0F);
-//        bufferbuilder.addVertex(1.0F, 0.0F, 0.0F);
-//        bufferbuilder.addVertex(1.0F, 1.0F, 0.0F);
-//        bufferbuilder.addVertex(0.0F, 1.0F, 0.0F);
-//        BufferUploader.draw(bufferbuilder.buildOrThrow());
-//        shaderinstance.clear();
-//        GlStateManager._depthMask(true);
-//        GlStateManager._colorMask(true, true, true, true);
+
     }
 
     private static boolean teardown(PipelineState state) {
