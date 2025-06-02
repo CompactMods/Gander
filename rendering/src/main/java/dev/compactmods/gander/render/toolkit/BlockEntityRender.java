@@ -81,7 +81,7 @@ public class BlockEntityRender {
 			int worldLight = LevelRenderer.getLightColor(world, worldPos);
 
             if(renderer.shouldRender(blockEntity, new Vec3(cameraPosition)))
-			    renderer.render(blockEntity, pt, ms, buffer, worldLight, OverlayTexture.NO_OVERLAY);
+			    renderer.render(blockEntity, pt, ms, buffer, worldLight, OverlayTexture.NO_OVERLAY, new Vec3(cameraPosition));
 
 		} catch (Exception e) {
 			String message = "BlockEntity " + BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(blockEntity.getType()) + " could not be rendered virtually.";

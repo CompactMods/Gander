@@ -1,3 +1,4 @@
 [versions]
+# https://parchmentmc.org/docs/getting-started
 parchmentMC = "1.21.5"
-parchment = "2025.04.19"
+parchment = "2025.06.01"

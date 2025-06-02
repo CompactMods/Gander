@@ -29,7 +29,7 @@ public class BakedLevelScreenRenderPipeline {
         var builder = new RenderPipelineBuilder();
         builder.phases()
             .addSetupPhase(GanderScreenToolkit::setupRenderTarget)
-            .addSetupPhase(GanderScreenToolkit::setupTranslucencyChain)
+            // .addSetupPhase(GanderScreenToolkit::setupTranslucencyChain)
             .addSetupPhase(BakedLevelScreenRenderPipeline::setup)
 
             .addPreGeometryPhase(GanderScreenToolkit::switchToFabulous)
@@ -78,7 +78,7 @@ public class BakedLevelScreenRenderPipeline {
         final var projectionMatrix = state.get(GanderRenderToolkit.PROJECTION_MATRIX);
         final var renderTarget = state.get(GanderRenderToolkit.RENDER_TARGET);
         final var renderBounds = state.get(GanderRenderToolkit.RENDER_BOUNDS);
-        final var translucencyChain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
+//        final var translucencyChain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
 
 //        translucencyChain.process();
 

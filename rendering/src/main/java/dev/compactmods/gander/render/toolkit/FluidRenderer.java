@@ -2,6 +2,8 @@ package dev.compactmods.gander.render.toolkit;
 
 import java.util.function.Function;
 
+import net.minecraft.client.resources.model.AtlasIds;
+
 import org.joml.Quaternionf;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -44,10 +46,6 @@ public class FluidRenderer {
 		Fluid fluid = fluidStack.getFluid();
 		IClientFluidTypeExtensions clientFluid = IClientFluidTypeExtensions.of(fluid);
 		FluidType fluidAttributes = fluid.getFluidType();
-		Function<ResourceLocation, TextureAtlasSprite> spriteAtlas = Minecraft.getInstance()
-				.getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
-		TextureAtlasSprite flowTexture = spriteAtlas.apply(clientFluid.getFlowingTexture(fluidStack));
-		TextureAtlasSprite stillTexture = spriteAtlas.apply(clientFluid.getStillTexture(fluidStack));
 
 		int color = clientFluid.getTintColor(fluidStack);
 		int blockLightIn = (light >> 4) & 0xF;
@@ -72,15 +70,22 @@ public class FluidRenderer {
 		float yMin = y - Mth.clamp(progress * .5f, 0, 1);
 		float yMax = y;
 
+        final var flowTexture = clientFluid.getFlowingTexture(fluidStack);
+        final var stillTexture = clientFluid.getStillTexture(fluidStack);
+
+        final var atlas = Minecraft.getInstance().getTextureAtlas(AtlasIds.BLOCKS);
+        final var flowSprite = atlas.apply(flowTexture);
+        final var stillSprite = atlas.apply(stillTexture);
+
 		for (int i = 0; i < 4; i++) {
 			ms.pushPose();
-			renderFlowingTiledFace(Direction.SOUTH, hMin, yMin, hMax, yMax, h, builder, ms, light, color, flowTexture);
+			renderFlowingTiledFace(Direction.SOUTH, hMin, yMin, hMax, yMax, h, builder, ms, light, color, flowSprite);
 			ms.popPose();
 			ms.mulPose(com.mojang.math.Axis.YP.rotationDegrees(90));
 		}
 
 		if (progress != 1)
-			renderStillTiledFace(Direction.DOWN, hMin, hMin, hMax, hMax, yMin, builder, ms, light, color, stillTexture);
+			renderStillTiledFace(Direction.DOWN, hMin, hMin, hMax, hMax, yMin, builder, ms, light, color, stillSprite);
 
 		ms.popPose();
 	}
@@ -102,7 +107,7 @@ public class FluidRenderer {
 		IClientFluidTypeExtensions clientFluid = IClientFluidTypeExtensions.of(fluid);
 		FluidType fluidAttributes = fluid.getFluidType();
 		TextureAtlasSprite fluidTexture = Minecraft.getInstance()
-				.getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
+				.getTextureAtlas(AtlasIds.BLOCKS)
 				.apply(clientFluid.getStillTexture(fluidStack));
 
 		int color = clientFluid.getTintColor(fluidStack);
@@ -219,7 +224,7 @@ public class FluidRenderer {
 	private static void putVertex(VertexConsumer builder, PoseStack ms, float x, float y, float z, int color, float u,
 								  float v, Direction face, int light) {
 
-		Vec3i normal = face.getNormal();
+		Vec3i normal = face.getUnitVec3i();
 		Pose peek = ms.last();
 		int a = color >> 24 & 0xff;
 		int r = color >> 16 & 0xff;

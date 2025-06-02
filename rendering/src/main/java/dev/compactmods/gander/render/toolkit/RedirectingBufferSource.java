@@ -1,5 +1,6 @@
 package dev.compactmods.gander.render.toolkit;
 
+import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.MeshData;
@@ -34,7 +35,7 @@ class RedirectingBufferSource extends MultiBufferSource.BufferSource {
             if (meshdata != null) {
                 if (renderType.sortOnUpload()) {
                     ByteBufferBuilder bytebufferbuilder = this.fixedBuffers.getOrDefault(renderType, this.sharedBuffer);
-                    meshdata.sortQuads(bytebufferbuilder, RenderSystem.getVertexSorting());
+                    meshdata.sortQuads(bytebufferbuilder, ProjectionType.ORTHOGRAPHIC.vertexSorting());
                 }
 
                 final var remappedRenderType = remapper.apply(renderType);

@@ -74,6 +74,6 @@ public record LevelInLevelRenderer(UUID id, PipelineState state) {
     public void onClientTick(ClientTickEvent.Post event) {
         final var level = state.get(GanderRenderToolkit.BAKED_LEVEL);
         if (level.originalLevel() instanceof TickingLevel vl)
-            vl.tick(Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(true));
+            vl.tick(Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(true));
     }
 }

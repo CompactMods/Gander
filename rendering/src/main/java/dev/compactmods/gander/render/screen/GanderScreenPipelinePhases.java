@@ -23,13 +23,13 @@ public class GanderScreenPipelinePhases {
 
     private static void staticPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
         final var bakedLevel = state.get(GanderRenderToolkit.BAKED_LEVEL);
-        final var chain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
+        // final var chain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
         final var renderTypeStore = state.get(GanderRenderToolkit.RENDER_TYPE_STORE);
         final var renderOrigin = state.getOrDefault(GanderRenderToolkit.RENDER_ORIGIN, new Vector3f());
         final var camera = state.get(GanderRenderToolkit.CAMERA);
         final var projectionMatrix = state.get(GanderRenderToolkit.PROJECTION_MATRIX);
 
-        chain.prepareLayer(Gander.asResource("main"));
+        // chain.prepareLayer(Gander.asResource("main"));
 
         final var camPos = camera.getPosition().toVector3f();
 
@@ -47,30 +47,31 @@ public class GanderScreenPipelinePhases {
 
     private static void blockEntitiesPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
         final var mc = Minecraft.getInstance();
+        final var bufferSource = mc.renderBuffers().bufferSource();
         final var camera = state.get(GanderRenderToolkit.CAMERA);
         final var lookFrom = camera.getPosition().toVector3f();
-        final var chain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
+        // final var chain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
         final var renderTypeStore = state.get(GanderRenderToolkit.RENDER_TYPE_STORE);
         final var bakedLevel = state.get(GanderRenderToolkit.BAKED_LEVEL);
 
         final var blockEntityPositions = state.get(GanderRenderToolkit.BLOCK_ENTITY_POSITIONS);
 
-        final var partialTick = mc.getTimer().getGameTimeDeltaPartialTick(true);
+        final var partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
         final var blockEntities = Arrays.stream(blockEntityPositions)
             .map(bakedLevel.originalLevel()::getBlockEntity)
             .filter(Objects::nonNull);
 
-        chain.prepareLayer(Gander.asResource("entity"));
+//        chain.prepareLayer(Gander.asResource("entity"));
 
         final var dispatcher = mc.getBlockEntityRenderDispatcher();
         dispatcher.prepare(bakedLevel.originalLevel(), camera, null);
 
-        BlockEntityRender.render(bakedLevel.originalLevel(), blockEntities, graphics.pose(), lookFrom, renderTypeStore, graphics.bufferSource(), partialTick);
+        BlockEntityRender.render(bakedLevel.originalLevel(), blockEntities, graphics.pose(), lookFrom, renderTypeStore, bufferSource, partialTick);
     }
 
     private static void translucentPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
-        final var chain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
+//        final var chain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
         final var renderTypeStore = state.get(GanderRenderToolkit.RENDER_TYPE_STORE);
         final var renderOrigin = state.getOrDefault(GanderRenderToolkit.RENDER_ORIGIN, new Vector3f());
         final var camera = state.get(GanderRenderToolkit.CAMERA);
@@ -78,7 +79,7 @@ public class GanderScreenPipelinePhases {
 
         final var projectionMatrix = state.get(GanderRenderToolkit.PROJECTION_MATRIX);
 
-        chain.prepareLayer(Gander.asResource("translucent"));
+//        chain.prepareLayer(Gander.asResource("translucent"));
 
         final var camPos = camera.getPosition().toVector3f();
 

@@ -103,8 +103,8 @@ public class GanderScreenCommand {
 
         player.displayClientMessage(Component.literal("Seed: %d".formatted(seed))
             .withStyle(style -> style
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Copy Seed to Clipboard")))
-                .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, seed + ""))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal("Copy Seed to Clipboard")))
+                .withClickEvent(new ClickEvent.CopyToClipboard(seed + ""))
             ), false);
 
         PacketDistributor.sendToPlayer(player, new OpenGanderUiForStructureRequest(title, finalStructure));

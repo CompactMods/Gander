@@ -24,16 +24,16 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 public class ScreenOpener {
 	public static void open(Supplier<Screen> screen) {
 		var client = Minecraft.getInstance();
-		client.tell(() -> client.setScreen(screen.get()));
+		client.execute(() -> client.setScreen(screen.get()));
 	}
 
 	public static void openGanderUI(Consumer<GanderUI> postSetup) {
 		var client = Minecraft.getInstance();
 
-		client.tell(() -> {
+		client.execute(() -> {
 			var ui = new GanderUI();
 			client.setScreen(ui);
-			client.tell(() -> postSetup.accept(ui));
+			client.execute(() -> postSetup.accept(ui));
 		});
 	}
 

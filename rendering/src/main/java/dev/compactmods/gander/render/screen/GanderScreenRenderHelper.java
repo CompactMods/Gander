@@ -1,5 +1,6 @@
 package dev.compactmods.gander.render.screen;
 
+import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 
@@ -32,16 +33,16 @@ public record GanderScreenRenderHelper(int width, int height) {
     public void renderInScreenSpace(GuiGraphics graphics, Camera camera, Consumer<Matrix4f> render) {
         final var projMatrix = projectionMatrix();
 
-        RenderSystem.setProjectionMatrix(projMatrix, VertexSorting.byDistance(camera.getPosition().toVector3f()));
+        RenderSystem.setProjectionMatrix(projMatrix, ProjectionType.ORTHOGRAPHIC);
 
         PoseStack poseStack = graphics.pose();
         poseStack.pushPose();
 
-        var poseStack2 = RenderSystem.getModelViewStack();
-        poseStack2.pushMatrix();
+        var modelViewStack = RenderSystem.getModelViewStack();
+        modelViewStack.pushMatrix();
         {
-            poseStack2.identity();
-            RenderSystem.applyModelViewMatrix();
+            modelViewStack.identity();
+//            RenderSystem.applyModelViewMatrix();
 
             poseStack.setIdentity();
             poseStack.mulPose(camera.rotation());
@@ -49,8 +50,8 @@ public record GanderScreenRenderHelper(int width, int height) {
             render.accept(projMatrix);
         }
 
-        poseStack2.popMatrix();
-        RenderSystem.applyModelViewMatrix();
+        modelViewStack.popMatrix();
+//        RenderSystem.applyModelViewMatrix();
 
         poseStack.popPose();
     }

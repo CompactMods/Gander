@@ -11,8 +11,9 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.ARGB;
+import net.minecraft.util.ColorRGBA;
 import net.minecraft.util.CommonColors;
-import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -47,7 +48,7 @@ public class GanderUI extends Screen {
         if (this.scene != null) {
             // TODO: :)
             var level = ((VirtualLevel) scene.originalLevel());
-            level.tick(minecraft.getTimer().getRealtimeDeltaTicks());
+            level.tick(minecraft.getDeltaTracker().getRealtimeDeltaTicks());
             // level.animateTick();
         }
     }
@@ -59,7 +60,7 @@ public class GanderUI extends Screen {
         if(activeRenderer != null) {
             var renderArea = activeRenderer.getRenderArea();
             graphics.fill(renderArea.left(), renderArea.top(), renderArea.right(), renderArea.bottom(),
-                FastColor.ARGB32.color(120, CommonColors.BLACK));
+                ARGB.color(120, CommonColors.BLACK));
         }
     }
 

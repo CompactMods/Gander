@@ -1,5 +1,6 @@
 package dev.compactmods.gander.render.geometry;
 
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.MeshData;
@@ -14,6 +15,7 @@ import dev.compactmods.gander.render.vertex.FluidVertexConsumer;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.SectionBufferBuilderPack;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
@@ -24,6 +26,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
@@ -45,6 +48,9 @@ public class LevelBakery {
         final var allSections = WorldMath.sectionPositions(level, blockBoundaries)
             .collect(Collectors.toSet());
 
+        Minecraft mc = Minecraft.getInstance();
+        MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
+
         Map<SectionPos, BakedLevelSection> bakedSections = new Reference2ObjectArrayMap<>();
         for (var sectionPos : allSections) {
 
@@ -59,11 +65,10 @@ public class LevelBakery {
             PoseStack pose = new PoseStack();
             RandomSource random = RandomSource.createNewThreadLocalInstance();
             BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
-            ModelBlockRenderer renderer = dispatcher.getModelRenderer();
 
             ModelBlockRenderer.enableCaching();
             BlockPos.betweenClosedStream(blockBoundaries).forEach(pos -> {
-                createBlockGeometry(level, pos, pose, dispatcher, random, blockBufferBuilders, blockPack, renderer, fluidBufferBuilders);
+                createBlockGeometry(level, pos, pose, buffers, dispatcher, random, blockPack, fluidBufferBuilders);
             });
 
             final var sorting = VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z);
@@ -82,10 +87,8 @@ public class LevelBakery {
         return new BakedLevel(level, blockBoundaries, bakedSections);
     }
 
-    private static void createBlockGeometry(Level level, BlockPos pos, PoseStack pose, BlockRenderDispatcher dispatcher,
-                                            RandomSource random, Map<RenderType, BufferBuilder> blockBufferBuilders,
-                                            SectionBufferBuilderPack blockPack, ModelBlockRenderer renderer,
-                                            Map<RenderType, BufferBuilder> fluidBufferBuilders) {
+    private static void createBlockGeometry(Level level, BlockPos pos, PoseStack pose, MultiBufferSource.BufferSource buffers, BlockRenderDispatcher dispatcher,
+                                            RandomSource random, SectionBufferBuilderPack blockPack, Map<RenderType, BufferBuilder> fluidBufferBuilders) {
 
         BlockState state = level.getBlockState(pos);
         FluidState fluidState = level.getFluidState(pos);
@@ -93,25 +96,27 @@ public class LevelBakery {
         pose.pushPose();
         pose.translate(pos.getX(), pos.getY(), pos.getZ());
 
-        ModelData modelData;
         if (state.getRenderShape() == RenderShape.MODEL) {
             BlockStateModel model = dispatcher.getBlockModel(state);
-
-            modelData = level.getModelData(pos);
-// TODO 21.5 Port            modelData = model.(level, pos, state, modelData);
 
             long seed = state.getSeed(pos);
             random.setSeed(seed);
 
-            ModelData finalModelData = modelData;
-            model.getRenderTypes(state, random, modelData).forEach(type -> {
-                var vertexBuilder = blockBufferBuilders.computeIfAbsent(type, t -> {
-                    var typedVC = blockPack.buffer(t);
-                    return new BufferBuilder(typedVC, VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
-                });
+            // renderModel(PoseStack.Pose p_111068_, MultiBufferSource bufferSource, BlockStateModel p_405848_,
+            // float red, float green, float blue, int light, int overlay, BlockAndTintGetter level, BlockPos pos, BlockState state)
 
-                renderer.tesselateBlock(level, model, state, pos, pose, vertexBuilder, true, random, seed, OverlayTexture.NO_OVERLAY, finalModelData, type);
-            });
+            int light = Math.max(level.getBrightness(LightLayer.BLOCK, pos), level.getBrightness(LightLayer.SKY, pos));
+            ModelBlockRenderer.renderModel(pose.last(), buffers, model, 1, 1, 1, light, OverlayTexture.NO_OVERLAY, level, pos, state);
+
+            // 21.1 Code
+//            model.getRenderTypes(state, random, modelData).forEach(type -> {
+//                var vertexBuilder = blockBufferBuilders.computeIfAbsent(type, t -> {
+//                    var typedVC = blockPack.buffer(t);
+//                    return new BufferBuilder(typedVC, VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
+//                });
+//
+//                renderer.tesselateBlock(level, model, state, pos, pose, vertexBuilder, true, random, seed, OverlayTexture.NO_OVERLAY, finalModelData, type);
+//            });
         }
 
         if (!fluidState.isEmpty()) {
@@ -131,11 +136,11 @@ public class LevelBakery {
     }
 
     private static SortedGeometryBufferResult buildSortedGeometryBuffers(SectionBufferBuilderPack blockPack,
-                                                                            VertexSorting sorting,
-                                                                            Map<RenderType, BufferBuilder> bufferBuilders
+                                                                         VertexSorting sorting,
+                                                                         Map<RenderType, BufferBuilder> bufferBuilders
     ) {
         final var renderSortStates = new Reference2ObjectArrayMap<RenderType, MeshData.SortState>();
-        final var vertexBuffers = new Reference2ObjectArrayMap<RenderType, VertexBuffer>();
+        final var vertexBuffers = new Reference2ObjectArrayMap<RenderType, GpuBuffer>();
 
         bufferBuilders.forEach((renderType, builder) -> {
             final var buffer = builder.build();
@@ -146,11 +151,12 @@ public class LevelBakery {
                 renderSortStates.put(renderType, state);
             }
 
-            VertexBuffer vb = new VertexBuffer(VertexBuffer.Usage.STATIC);
-            vb.bind();
-            vb.upload(buffer);
-            VertexBuffer.unbind();
-            vertexBuffers.put(renderType, vb);
+            // TODO 21.5 Port
+//            VertexBuffer vb = new VertexBuffer(VertexBuffer.Usage.STATIC);
+//            vb.bind();
+//            vb.upload(buffer);
+//            VertexBuffer.unbind();
+//            vertexBuffers.put(renderType, vb);
         });
 
         return new SortedGeometryBufferResult(vertexBuffers, renderSortStates);
