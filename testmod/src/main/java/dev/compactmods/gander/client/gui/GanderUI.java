@@ -2,13 +2,23 @@ package dev.compactmods.gander.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 
+import com.mojang.math.Axis;
+
+import com.mojang.math.Transformation;
+
 import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.geometry.BakedLevel;
+import dev.compactmods.gander.render.toolkit.FluidRenderer;
 import dev.compactmods.gander.ui.widget.SpatialRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.SpecialBlockModelRenderer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.ARGB;
@@ -16,7 +26,14 @@ import net.minecraft.util.ColorRGBA;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.lighting.BlockLightEngine;
+import net.minecraft.world.level.material.Fluids;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.network.PacketDistributor;
+
+import org.joml.Vector3f;
 
 public class GanderUI extends Screen {
 
@@ -82,6 +99,33 @@ public class GanderUI extends Screen {
         for (Renderable renderable : this.renderables) {
             renderable.render(graphics, mouseX, mouseY, partialTicks);
         }
+
+        final var pose = graphics.pose();
+        pose.pushPose();
+        pose.translate(100, 300, 100);
+        pose.rotateAround(Axis.XN.rotationDegrees(25), 0.5F, 0.0F, 0.5F);
+        pose.rotateAround(Axis.YP.rotationDegrees(45), 0.5F, 0.0F, 0.5F);
+        pose.scale(100, -100, 100);
+
+        var fs = new FluidStack(Fluids.WATER, 1000);
+        FluidRenderer.renderFluidBox(fs, 1, 1, 1, 3, 5, 2.75f, minecraft.renderBuffers().bufferSource(), graphics.pose(), LightTexture.FULL_BLOCK, true);
+
+        pose.popPose();
+
+        renderDebugBlock(graphics);
+    }
+
+    private void renderDebugBlock(GuiGraphics graphics) {
+        final var pose = graphics.pose();
+        pose.pushPose();
+        pose.translate(100, 300, 100);
+        pose.rotateAround(Axis.XN.rotationDegrees(25), 0.5F, 0.0F, 0.5F);
+        pose.rotateAround(Axis.YP.rotationDegrees(45), 0.5F, 0.0F, 0.5F);
+        pose.scale(100, -100, 100);
+        minecraft.getBlockRenderer()
+            .renderSingleBlock(Blocks.SCULK_SENSOR.defaultBlockState(), pose, minecraft.renderBuffers().bufferSource(), LightTexture.FULL_BLOCK, OverlayTexture.NO_OVERLAY, minecraft.level, BlockPos.ZERO);
+
+        pose.popPose();
     }
 
     @Override

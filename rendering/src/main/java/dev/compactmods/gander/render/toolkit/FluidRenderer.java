@@ -2,6 +2,7 @@ package dev.compactmods.gander.render.toolkit;
 
 import java.util.function.Function;
 
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.AtlasIds;
 
 import org.joml.Quaternionf;
@@ -73,7 +74,7 @@ public class FluidRenderer {
         final var flowTexture = clientFluid.getFlowingTexture(fluidStack);
         final var stillTexture = clientFluid.getStillTexture(fluidStack);
 
-        final var atlas = Minecraft.getInstance().getTextureAtlas(AtlasIds.BLOCKS);
+        final var atlas = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS);
         final var flowSprite = atlas.apply(flowTexture);
         final var stillSprite = atlas.apply(stillTexture);
 
@@ -107,7 +108,7 @@ public class FluidRenderer {
 		IClientFluidTypeExtensions clientFluid = IClientFluidTypeExtensions.of(fluid);
 		FluidType fluidAttributes = fluid.getFluidType();
 		TextureAtlasSprite fluidTexture = Minecraft.getInstance()
-				.getTextureAtlas(AtlasIds.BLOCKS)
+				.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
 				.apply(clientFluid.getStillTexture(fluidStack));
 
 		int color = clientFluid.getTintColor(fluidStack);
