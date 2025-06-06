@@ -1,5 +1,9 @@
 package dev.compactmods.gander.core.math;
 
+import com.mojang.datafixers.kinds.Functor;
+
+import com.mojang.datafixers.kinds.K1;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
@@ -56,5 +60,26 @@ public class WorldMath {
                 for (int y = level.getMinSectionY(); y <= level.getMaxSectionY(); ++y)
                     nums.accept(SectionPos.of(cp, y));
             });
+    }
+
+    public static Stream<BlockPos> blockPosRing(BlockPos center, int radius) {
+        if (radius == 0)
+            return Stream.of(center);
+
+        int y = center.getY();
+        int width = (radius * 2) + 1;
+        BlockPos offset = center.mutable()
+            .setY(0)
+            .offset(-radius, 0, -radius)
+            .immutable();
+
+        final var builder = Stream.<BlockPos>builder();
+        for (int x = 0; x < width; x++)
+            for (int z = 0; z < width; z++) {
+                if (x == 0 || x == width - 1 || z == 0 || z == width - 1) {
+                    builder.add(new BlockPos(x, y, z).offset(offset));
+                }
+            }
+        return builder.build();
     }
 }
