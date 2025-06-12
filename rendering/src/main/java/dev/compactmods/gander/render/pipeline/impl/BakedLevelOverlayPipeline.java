@@ -54,25 +54,26 @@ public final class BakedLevelOverlayPipeline {
         poseStack.pushPose();
         poseStack.mulPose(modelViewMatrix);
 
-        for (RenderType renderType : STATIC_GEOMETRY) {
-            for(var section : bakedLevel.sections().values()) {
-                BlockRenderer.renderSectionLayer(
-                    section.blockBuffers(),
-                    Function.identity(),
-                    renderType,
-                    poseStack,
-                    camPos, renderOrigin,
-                    projectionMatrix);
-
-                BlockRenderer.renderSectionLayer(
-                    section.fluidBuffers(),
-                    Function.identity(),
-                    renderType,
-                    poseStack,
-                    camPos, renderOrigin,
-                    projectionMatrix);
-            }
-        }
+        // TODO 21.5 Port - Static Geometry Overlay Phase
+//        for (RenderType renderType : STATIC_GEOMETRY) {
+//            for(var section : bakedLevel.sections().values()) {
+//                BlockRenderer.renderSectionLayer(
+//                    section.gpuBuffers(),
+//                    Function.identity(),
+//                    renderType,
+//                    poseStack,
+//                    camPos, renderOrigin,
+//                    projectionMatrix);
+//
+//                BlockRenderer.renderSectionLayer(
+//                    section.fluidBuffers(),
+//                    Function.identity(),
+//                    renderType,
+//                    poseStack,
+//                    camPos, renderOrigin,
+//                    projectionMatrix);
+//            }
+//        }
 
         poseStack.popPose();
     }
@@ -139,23 +140,24 @@ public final class BakedLevelOverlayPipeline {
         poseStack.pushPose();
         poseStack.mulPose(modelViewMatrix);
 
-        bakedLevel.sections().forEach((chunkPos, section) -> {
-            BlockRenderer.renderSectionLayer(
-                section.fluidBuffers(),
-                Function.identity(),
-                RenderType.translucent(),
-                poseStack,
-                camPos, renderOrigin,
-                projectionMatrix);
-
-            BlockRenderer.renderSectionLayer(
-                section.blockBuffers(),
-                Function.identity(),
-                RenderType.translucent(),
-                poseStack,
-                camPos, renderOrigin,
-                projectionMatrix);
-        });
+        // TODO 21.5 Port - Translucency Phase?
+//        bakedLevel.sections().forEach((chunkPos, section) -> {
+//            BlockRenderer.renderSectionLayer(
+//                section.fluidBuffers(),
+//                Function.identity(),
+//                RenderType.translucent(),
+//                poseStack,
+//                camPos, renderOrigin,
+//                projectionMatrix);
+//
+//            BlockRenderer.renderSectionLayer(
+//                section.gpuBuffers(),
+//                Function.identity(),
+//                RenderType.translucent(),
+//                poseStack,
+//                camPos, renderOrigin,
+//                projectionMatrix);
+//        });
 
         poseStack.pushPose();
     }

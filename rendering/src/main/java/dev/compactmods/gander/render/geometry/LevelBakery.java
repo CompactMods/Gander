@@ -22,6 +22,8 @@ import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.chunk.RenderChunkRegion;
+import net.minecraft.client.renderer.chunk.RenderRegionCache;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -51,44 +53,63 @@ public class LevelBakery {
             .collect(Collectors.toSet());
 
         Minecraft mc = Minecraft.getInstance();
+
+        if (!GanderGeometryHelper.initialized())
+            GanderGeometryHelper.setup();
+
         MultiBufferSource.BufferSource buffers = mc.renderBuffers().bufferSource();
 
         Map<SectionPos, BakedLevelSection> bakedSections = new Reference2ObjectArrayMap<>();
         try {
+            final var sorting = VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+
+            RenderRegionCache regionCache = new RenderRegionCache();
             for (var sectionPos : allSections) {
+                final AABB sectionAABB = WorldMath.sectionAABB(sectionPos);
 
-                final AABB chunkArea = WorldMath.sectionABB(sectionPos);
+                final var renderChunk = regionCache.createRegion(level, sectionPos);
+                if (renderChunk == null) {
+                    // Empty section - see createRegion
+                    continue;
+                }
 
-                final SectionBufferBuilderPack blockPack = new SectionBufferBuilderPack();
-                final SectionBufferBuilderPack fluidPack = new SectionBufferBuilderPack();
+                final SectionBufferBuilderPack bufferPack = new SectionBufferBuilderPack();
+                final var compileResults = GanderGeometryHelper.SECTION_COMPILER
+                    .compile(sectionPos, renderChunk, sorting, bufferPack);
 
-                final Map<RenderType, BufferBuilder> blockBufferBuilders = new HashMap<>();
-                final Map<RenderType, BufferBuilder> fluidBufferBuilders = new HashMap<>();
+                final var bakedSection = new BakedLevelSection(bufferPack,
+                    compileResults.renderedLayers,
+                    sectionAABB);
 
-                PoseStack pose = new PoseStack();
-                RandomSource random = RandomSource.createNewThreadLocalInstance();
-                BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
+                bakedSections.put(sectionPos, bakedSection);
 
-//                ModelBlockRenderer.enableCaching();
-                BlockPos.betweenClosedStream(blockBoundaries).forEach(pos -> {
-                    createBlockGeometry(level, pos, pose, buffers, dispatcher, random, blockPack, fluidBufferBuilders);
-                });
-
-//            final var sorting = VertexSorting.byDistance(cameraPosition.x, cameraPosition.y, cameraPosition.z);
 //
-//            final var blockVertices = buildSortedGeometryBuffers(blockPack, sorting, blockBufferBuilders);
-//            final var fluidVertices = buildSortedGeometryBuffers(fluidPack, sorting, fluidBufferBuilders);
+//                final SectionBufferBuilderPack fluidPack = new SectionBufferBuilderPack();
 //
-//            final var bakedSection = new BakedLevelSection(blockPack, fluidPack,
-//                blockVertices.buffers(), fluidVertices.buffers(),
-//                blockVertices.meshStates(), fluidVertices.meshStates(),
-//                chunkArea);
+//                final Map<RenderType, BufferBuilder> blockBufferBuilders = new HashMap<>();
+//                final Map<RenderType, BufferBuilder> fluidBufferBuilders = new HashMap<>();
 //
-//            bakedSections.put(sectionPos, bakedSection);
+//                PoseStack pose = new PoseStack();
+//                RandomSource random = RandomSource.createNewThreadLocalInstance();
+//                BlockRenderDispatcher dispatcher = Minecraft.getInstance().getBlockRenderer();
+//
+////                ModelBlockRenderer.enableCaching();
+//                BlockPos.betweenClosedStream(blockBoundaries).forEach(pos -> {
+//                    createBlockGeometry(level, pos, pose, buffers, dispatcher, random, bufferPack, fluidBufferBuilders);
+//                });
+//
+//
+//                final var blockVertices = buildSortedGeometryBuffers(bufferPack, sorting, blockBufferBuilders);
+//                final var fluidVertices = buildSortedGeometryBuffers(fluidPack, sorting, fluidBufferBuilders);
+//
+//                final var bakedSection = new BakedLevelSection(bufferPack, fluidPack,
+//                    blockVertices.buffers(), fluidVertices.buffers(),
+//                    blockVertices.meshData(), fluidVertices.meshData(),
+//                    chunkArea);
+//
+//                bakedSections.put(sectionPos, bakedSection);
             }
-        }
-
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -118,7 +139,7 @@ public class LevelBakery {
             try {
                 for (BlockModelPart blockmodelpart : model.collectParts(level, pos, state, RandomSource.create(42L))) {
                     final var renderType = blockmodelpart.getRenderType(state);
-                    if(renderType == null)
+                    if (renderType == null)
                         continue;
 
 //                    final var entRenderType = net.neoforged.neoforge.client.RenderTypeHelper.getEntityRenderType(renderType);
@@ -133,9 +154,7 @@ public class LevelBakery {
 
                     renderQuadList(pose.last(), vertices, 1, 1, 1, blockmodelpart.getQuads(null), light, OverlayTexture.NO_OVERLAY);
                 }
-            }
-
-            catch (Exception e) {
+            } catch (Exception e) {
 
             }
 
@@ -194,30 +213,30 @@ public class LevelBakery {
         }
     }
 
-    private static SortedGeometryBufferResult buildSortedGeometryBuffers(SectionBufferBuilderPack blockPack,
-                                                                         VertexSorting sorting,
-                                                                         Map<RenderType, BufferBuilder> bufferBuilders
-    ) {
-        final var renderSortStates = new Reference2ObjectArrayMap<RenderType, MeshData.SortState>();
-        final var vertexBuffers = new Reference2ObjectArrayMap<RenderType, GpuBuffer>();
-
-        bufferBuilders.forEach((renderType, builder) -> {
-            final var buffer = builder.build();
-            if (buffer == null) return;
-
-            if (renderType.sortOnUpload()) {
-                var state = buffer.sortQuads(blockPack.buffer(renderType), sorting);
-                renderSortStates.put(renderType, state);
-            }
-
-            // TODO 21.5 Port
-//            VertexBuffer vb = new VertexBuffer(VertexBuffer.Usage.STATIC);
-//            vb.bind();
-//            vb.upload(buffer);
-//            VertexBuffer.unbind();
-//            vertexBuffers.put(renderType, vb);
-        });
-
-        return new SortedGeometryBufferResult(vertexBuffers, renderSortStates);
-    }
+//    private static SortedGeometryBufferResult buildSortedGeometryBuffers(SectionBufferBuilderPack blockPack,
+//                                                                         VertexSorting sorting,
+//                                                                         Map<RenderType, BufferBuilder> bufferBuilders
+//    ) {
+//        final var renderSortStates = new Reference2ObjectArrayMap<RenderType, MeshData.SortState>();
+//        final var vertexBuffers = new Reference2ObjectArrayMap<RenderType, GpuBuffer>();
+//
+//        bufferBuilders.forEach((renderType, builder) -> {
+//            final var buffer = builder.build();
+//            if (buffer == null) return;
+//
+//            if (renderType.sortOnUpload()) {
+//                var state = buffer.sortQuads(blockPack.buffer(renderType), sorting);
+//                renderSortStates.put(renderType, state);
+//            }
+//
+//            // TODO 21.5 Port
+////            VertexBuffer vb = new VertexBuffer(VertexBuffer.Usage.STATIC);
+////            vb.bind();
+////            vb.upload(buffer);
+////            VertexBuffer.unbind();
+////            vertexBuffers.put(renderType, vb);
+//        });
+//
+//        return new SortedGeometryBufferResult(vertexBuffers, renderSortStates);
+//    }
 }

@@ -4,8 +4,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 
 import com.mojang.math.Axis;
 
-import com.mojang.math.Transformation;
-
 import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.geometry.BakedLevel;
@@ -13,27 +11,20 @@ import dev.compactmods.gander.render.toolkit.FluidRenderer;
 import dev.compactmods.gander.ui.widget.SpatialRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.gui.screens.Overlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.SpecialBlockModelRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.ARGB;
-import net.minecraft.util.ColorRGBA;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.lighting.BlockLightEngine;
 import net.minecraft.world.level.material.Fluids;
 import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.network.PacketDistributor;
-
-import org.joml.Vector3f;
 
 public class GanderUI extends Screen {
 

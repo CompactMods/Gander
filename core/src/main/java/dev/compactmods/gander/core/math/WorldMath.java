@@ -1,9 +1,5 @@
 package dev.compactmods.gander.core.math;
 
-import com.mojang.datafixers.kinds.Functor;
-
-import com.mojang.datafixers.kinds.K1;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.SectionPos;
 import net.minecraft.util.Mth;
@@ -12,9 +8,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
-import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class WorldMath {
@@ -35,7 +29,7 @@ public class WorldMath {
         return AABB.encapsulatingFullBlocks(minBlock, maxBlock);
     }
 
-    public static AABB sectionABB(SectionPos sectionPos) {
+    public static AABB sectionAABB(SectionPos sectionPos) {
         var minBlock = new BlockPos(sectionPos.minBlockX(), sectionPos.minBlockY(), sectionPos.minBlockZ());
         var maxBlock = new BlockPos(sectionPos.maxBlockX(), sectionPos.maxBlockY(), sectionPos.maxBlockZ());
         return AABB.encapsulatingFullBlocks(minBlock, maxBlock);

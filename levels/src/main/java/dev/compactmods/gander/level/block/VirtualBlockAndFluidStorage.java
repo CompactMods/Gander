@@ -117,4 +117,8 @@ public class VirtualBlockAndFluidStorage {
     public Stream<BlockEntity> blockEntities() {
         return blockEntities.values().stream();
     }
+
+    public boolean isEmpty() {
+        return states.isEmpty();
+    }
 }

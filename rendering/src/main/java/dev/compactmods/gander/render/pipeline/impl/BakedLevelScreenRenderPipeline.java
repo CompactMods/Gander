@@ -43,7 +43,7 @@ public class BakedLevelScreenRenderPipeline {
             .addPreGeometryPhase(GanderScreenToolkit::switchToFabulous)
             .addGeometryUploadPhase(GanderScreenPipelinePhases.STATIC_GEOMETRY_UPLOAD)
             .addGeometryUploadPhase(GanderScreenPipelinePhases.BLOCK_ENTITIES_GEOMETRY_UPLOAD)
-            .addGeometryUploadPhase(GanderScreenPipelinePhases.TRANSLUCENT_GEOMETRY_UPLOAD)
+//            .addGeometryUploadPhase(GanderScreenPipelinePhases.TRANSLUCENT_GEOMETRY_UPLOAD)
             .addRenderPhase(BakedLevelScreenRenderPipeline::render)
             .addCleanupPhase(GanderScreenToolkit::revertGraphicsMode)
             .addCleanupPhase(BakedLevelScreenRenderPipeline::teardown);

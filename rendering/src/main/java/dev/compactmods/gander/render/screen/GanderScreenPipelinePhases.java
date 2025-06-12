@@ -1,9 +1,7 @@
 package dev.compactmods.gander.render.screen;
 
-import dev.compactmods.gander.core.Gander;
 import dev.compactmods.gander.render.pipeline.phase.PipelineGeometryUploadPhase;
 import dev.compactmods.gander.render.pipeline.PipelineState;
-import dev.compactmods.gander.render.toolkit.BlockEntityRender;
 import dev.compactmods.gander.render.toolkit.BlockRenderer;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import net.minecraft.client.Minecraft;
@@ -34,14 +32,15 @@ public class GanderScreenPipelinePhases {
         final var camPos = camera.getPosition().toVector3f();
 
         for(var section : bakedLevel.sections().values()) {
-            BlockRenderer.renderSectionBlocks(section, renderTypeStore, RenderType.solid(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-            BlockRenderer.renderSectionFluids(section, renderTypeStore, RenderType.solid(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-
-            BlockRenderer.renderSectionBlocks(section, renderTypeStore, RenderType.cutoutMipped(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-            BlockRenderer.renderSectionFluids(section, renderTypeStore, RenderType.cutoutMipped(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-
-            BlockRenderer.renderSectionBlocks(section, renderTypeStore, RenderType.cutout(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-            BlockRenderer.renderSectionFluids(section, renderTypeStore, RenderType.cutout(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+            // TODO 21.5 Port - upload geometry from baked level
+//            BlockRenderer.renderSectionBlocks(section, RenderType.solid(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+//            BlockRenderer.renderSectionFluids(section, RenderType.solid(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+//
+//            BlockRenderer.renderSectionBlocks(section, RenderType.cutoutMipped(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+//            BlockRenderer.renderSectionFluids(section, RenderType.cutoutMipped(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+//
+//            BlockRenderer.renderSectionBlocks(section, RenderType.cutout(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+//            BlockRenderer.renderSectionFluids(section, RenderType.cutout(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
         }
     }
 
@@ -84,8 +83,8 @@ public class GanderScreenPipelinePhases {
         final var camPos = camera.getPosition().toVector3f();
 
         for(var section : bakedLevel.sections().values()) {
-            BlockRenderer.renderSectionFluids(section, renderTypeStore, RenderType.translucent(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-            BlockRenderer.renderSectionBlocks(section, renderTypeStore, RenderType.translucent(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+//            BlockRenderer.renderSectionFluids(section, RenderType.translucent(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+//            BlockRenderer.renderSectionBlocks(section, RenderType.translucent(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
         }
     }
 }

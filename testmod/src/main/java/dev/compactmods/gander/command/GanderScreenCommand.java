@@ -26,6 +26,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -61,12 +62,15 @@ public class GanderScreenCommand {
             .then(Commands.argument("distance", IntegerArgumentType.integer(3, 32))
                 .executes(GanderScreenCommand::nearbyBlocks));
 
+        var area = GanderCommandHelper.makeAreaCommand(GanderScreenCommand::areaRenderer);
+
         final var renderToScreenRoot = Commands.literal("screen");
         renderToScreenRoot
             .then(scene)
             .then(structure)
             .then(debug)
-            .then(nearby);
+            .then(nearby)
+            .then(area);
 
         root.then(renderToScreenRoot);
     }
@@ -143,5 +147,25 @@ public class GanderScreenCommand {
         }
 
         return 0;
+    }
+
+    private static int areaRenderer(CommandContext<CommandSourceStack> ctx) {
+        final var src = ctx.getSource();
+        final var area = GanderCommandHelper.getAreaFromCommand(ctx);
+
+        makeAndSendTemplateToPlayers(src, area);
+        return 0;
+    }
+
+    private static void makeAndSendTemplateToPlayers(CommandSourceStack source, AABB area) {
+        final var finalStructure = GanderCommandHelper.makeAreaStructure(source, area);
+
+        final var nearbyPlayers = source.getLevel()
+            .getPlayers(player -> player.position()
+                .closerThan(source.getPosition(), 15, 15));
+
+        for(var nearby : nearbyPlayers) {
+            PacketDistributor.sendToPlayer(nearby, new OpenGanderUiForStructureRequest(Component.literal("Area Render"), finalStructure));
+        }
     }
 }

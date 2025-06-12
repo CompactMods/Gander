@@ -45,7 +45,7 @@ public class SpatialRenderer implements Renderable {
 
     public void recalculateTranslucency() {
         final var lvl = state.get(GanderRenderToolkit.BAKED_LEVEL);
-        lvl.resortTranslucency(camera.getLookFrom());
+//        lvl.resortTranslucency(camera.getLookFrom());
     }
 
     public void shouldRenderCompass(boolean render) {

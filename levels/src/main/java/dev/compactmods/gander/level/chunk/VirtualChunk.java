@@ -21,6 +21,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.EmptyLevelChunk;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.Structure;
@@ -34,7 +35,7 @@ import org.jetbrains.annotations.Nullable;
 
 import static net.minecraft.world.level.chunk.ProtoChunk.packOffsetCoordinates;
 
-public class VirtualChunk extends EmptyLevelChunk {
+public class VirtualChunk extends LevelChunk {
 
 	private final VirtualLevel virtualLevel;
 	private final VirtualChunkSection[] sections;
@@ -42,7 +43,7 @@ public class VirtualChunk extends EmptyLevelChunk {
 	private boolean needsLight;
 
 	public VirtualChunk(VirtualLevel world, int x, int z) {
-		super(world, new ChunkPos(x, z), world.getBiome());
+		super(world, new ChunkPos(x, z));
 
 		this.virtualLevel = world;
 
@@ -210,4 +211,16 @@ public class VirtualChunk extends EmptyLevelChunk {
 	public FluidState getFluidState(BlockPos pos) {
 		return virtualLevel.getFluidState(pos);
 	}
+
+    @Override
+    public boolean isEmpty() {
+        return this.virtualLevel.blockSystem()
+            .blockAndFluidStorage()
+            .isEmpty();
+    }
+
+    @Override
+    public boolean isSectionEmpty(int y) {
+        return false;
+    }
 }

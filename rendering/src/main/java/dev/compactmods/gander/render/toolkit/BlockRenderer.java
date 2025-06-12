@@ -1,39 +1,51 @@
 package dev.compactmods.gander.render.toolkit;
 
+import com.mojang.blaze3d.buffers.BufferType;
+import com.mojang.blaze3d.buffers.BufferUsage;
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import dev.compactmods.gander.render.RenderTypes;
 import dev.compactmods.gander.render.geometry.BakedLevelSection;
-import dev.compactmods.gander.render.rendertypes.RenderTypeStore;
+import dev.compactmods.gander.render.geometry.MultiPassGeometryUploader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
+
+import net.minecraft.client.renderer.chunk.SectionRenderDispatcher;
+import net.minecraft.core.SectionPos;
+import net.minecraft.util.profiling.Profiler;
 
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
 import java.util.Map;
-import java.util.function.Function;
 
 public class BlockRenderer {
 
-	public static void renderSectionBlocks(BakedLevelSection section, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
+	public static void renderSectionBlocks(BakedLevelSection section,
+                                           MultiPassGeometryUploader uploader,
+                                           RenderType renderType, PoseStack poseStack,
                                            Vector3fc camera,
                                            Vector3fc renderOrigin,
                                            Matrix4f pProjectionMatrix) {
-		renderSectionLayer(section.blockBuffers(), renderTypeStore::redirectedBlockRenderType, renderType, poseStack, camera, renderOrigin, pProjectionMatrix);
+		renderSectionLayer(section, uploader, renderType, poseStack, camera, renderOrigin, pProjectionMatrix);
 	}
 
-	public static void renderSectionFluids(BakedLevelSection section, RenderTypeStore renderTypeStore, RenderType renderType, PoseStack poseStack,
+	public static void renderSectionFluids(BakedLevelSection section,
+                                           MultiPassGeometryUploader uploader,
+                                           RenderType renderType, PoseStack poseStack,
                                            Vector3fc camera,
                                            Vector3fc renderOrigin,
                                            Matrix4f pProjectionMatrix) {
-		renderSectionLayer(section.fluidBuffers(), renderTypeStore::redirectedFluidRenderType, renderType, poseStack, camera, renderOrigin, pProjectionMatrix);
+		renderSectionLayer(section, uploader, renderType, poseStack, camera, renderOrigin, pProjectionMatrix);
 	}
 
-	public static void renderSectionLayer(Map<RenderType, GpuBuffer> renderBuffers,
-                                          Function<RenderType, RenderType> redirector,
+	public static void renderSectionLayer(BakedLevelSection section,
+                                          MultiPassGeometryUploader uploader,
                                           RenderType renderType,
                                           PoseStack poseStack,
                                           Vector3fc cameraPosition,
@@ -42,38 +54,19 @@ public class BlockRenderer {
     ) {
 		final var mc = Minecraft.getInstance();
 
-		final var retargetedRenderType = redirector.apply(renderType);
-
 		RenderSystem.assertOnRenderThread();
-		retargetedRenderType.setupRenderState();
+		renderType.setupRenderState();
 
-//		mc.getProfiler().popPush(() -> "render_" + renderType);
+        Profiler.get().popPush("gander_render_" + renderType.getName());
 
-//		ShaderInstance shaderinstance = RenderSystem.getShader();
-//		Uniform uniform = shaderinstance.CHUNK_OFFSET;
+//        uploader.makeUploadTask(renderType, section.meshData())
+//        uploader.makeUploadTask(renderType, section.gpuBuffers())
 
-		final var vertexbuffer = renderBuffers.get(renderType);
+		Profiler.get().pop();
 
-        final Vector3f renderAt = new Vector3f();
-        renderOrigin.sub(cameraPosition, renderAt);
-
-		if (vertexbuffer != null) {
-//			if (uniform != null) {
-//				shaderinstance.apply();
-//				uniform.set(renderAt.x(), renderAt.y(), renderAt.z());
-//				uniform.upload();
-//			}
-
-//			vertexbuffer.bind();
-//			vertexbuffer.drawWithShader(poseStack.last().pose(), pProjectionMatrix, shaderinstance);
-		}
-
-//		if (uniform != null) {
-//			uniform.set(0.0F, 0.0F, 0.0F);
-//		}
-
-//		mc.getProfiler().pop();
 		// net.neoforged.neoforge.client.ClientHooks.dispatchRenderStage(pRenderType, this, pPoseStack, pProjectionMatrix, this.ticks, mc.gameRenderer.getMainCamera(), this.getFrustum());
-		retargetedRenderType.clearRenderState();
+		renderType.clearRenderState();
 	}
+
+
 }
