@@ -1,5 +1,7 @@
 package dev.compactmods.gander.render.pipeline;
 
+import com.mojang.blaze3d.systems.CommandEncoder;
+
 import dev.compactmods.gander.render.pipeline.phase.PipelinePhaseCollection;
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -28,15 +30,15 @@ public record SingleEntrypointRenderPipeline(PipelinePhaseCollection phases)
     }
 
     @Override
-    public void render(PipelineState state, GuiGraphics graphics, float partialTicks) {
+    public void render(PipelineState state, CommandEncoder encoder, float partialTicks) {
         for (var preRenderPhase : phases.beforeGeometryPhases())
             preRenderPhase.run(state);
 
         for (var phase : phases.geometryUploadPhases())
-            phase.upload(state, graphics, partialTicks);
+            phase.upload(state, encoder);
 
         for (var phase : phases.renderPhases())
-            phase.render(state, graphics);
+            phase.render(state, encoder, partialTicks);
 
         for (var phase : phases.cleanupPhases())
             phase.run(state);

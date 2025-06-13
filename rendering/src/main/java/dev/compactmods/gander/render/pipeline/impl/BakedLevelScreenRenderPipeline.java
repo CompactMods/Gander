@@ -5,16 +5,12 @@ import com.mojang.blaze3d.buffers.BufferUsage;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
-import dev.compactmods.gander.render.geometry.MultiPassGeometryUploader;
 import dev.compactmods.gander.render.pipeline.PipelineState;
-import dev.compactmods.gander.render.pipeline.RenderPipeline;
 import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
 import dev.compactmods.gander.render.pipeline.SinglePassRenderPipeline;
 import dev.compactmods.gander.render.screen.GanderScreenPipelinePhases;
@@ -26,7 +22,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Mth;
 
-import java.util.Objects;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
@@ -42,10 +37,10 @@ public class BakedLevelScreenRenderPipeline {
             .addSetupPhase(BakedLevelScreenRenderPipeline::setup)
 
             .addPreGeometryPhase(GanderScreenToolkit::switchToFabulous)
-            .addGeometryUploadPhase(GanderScreenPipelinePhases::staticPass)
-            .addGeometryUploadPhase(GanderScreenPipelinePhases.BLOCK_ENTITIES_GEOMETRY_UPLOAD)
+            .addGeometryUploadPhase(GanderScreenPipelinePhases::uploadStaticGeometry)
+//            .addGeometryUploadPhase(GanderScreenPipelinePhases.BLOCK_ENTITIES_GEOMETRY_UPLOAD)
 //            .addGeometryUploadPhase(GanderScreenPipelinePhases.TRANSLUCENT_GEOMETRY_UPLOAD)
-            .addRenderPhase(BakedLevelScreenRenderPipeline::render)
+            .addRenderPhase(GanderScreenPipelinePhases::renderStaticGeometry)
             .addCleanupPhase(GanderScreenToolkit::revertGraphicsMode)
             .addCleanupPhase(BakedLevelScreenRenderPipeline::teardown);
 
@@ -80,6 +75,8 @@ public class BakedLevelScreenRenderPipeline {
 
         return true;
     }
+
+
 
     private static void render(PipelineState state, GuiGraphics graphics) {
         final var mc = Minecraft.getInstance();

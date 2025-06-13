@@ -32,10 +32,12 @@ public final class BakedLevelOverlayPipeline {
     public static MultiPassRenderPipeline INSTANCE;
     static {
         var builder = new RenderPipelineBuilder();
+        /*
         builder.phases()
             .addGeometryUploadPhase(STATIC_GEOMETRY::contains, BakedLevelOverlayPipeline::staticGeometryPass)
             .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::blockEntitiesPass)
             .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::translucentGeometryPass);
+         */
 
         INSTANCE = builder.stagedMultiPass();
     }

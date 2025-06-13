@@ -1,5 +1,7 @@
 package dev.compactmods.gander.render.pipeline.phase;
 
+import com.mojang.blaze3d.systems.CommandEncoder;
+
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -16,7 +18,7 @@ public record PredicateWrappedGeometryUploadPhase(Predicate<RenderType> predicat
     }
 
     @Override
-    public void upload(PipelineState state, GuiGraphics graphics, float partialTicks) {
-        phase.upload(state, graphics, partialTicks);
+    public void upload(PipelineState state, CommandEncoder encoder) {
+        phase.upload(state, encoder);
     }
 }

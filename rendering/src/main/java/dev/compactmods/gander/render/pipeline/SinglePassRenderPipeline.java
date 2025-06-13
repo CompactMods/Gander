@@ -1,9 +1,9 @@
 package dev.compactmods.gander.render.pipeline;
 
-import net.minecraft.client.gui.GuiGraphics;
+import com.mojang.blaze3d.systems.CommandEncoder;
 
 public interface SinglePassRenderPipeline extends RenderPipeline {
 
-    void render(PipelineState state, GuiGraphics graphics, float partialTicks);
+    void render(PipelineState state, CommandEncoder encoder, float partialTicks);
 
 }

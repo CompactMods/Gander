@@ -1,5 +1,7 @@
 package dev.compactmods.gander.render.pipeline.phase;
 
+import com.mojang.blaze3d.systems.CommandEncoder;
+
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -11,5 +13,5 @@ public interface PipelineGeometryUploadPhase extends PipelinePhase {
         return true;
     }
 
-    void upload(PipelineState state, GuiGraphics graphics, float partialTicks);
+    void upload(PipelineState state, CommandEncoder encoder);
 }

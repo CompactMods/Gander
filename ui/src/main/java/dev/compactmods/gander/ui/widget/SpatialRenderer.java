@@ -1,5 +1,7 @@
 package dev.compactmods.gander.ui.widget;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+
 import dev.compactmods.gander.core.camera.SceneCamera;
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.pipeline.PipelineState;
@@ -9,15 +11,19 @@ import dev.compactmods.gander.render.screen.GanderScreenRenderHelper;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.GuiGraphics;
 
 import net.minecraft.client.gui.navigation.ScreenPosition;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.core.BlockPos;
 
 import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 
 public class SpatialRenderer implements Renderable {
     private final GanderScreenRenderHelper renderHelper;
@@ -69,7 +75,8 @@ public class SpatialRenderer implements Renderable {
 
             state.set(GanderRenderToolkit.PROJECTION_MATRIX, projMatrix);
 
-            BakedLevelScreenRenderPipeline.INSTANCE.render(state, graphics, partialTicks);
+            var encoder = RenderSystem.getDevice().createCommandEncoder();
+            BakedLevelScreenRenderPipeline.INSTANCE.render(state, encoder, partialTicks);
 
             poseStack.popPose();
         });

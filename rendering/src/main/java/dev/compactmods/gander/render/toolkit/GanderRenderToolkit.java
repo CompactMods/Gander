@@ -11,6 +11,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.GraphicsStatus;
 
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.core.BlockPos;
 
 import org.joml.Matrix4f;
@@ -27,6 +28,8 @@ public class GanderRenderToolkit {
 
     public static final PipelineState.Item<Matrix4f> PROJECTION_MATRIX = new PipelineState.Item<>(Matrix4f.class);
     public static final PipelineState.Item<Matrix4f> MODEL_VIEW_MATRIX = new PipelineState.Item<>(Matrix4f.class);
+
+    public static final PipelineState.Item<Frustum> FRUSTUM = new PipelineState.Item<>(Frustum.class);
 
     public static final PipelineState.Item<BakedLevel> BAKED_LEVEL = new PipelineState.Item<>(BakedLevel.class);
     public static final PipelineState.Item<ScreenRectangle> RENDER_BOUNDS = new PipelineState.Item<>(ScreenRectangle.class);
