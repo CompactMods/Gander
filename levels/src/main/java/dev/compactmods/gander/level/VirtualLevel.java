@@ -2,15 +2,25 @@ package dev.compactmods.gander.level;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
+import dev.compactmods.gander.level.light.VirtualLightEngine;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
+import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.crafting.RecipeAccess;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.block.entity.FuelValues;
+import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import net.minecraft.world.phys.AABB;
 
 import net.neoforged.neoforge.entity.PartEntity;
@@ -21,7 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import dev.compactmods.gander.core.math.WorldMath;
-import dev.compactmods.gander.level.block.VirtualBlockSystem;
+//import dev.compactmods.gander.level.block.VirtualBlockSystem;
 import dev.compactmods.gander.level.chunk.VirtualChunkSource;
 import dev.compactmods.gander.level.entity.VirtualEntitySystem;
 import dev.compactmods.gander.level.util.VirtualLevelUtils;
@@ -73,14 +83,16 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	private final TickRateManager tickManager = new TickRateManager();
 	private final RegistryAccess access;
-	private final VirtualChunkSource chunkSource;
-	private final VirtualBlockSystem blocks;
+	private final ChunkSource chunkSource;
+    private final VirtualLightEngine lightEngine;
+//	private final VirtualBlockSystem blocks;
 	private final Scoreboard scoreboard;
 	private AABB bounds;
 	private VirtualEntitySystem entities;
 	private final Holder<Biome> biome;
     private final Consumer<VirtualLevel> onBlockUpdate;
     private final ModelDataManager modelDataManager;
+    private final Long2ReferenceMap<BlockEntity> blockEntities;
 
     public VirtualLevel(RegistryAccess access, boolean isClientside) {
         this(access, isClientside, newLevel -> {});
@@ -103,12 +115,14 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		this.access = pRegistryAccess;
         this.onBlockUpdate = onBlockUpdate;
         this.chunkSource = new VirtualChunkSource(this);
-		this.blocks = new VirtualBlockSystem(this);
+//		this.blocks = new VirtualBlockSystem(this);
+        this.lightEngine = new VirtualLightEngine(pos -> 15, skyPos -> 15, () -> this);
 		this.scoreboard = new Scoreboard();
 		this.bounds = AABB.INFINITE;
 		this.entities = new VirtualEntitySystem();
 		this.biome = pRegistryAccess.holderOrThrow(Biomes.PLAINS);
         this.modelDataManager = new ModelDataManager(this);
+        this.blockEntities = new Long2ReferenceOpenHashMap<>();
 	}
 
 	public Holder<Biome> getBiome() {
@@ -166,63 +180,65 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
     }
 
-    public VirtualBlockSystem blockSystem() {
-		return this.blocks;
-	}
+//    public VirtualBlockSystem blockSystem() {
+//		return this.blocks;
+//	}
 
-	@Override
-	public boolean setBlock(BlockPos pPos, BlockState pNewState, int pFlags) {
-		return this.setBlock(pPos, pNewState, 0, 512);
-	}
-
-	@Override
-	public boolean setBlock(BlockPos pos, BlockState state, int pFlags, int pRecursionLeft) {
-		if (this.isOutsideBuildHeight(pos)) {
-			return false;
-		}
-
-		return blocks.blockAndFluidStorage().setBlock(pos, state, pFlags, pRecursionLeft);
-	}
-
-	@Override
-	public boolean setBlockAndUpdate(BlockPos pPos, BlockState pState) {
-		return this.setBlock(pPos, pState, Block.UPDATE_NONE);
-	}
-
+//	@Override
+//	public boolean setBlock(BlockPos pPos, BlockState pNewState, int pFlags) {
+//		return this.setBlock(pPos, pNewState, 0, 512);
+//	}
+//
+//	@Override
+//	public boolean setBlock(BlockPos pos, BlockState state, int pFlags, int pRecursionLeft) {
+//		if (this.isOutsideBuildHeight(pos)) {
+//			return false;
+//		}
+//
+//		return blocks.blockAndFluidStorage().setBlock(pos, state, pFlags, pRecursionLeft);
+//	}
+//
+//	@Override
+//	public boolean setBlockAndUpdate(BlockPos pPos, BlockState pState) {
+//		return this.setBlock(pPos, pState, Block.UPDATE_NONE);
+//	}
+//
 	@Override
 	public void setBlockEntity(BlockEntity blockEntity) {
-		blocks.blockAndFluidStorage().setBlockEntity(blockEntity);
+		super.setBlockEntity(blockEntity);
+        this.blockEntities.put(blockEntity.getBlockPos().asLong(), blockEntity);
 	}
-
+//
 	@Override
 	public void removeBlockEntity(final BlockPos pPos) {
-		blocks.blockAndFluidStorage().removeBlockEntity(pPos);
+		super.removeBlockEntity(pPos);
+        this.untrackBlockEntity(pPos);
 	}
-
-	@Nullable
-	@Override
-	public BlockEntity getBlockEntity(BlockPos pPos) {
-		if (!bounds.contains(Vec3.atCenterOf(pPos)))
-			return null;
-
-		return blocks.blockAndFluidStorage().getBlockEntity(pPos);
-	}
-
-	@Override
-	public BlockState getBlockState(BlockPos pPos) {
-		if (!bounds.contains(Vec3.atCenterOf(pPos)))
-			return Blocks.AIR.defaultBlockState();
-
-		return blocks.blockAndFluidStorage().getBlockState(pPos);
-	}
-
-	@Override
-	public @NotNull FluidState getFluidState(BlockPos pos) {
-		if (!bounds.contains(Vec3.atCenterOf(pos)))
-			return Fluids.EMPTY.defaultFluidState();
-
-		return blocks.blockAndFluidStorage().getFluidState(pos);
-	}
+//
+//	@Nullable
+//	@Override
+//	public BlockEntity getBlockEntity(BlockPos pPos) {
+//		if (!bounds.contains(Vec3.atCenterOf(pPos)))
+//			return null;
+//
+//		return blocks.blockAndFluidStorage().getBlockEntity(pPos);
+//	}
+//
+//	@Override
+//	public BlockState getBlockState(BlockPos pPos) {
+//		if (!bounds.contains(Vec3.atCenterOf(pPos)))
+//			return Blocks.AIR.defaultBlockState();
+//
+//		return blocks.blockAndFluidStorage().getBlockState(pPos);
+//	}
+//
+//	@Override
+//	public @NotNull FluidState getFluidState(BlockPos pos) {
+//		if (!bounds.contains(Vec3.atCenterOf(pos)))
+//			return Fluids.EMPTY.defaultFluidState();
+//
+//		return blocks.blockAndFluidStorage().getFluidState(pos);
+//	}
 
     @Override
     public void playSeededSound(@Nullable Entity entity, double v, double v1, double v2, Holder<SoundEvent> holder, SoundSource soundSource, float v3, float v4, long l) {
@@ -262,22 +278,22 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 		}
 	}
 
-	@Override
-	protected void tickBlockEntities() {
-		if (tickRateManager().runsNormally()) {
-			blocks.blockAndFluidStorage().blockEntityPositions()
-					.filter(this::shouldTickBlocksAt)
-					.forEach(entityPos -> {
-						var blockEntity = blocks.blockAndFluidStorage().getBlockEntity(entityPos);
-						if (blockEntity != null) {
-							var ticker = blocks.blockAndFluidStorage().getBlockState(entityPos).getTicker(this, blockEntity.getType());
-
-							if (ticker != null)
-								tickBlockEntity(blockEntity, (BlockEntityTicker<BlockEntity>) ticker);
-						}
-					});
-		}
-	}
+//	@Override
+//	protected void tickBlockEntities() {
+//		if (tickRateManager().runsNormally()) {
+//			blocks.blockAndFluidStorage().blockEntityPositions()
+//					.filter(this::shouldTickBlocksAt)
+//					.forEach(entityPos -> {
+//						var blockEntity = blocks.blockAndFluidStorage().getBlockEntity(entityPos);
+//						if (blockEntity != null) {
+//							var ticker = blocks.blockAndFluidStorage().getBlockState(entityPos).getTicker(this, blockEntity.getType());
+//
+//							if (ticker != null)
+//								tickBlockEntity(blockEntity, (BlockEntityTicker<BlockEntity>) ticker);
+//						}
+//					});
+//		}
+//	}
 
     @Override
     public void explode(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionDamageCalculator explosionDamageCalculator, double v, double v1, double v2, float v3, boolean b, ExplosionInteraction explosionInteraction, ParticleOptions particleOptions, ParticleOptions particleOptions1, Holder<SoundEvent> holder) {
@@ -397,7 +413,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	@Override
 	public @NotNull LevelLightEngine getLightEngine() {
-		return blocks.lightEngine();
+		return this.lightEngine;
 	}
 
 	@Override
@@ -415,7 +431,17 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
     }
 
     public void refreshBlockEntityModels() {
-        blocks.blockAndFluidStorage().blockEntities()
+        this.blockEntities.values()
             .forEach(modelDataManager::requestRefresh);
+    }
+
+    public Stream<BlockPos> blockEntityPositions() {
+        return blockEntities.keySet().longStream()
+            .mapToObj(BlockPos::of)
+            .map(BlockPos::immutable);
+    }
+
+    public void untrackBlockEntity(BlockPos pos) {
+        this.blockEntities.remove(pos.asLong());
     }
 }

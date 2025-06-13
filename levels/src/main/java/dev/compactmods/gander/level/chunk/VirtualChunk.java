@@ -38,32 +38,14 @@ import static net.minecraft.world.level.chunk.ProtoChunk.packOffsetCoordinates;
 public class VirtualChunk extends LevelChunk {
 
 	private final VirtualLevel virtualLevel;
-	private final VirtualChunkSection[] sections;
-
 	private boolean needsLight;
 
 	public VirtualChunk(VirtualLevel world, int x, int z) {
 		super(world, new ChunkPos(x, z));
 
 		this.virtualLevel = world;
-
-		int sectionCount = world.getSectionsCount();
-		this.sections = new VirtualChunkSection[sectionCount];
-
-		for (int i = 0; i < sectionCount; i++) {
-			sections[i] = new VirtualChunkSection(this, i << 4);
-		}
-
 		this.needsLight = true;
 	}
-
-    @Override
-    public @Nullable BlockState setBlockState(BlockPos pos, BlockState state, int flags) {
-        if (virtualLevel.setBlockAndUpdate(pos, state))
-            return state;
-
-        return virtualLevel.getBlockState(pos);
-    }
 
 	@Override
 	public void markPosForPostprocessing(BlockPos pPos) {
@@ -73,18 +55,8 @@ public class VirtualChunk extends LevelChunk {
 	}
 
 	@Override
-	public void setBlockEntity(BlockEntity blockEntity) {
-		virtualLevel.setBlockEntity(blockEntity);
-	}
-
-	@Override
 	public Set<BlockPos> getBlockEntitiesPos() {
 		return Collections.emptySet();
-	}
-
-	@Override
-	public LevelChunkSection[] getSections() {
-		return sections;
 	}
 
 	@Override
@@ -128,11 +100,6 @@ public class VirtualChunk extends LevelChunk {
 	@Override
 	public LongSet getReferencesForStructure(Structure pStructure) {
 		return LongSets.emptySet();
-	}
-
-	@Override
-	public void removeBlockEntity(BlockPos pos) {
-		virtualLevel.removeBlockEntity(pos);
 	}
 
 	@Override
@@ -190,37 +157,15 @@ public class VirtualChunk extends LevelChunk {
 		this.needsLight = lightCorrect;
 	}
 
-	@Override
-	@Nullable
-	public BlockEntity getBlockEntity(BlockPos pos) {
-		return virtualLevel.getBlockEntity(pos);
-	}
-
-	@org.jetbrains.annotations.Nullable
-	@Override
-	public BlockEntity getBlockEntity(BlockPos pos, EntityCreationType pCreationType) {
-		return virtualLevel.getBlockEntity(pos);
-	}
-
-	@Override
-	public BlockState getBlockState(BlockPos pos) {
-		return virtualLevel.getBlockState(pos);
-	}
-
-	@Override
-	public FluidState getFluidState(BlockPos pos) {
-		return virtualLevel.getFluidState(pos);
-	}
-
-    @Override
-    public boolean isEmpty() {
-        return this.virtualLevel.blockSystem()
-            .blockAndFluidStorage()
-            .isEmpty();
-    }
-
-    @Override
-    public boolean isSectionEmpty(int y) {
-        return false;
-    }
+//    @Override
+//    public boolean isEmpty() {
+//        return this.virtualLevel.blockSystem()
+//            .blockAndFluidStorage()
+//            .isEmpty();
+//    }
+//
+//    @Override
+//    public boolean isSectionEmpty(int y) {
+//        return false;
+//    }
 }

@@ -42,9 +42,7 @@ public record LevelInLevelRenderer(UUID id, PipelineState state) {
 
     public static LevelInLevelRenderer create(BakedLevel level, VirtualLevel virtualLevel, Vector3f renderLocation) {
         final var initialState = BakedLevelOverlayPipeline.INSTANCE.setup((state) -> {
-            final var blockEntityPos = virtualLevel.blockSystem()
-                .blockAndFluidStorage()
-                .blockEntityPositions()
+            final var blockEntityPos = virtualLevel.blockEntityPositions()
                 .toArray(BlockPos[]::new);
 
             state.set(GanderRenderToolkit.BAKED_LEVEL, level);

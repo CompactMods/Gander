@@ -91,19 +91,19 @@ public class GanderUI extends Screen {
             renderable.render(graphics, mouseX, mouseY, partialTicks);
         }
 
-        final var pose = graphics.pose();
-        pose.pushPose();
-        pose.translate(100, 300, 100);
-        pose.rotateAround(Axis.XN.rotationDegrees(25), 0.5F, 0.0F, 0.5F);
-        pose.rotateAround(Axis.YP.rotationDegrees(45), 0.5F, 0.0F, 0.5F);
-        pose.scale(100, -100, 100);
+//        final var pose = graphics.pose();
+//        pose.pushPose();
+//        pose.translate(100, 300, 100);
+//        pose.rotateAround(Axis.XN.rotationDegrees(25), 0.5F, 0.0F, 0.5F);
+//        pose.rotateAround(Axis.YP.rotationDegrees(45), 0.5F, 0.0F, 0.5F);
+//        pose.scale(100, -100, 100);
+//
+////        var fs = new FluidStack(Fluids.WATER, 1000);
+////        FluidRenderer.renderFluidBox(fs, 1, 1, 1, 3, 5, 2.75f, minecraft.renderBuffers().bufferSource(), graphics.pose(), LightTexture.FULL_BLOCK, true);
+//
+//        pose.popPose();
 
-        var fs = new FluidStack(Fluids.WATER, 1000);
-        FluidRenderer.renderFluidBox(fs, 1, 1, 1, 3, 5, 2.75f, minecraft.renderBuffers().bufferSource(), graphics.pose(), LightTexture.FULL_BLOCK, true);
-
-        pose.popPose();
-
-        renderDebugBlock(graphics);
+//        renderDebugBlock(graphics);
     }
 
     private void renderDebugBlock(GuiGraphics graphics) {
