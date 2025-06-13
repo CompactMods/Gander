@@ -22,9 +22,9 @@ public class MultiPassGeometryUploader {
 
     private final Map<RenderType, MultiPassGpuBuffer> buffers = new HashMap<>();
 
-    public RenderTypeUploadTask makeUploadTask(RenderType type, MeshData meshData) {
+    public SectionRenderPhase makeUploadTask(RenderType type, MeshData meshData) {
         MultiPassGpuBuffer buffer = buffers.computeIfAbsent(type, t -> MultiPassGpuBuffer.create(t, meshData));
-        return new RenderTypeUploadTask(buffer);
+        return new SectionRenderPhase(type, buffer);
     }
 
     public record MultiPassGpuBuffer(RenderType renderType, MeshData meshData, GpuBuffer vertexBuffer, GpuBuffer indexBuffer) {
@@ -67,16 +67,13 @@ public class MultiPassGeometryUploader {
         }
     }
 
-    public record RenderTypeUploadTask(MultiPassGpuBuffer buffer) {
+    public record SectionRenderPhase(RenderType renderType, MultiPassGpuBuffer buffer) {
 
         // from SectionRenderDispatcher
-        private CompletableFuture<Void> upload(MeshData meshData) {
+        public CompletableFuture<Void> upload(final CommandEncoder encoder, MeshData meshData) {
             return CompletableFuture.runAsync(() -> {
-                final CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
-
                 if (buffer.vertexBuffer.size() < meshData.vertexBuffer().remaining()) {
                     buffer.vertexBuffer.close();
-//                    buffer.setVertexBuffer(buffer.vertexBuffer);
                 } else if (!buffer.vertexBuffer.isClosed()) {
                     encoder.writeToBuffer(buffer.vertexBuffer, meshData.vertexBuffer(), 0);
                 }
@@ -91,12 +88,9 @@ public class MultiPassGeometryUploader {
                         if (buffer.indexBuffer != null) {
                             buffer.indexBuffer.close();
                         }
-
-//                        buffer.setIndexBuffer(createGpuBufferForIndexedMeshData(renderType, meshData));
                     }
                 } else if (buffer.indexBuffer != null) {
                     buffer.indexBuffer.close();
-//                    buffer.setIndexBuffer(null);
                 }
 
                 meshData.close();

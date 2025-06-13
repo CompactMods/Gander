@@ -12,6 +12,7 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
+import dev.compactmods.gander.render.geometry.MultiPassGeometryUploader;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.pipeline.RenderPipeline;
 import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
@@ -41,7 +42,7 @@ public class BakedLevelScreenRenderPipeline {
             .addSetupPhase(BakedLevelScreenRenderPipeline::setup)
 
             .addPreGeometryPhase(GanderScreenToolkit::switchToFabulous)
-            .addGeometryUploadPhase(GanderScreenPipelinePhases.STATIC_GEOMETRY_UPLOAD)
+            .addGeometryUploadPhase(GanderScreenPipelinePhases::staticPass)
             .addGeometryUploadPhase(GanderScreenPipelinePhases.BLOCK_ENTITIES_GEOMETRY_UPLOAD)
 //            .addGeometryUploadPhase(GanderScreenPipelinePhases.TRANSLUCENT_GEOMETRY_UPLOAD)
             .addRenderPhase(BakedLevelScreenRenderPipeline::render)
@@ -111,25 +112,26 @@ public class BakedLevelScreenRenderPipeline {
 //        shaderinstance.setSampler("DiffuseSampler", renderTarget.getColorTextureId());
 //        shaderinstance.apply();
 
-            var bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLIT_SCREEN);
-            bufferbuilder.addVertex(0.0F, 0.0F, 0.0F);
-            bufferbuilder.addVertex(1.0F, 0.0F, 0.0F);
-            bufferbuilder.addVertex(1.0F, 1.0F, 0.0F);
-            bufferbuilder.addVertex(0.0F, 1.0F, 0.0F);
-            try(final var mesh = bufferbuilder.build()) {
 
-                final var buffer = RenderSystem.getDevice()
-                    .createBuffer(() -> "Gander Render Buffer", BufferType.VERTICES, BufferUsage.STATIC_WRITE, mesh.vertexBuffer());
+        var bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLIT_SCREEN);
+        bufferbuilder.addVertex(0.0F, 0.0F, 0.0F);
+        bufferbuilder.addVertex(1.0F, 0.0F, 0.0F);
+        bufferbuilder.addVertex(1.0F, 1.0F, 0.0F);
+        bufferbuilder.addVertex(0.0F, 1.0F, 0.0F);
+        try (final var mesh = bufferbuilder.build()) {
 
-                try (RenderPass renderpass = RenderSystem.getDevice()
-                    .createCommandEncoder()
-                    .createRenderPass(renderTarget.getColorTexture(), OptionalInt.empty(), renderTarget.getDepthTexture(), OptionalDouble.empty())) {
+            final var buffer = RenderSystem.getDevice()
+                .createBuffer(() -> "Gander Render Buffer", BufferType.VERTICES, BufferUsage.STATIC_WRITE, mesh.vertexBuffer());
 
-                    renderpass.setPipeline(RenderPipelines.GUI);
-                    renderpass.setVertexBuffer(0, buffer);
-                    renderpass.draw(0, 10);
-                }
+            try (RenderPass renderpass = RenderSystem.getDevice()
+                .createCommandEncoder()
+                .createRenderPass(renderTarget.getColorTexture(), OptionalInt.empty(), renderTarget.getDepthTexture(), OptionalDouble.empty())) {
+
+                renderpass.setPipeline(RenderPipelines.GUI);
+                renderpass.setVertexBuffer(0, buffer);
+                renderpass.draw(0, 10);
             }
+        }
 
 //        BufferBuilder bufferbuilder = RenderSystem.renderThreadTesselator().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLIT_SCREEN);
 

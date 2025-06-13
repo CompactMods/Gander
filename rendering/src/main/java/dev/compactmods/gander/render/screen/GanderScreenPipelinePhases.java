@@ -1,9 +1,13 @@
 package dev.compactmods.gander.render.screen;
 
+import com.mojang.blaze3d.systems.CommandEncoder;
+import com.mojang.blaze3d.systems.RenderSystem;
+
+import dev.compactmods.gander.render.geometry.MultiPassGeometryUploader;
 import dev.compactmods.gander.render.pipeline.phase.PipelineGeometryUploadPhase;
 import dev.compactmods.gander.render.pipeline.PipelineState;
-import dev.compactmods.gander.render.toolkit.BlockRenderer;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderType;
@@ -11,37 +15,43 @@ import net.minecraft.client.renderer.RenderType;
 import org.joml.Vector3f;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 public class GanderScreenPipelinePhases {
 
-    public static final PipelineGeometryUploadPhase STATIC_GEOMETRY_UPLOAD = GanderScreenPipelinePhases::staticPass;
     public static final PipelineGeometryUploadPhase BLOCK_ENTITIES_GEOMETRY_UPLOAD = GanderScreenPipelinePhases::blockEntitiesPass;
     public static final PipelineGeometryUploadPhase TRANSLUCENT_GEOMETRY_UPLOAD = GanderScreenPipelinePhases::translucentPass;
 
-    private static void staticPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
+    public static void staticPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
         final var bakedLevel = state.get(GanderRenderToolkit.BAKED_LEVEL);
-        // final var chain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
-        final var renderTypeStore = state.get(GanderRenderToolkit.RENDER_TYPE_STORE);
-        final var renderOrigin = state.getOrDefault(GanderRenderToolkit.RENDER_ORIGIN, new Vector3f());
-        final var camera = state.get(GanderRenderToolkit.CAMERA);
-        final var projectionMatrix = state.get(GanderRenderToolkit.PROJECTION_MATRIX);
 
-        // chain.prepareLayer(Gander.asResource("main"));
+        var uploader = new MultiPassGeometryUploader();
 
-        final var camPos = camera.getPosition().toVector3f();
 
+//        final var groupedUploadTasks = bakedLevel.sections.values()
+//            .stream()
+//            .flatMap(it -> it.meshData().entrySet())
+//            .map(it -> makeUploadTask(it.getKey(), it.getValue()))
+//            .collect(Collectors.groupingBy(it -> it.renderType()))
+//            .entrySet()
+//            .stream()
+//            .flatMap(it -> Map.entry(it.getKey(), it.getValue().stream()
+//                .reducing(CompletableFuture::andThen)))
+//            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        final var uploadTasks = new HashMap<RenderType, List<MultiPassGeometryUploader.SectionRenderPhase>>();
         for(var section : bakedLevel.sections().values()) {
-            // TODO 21.5 Port - upload geometry from baked level
-//            BlockRenderer.renderSectionBlocks(section, RenderType.solid(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-//            BlockRenderer.renderSectionFluids(section, RenderType.solid(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-//
-//            BlockRenderer.renderSectionBlocks(section, RenderType.cutoutMipped(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-//            BlockRenderer.renderSectionFluids(section, RenderType.cutoutMipped(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-//
-//            BlockRenderer.renderSectionBlocks(section, RenderType.cutout(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
-//            BlockRenderer.renderSectionFluids(section, RenderType.cutout(), graphics.pose(), camPos, renderOrigin, projectionMatrix);
+            for(var data : section.meshData().entrySet()) {
+                final var set = uploadTasks.computeIfAbsent(data.getKey(), k -> new ObjectArrayList<>());
+                var task = uploader.makeUploadTask(data.getKey(), data.getValue());
+                set.add(task);
+            }
         }
+
+        final CommandEncoder encoder = RenderSystem.getDevice().createCommandEncoder();
+
     }
 
     private static void blockEntitiesPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
