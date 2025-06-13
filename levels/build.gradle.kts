@@ -27,12 +27,7 @@ java {
 
 neoForge {
     version = neoforged.versions.neoforge
-
-    accessTransformers {
-        file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))
-        publish(file("src/main/resources/META-INF/accesstransformer.cfg"))
-    }
-
+    
     parchment {
         minecraftVersion = libs.versions.parchmentMC
         mappingsVersion = libs.versions.parchment
