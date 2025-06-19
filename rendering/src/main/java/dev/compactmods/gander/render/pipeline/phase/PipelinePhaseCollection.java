@@ -1,6 +1,7 @@
 package dev.compactmods.gander.render.pipeline.phase;
 
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -33,7 +34,7 @@ public record PipelinePhaseCollection(
         }
 
         @Override
-        public IPipelinePhaseCollectionBuilder addGeometryUploadPhase(Predicate<RenderType> predicate, PipelineGeometryUploadPhase phase) {
+        public IPipelinePhaseCollectionBuilder addGeometryUploadPhase(Predicate<ChunkSectionLayerGroup> predicate, PipelineGeometryUploadPhase phase) {
             this.geometryPhases.add(new PredicateWrappedGeometryUploadPhase(predicate, phase));
             return this;
         }

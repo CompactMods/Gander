@@ -3,12 +3,14 @@ package dev.compactmods.gander.ui.widget;
 import dev.compactmods.gander.core.camera.SceneCamera;
 import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.pipeline.PipelineState;
+import dev.compactmods.gander.render.screen.GanderPictureInPictureRenderState;
+import dev.compactmods.gander.render.screen.GanderPictureInPictureRenderer;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import dev.compactmods.gander.render.pipeline.impl.BakedLevelScreenRenderPipeline;
-import dev.compactmods.gander.render.screen.GanderScreenRenderHelper;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.GuiGraphics;
 
@@ -20,7 +22,6 @@ import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
 public class SpatialRenderer implements Renderable {
-    private final GanderScreenRenderHelper renderHelper;
     private final ScreenRectangle renderArea;
     private final BakedLevel bakedLevel;
     private PipelineState state;
@@ -29,14 +30,17 @@ public class SpatialRenderer implements Renderable {
     private boolean shouldRenderCompass;
 
     private final SceneCamera camera;
+    private final GanderPictureInPictureRenderer renderer;
 
     public SpatialRenderer(BakedLevel bakedLevel, int x, int y, int width, int height) {
         this.bakedLevel = bakedLevel;
         this.compassOverlay = new CompassOverlay();
         this.shouldRenderCompass = false;
         this.camera = new SceneCamera();
+
+        final var buffers = Minecraft.getInstance().renderBuffers().bufferSource();
         this.renderArea = new ScreenRectangle(new ScreenPosition(x, y), width, height);
-        this.renderHelper = new GanderScreenRenderHelper(width, height);
+        this.renderer = new GanderPictureInPictureRenderer(buffers);
     }
 
     public SceneCamera camera() {
@@ -59,20 +63,7 @@ public class SpatialRenderer implements Renderable {
             this.state = BakedLevelScreenRenderPipeline.INSTANCE.setup(this::setupInitialState);
         }
 
-        renderHelper.renderInScreenSpace(graphics, camera, (projMatrix) -> {
-            final var poseStack = graphics.pose();
-            poseStack.pushPose();
-            poseStack.translate(
-                bakedLevel.blockBoundaries().getXsize() / -2f,
-                bakedLevel.blockBoundaries().getYsize() / -2f,
-                bakedLevel.blockBoundaries().getZsize() / -2f);
-
-            state.set(GanderRenderToolkit.PROJECTION_MATRIX, projMatrix);
-
-            BakedLevelScreenRenderPipeline.INSTANCE.render(state, graphics, partialTicks);
-
-            poseStack.popPose();
-        });
+        var pipState = new GanderPictureInPictureRenderState(() -> this.state, renderArea);
     }
 
     private void setupInitialState(PipelineState state) {

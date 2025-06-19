@@ -4,12 +4,13 @@ import dev.compactmods.gander.render.pipeline.PipelineState;
 import net.minecraft.client.gui.GuiGraphics;
 
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 
 public interface PipelineGeometryUploadPhase extends PipelinePhase {
 
-    default boolean shouldRun(RenderType renderType) {
+    default boolean shouldRun(ChunkSectionLayerGroup layer) {
         return true;
     }
 
-    void upload(PipelineState state, GuiGraphics graphics, float partialTicks);
+    void upload(PipelineState state);
 }

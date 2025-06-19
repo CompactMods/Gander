@@ -39,6 +39,7 @@ import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class GanderCommandHelper {
@@ -139,7 +140,7 @@ public class GanderCommandHelper {
             boundingbox.minX(),
             boundingbox.minY(),
             boundingbox.minZ()
-        ), boundingbox.getLength(), false, Blocks.AIR);
+        ), boundingbox.getLength(), false, List.of(Blocks.AIR));
         return finalStructure;
     }
 
@@ -182,7 +183,7 @@ public class GanderCommandHelper {
         }
 
         var structure = new StructureTemplate();
-        structure.fillFromWorld(level, new BlockPos(bounds.minX(), bounds.minY(), bounds.minZ()), new Vec3i(bounds.maxX(), bounds.maxY(), bounds.maxZ()), false, Blocks.AIR);
+        structure.fillFromWorld(level, new BlockPos(bounds.minX(), bounds.minY(), bounds.minZ()), new Vec3i(bounds.maxX(), bounds.maxY(), bounds.maxZ()), false, List.of(Blocks.AIR));
         return structure;
     }
 

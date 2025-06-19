@@ -1,34 +1,27 @@
 package dev.compactmods.gander.render.pipeline.impl;
 
-import com.mojang.blaze3d.buffers.BufferType;
-import com.mojang.blaze3d.buffers.BufferUsage;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
-import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-
 import com.mojang.blaze3d.vertex.Tesselator;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
-import dev.compactmods.gander.render.geometry.MultiPassGeometryUploader;
 import dev.compactmods.gander.render.pipeline.PipelineState;
-import dev.compactmods.gander.render.pipeline.RenderPipeline;
 import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
 import dev.compactmods.gander.render.pipeline.SinglePassRenderPipeline;
 import dev.compactmods.gander.render.screen.GanderScreenPipelinePhases;
-import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import dev.compactmods.gander.render.screen.GanderScreenToolkit;
+import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-
+import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Mth;
-
-import java.util.Objects;
-import java.util.OptionalDouble;
-import java.util.OptionalInt;
 
 public class BakedLevelScreenRenderPipeline {
 
@@ -81,7 +74,7 @@ public class BakedLevelScreenRenderPipeline {
         return true;
     }
 
-    private static void render(PipelineState state, GuiGraphics graphics) {
+    private static void render(PipelineState state) {
         final var mc = Minecraft.getInstance();
 
         final var projectionMatrix = state.get(GanderRenderToolkit.PROJECTION_MATRIX);
@@ -121,16 +114,17 @@ public class BakedLevelScreenRenderPipeline {
         try (final var mesh = bufferbuilder.build()) {
 
             final var buffer = RenderSystem.getDevice()
-                .createBuffer(() -> "Gander Render Buffer", BufferType.VERTICES, BufferUsage.STATIC_WRITE, mesh.vertexBuffer());
+                .createBuffer(() -> "Gander Render Buffer", GpuBuffer.USAGE_VERTEX, mesh.vertexBuffer());
 
-            try (RenderPass renderpass = RenderSystem.getDevice()
-                .createCommandEncoder()
-                .createRenderPass(renderTarget.getColorTexture(), OptionalInt.empty(), renderTarget.getDepthTexture(), OptionalDouble.empty())) {
-
-                renderpass.setPipeline(RenderPipelines.GUI);
-                renderpass.setVertexBuffer(0, buffer);
-                renderpass.draw(0, 10);
-            }
+//            try (RenderPass renderpass = RenderSystem.getDevice()
+//                .createCommandEncoder()
+//                .createRenderPass(renderTarget.getColorTexture(), OptionalInt.empty(), renderTarget.getDepthTexture(), OptionalDouble.empty())) {
+//
+//
+//                renderpass.setPipeline(RenderPipelines.GUI);
+//                renderpass.setVertexBuffer(0, buffer);
+//                renderpass.draw(0, 10);
+//            }
         }
 
 //        BufferBuilder bufferbuilder = RenderSystem.renderThreadTesselator().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLIT_SCREEN);

@@ -54,11 +54,14 @@ public class GanderScreenToolkit {
     }
 
     public static void backupProjectionMatrix(PipelineState state) {
-        state.set(GanderRenderToolkit.ORIGINAL_MATRIX, RenderSystem.getProjectionMatrix());
+        state.set(GanderRenderToolkit.ORIGINAL_CPU_BUFFER_SLICE, RenderSystem.getProjectionMatrixBuffer());
         state.set(GanderRenderToolkit.ORIGINAL_PROJECTION_TYPE, RenderSystem.getProjectionType());
     }
 
     public static void restoreProjectionMatrix(PipelineState state) {
-        RenderSystem.setProjectionMatrix(state.get(GanderRenderToolkit.ORIGINAL_MATRIX), state.get(GanderRenderToolkit.ORIGINAL_PROJECTION_TYPE));
+        RenderSystem.setProjectionMatrix(
+            state.get(GanderRenderToolkit.ORIGINAL_CPU_BUFFER_SLICE),
+            state.get(GanderRenderToolkit.ORIGINAL_PROJECTION_TYPE)
+        );
     }
 }

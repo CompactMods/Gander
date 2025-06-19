@@ -44,7 +44,7 @@ public class CompassOverlay implements Renderable {
 		if(sceneBounds == null)
 			return;
 
-		PoseStack poseStack = graphics.pose();
+		PoseStack poseStack = new PoseStack();
 
 		poseStack.pushPose();
 
@@ -113,8 +113,6 @@ public class CompassOverlay implements Renderable {
 						sceneBounds.getXSpan(),
 						sceneBounds.getYSpan()),
 				sceneBounds.getZSpan()) * 16;
-
-		var pose = graphics.pose().last().pose();
 
         // TODO Port 21.5
 //		var tesselator = RenderSystem.renderThreadTesselator();

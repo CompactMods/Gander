@@ -3,10 +3,13 @@ package dev.compactmods.gander.level.util;
 import dev.compactmods.gander.level.mixin.StructureTemplateAccessor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelWriter;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.ValueInput;
 
 public interface StructureTemplateUtils {
 	static <T extends LevelWriter & BlockGetter> void place(StructureTemplate template, T level, RegistryAccess registryAccess, BlockPos origin, int flags) {
@@ -28,8 +31,9 @@ public interface StructureTemplateUtils {
 				if(nbt != null) {
 					var blockEntity = level.getBlockEntity(pos);
 
-					if(blockEntity != null)
-						blockEntity.loadWithComponents(nbt, registryAccess);
+					if(blockEntity != null) {
+                        blockEntity.loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING, registryAccess, nbt));
+                    }
 				}
 			}
 		}

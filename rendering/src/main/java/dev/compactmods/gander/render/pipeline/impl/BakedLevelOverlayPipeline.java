@@ -5,12 +5,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import dev.compactmods.gander.render.pipeline.MultiPassRenderPipeline;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.pipeline.RenderPipelineBuilder;
-import dev.compactmods.gander.render.toolkit.BlockRenderer;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -20,28 +18,21 @@ import org.joml.Vector3f;
 
 import java.util.Arrays;
 import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 public final class BakedLevelOverlayPipeline {
-
-    private static final Predicate<RenderType> IS_TRANSLUCENT = renderType -> renderType == RenderType.TRANSLUCENT;
-    private static final Set<RenderType> STATIC_GEOMETRY = Set.of(RenderType.solid(), RenderType.cutoutMipped(), RenderType.cutout());
 
     public static MultiPassRenderPipeline INSTANCE;
     static {
         var builder = new RenderPipelineBuilder();
         builder.phases()
-            .addGeometryUploadPhase(STATIC_GEOMETRY::contains, BakedLevelOverlayPipeline::staticGeometryPass)
-            .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::blockEntitiesPass)
-            .addGeometryUploadPhase(BakedLevelOverlayPipeline.IS_TRANSLUCENT, BakedLevelOverlayPipeline::translucentGeometryPass);
+            .addGeometryUploadPhase(BakedLevelOverlayPipeline::staticGeometryPass)
+            .addGeometryUploadPhase(BakedLevelOverlayPipeline::blockEntitiesPass);
 
         INSTANCE = builder.stagedMultiPass();
     }
 
-    private static void staticGeometryPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
-        var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
+    private static void staticGeometryPass(PipelineState state) {
+//        var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
         final var camera = state.get(GanderRenderToolkit.CAMERA);
 
         final var camPos = camera.getPosition().toVector3f();
@@ -50,11 +41,7 @@ public final class BakedLevelOverlayPipeline {
         final var projectionMatrix = state.get(GanderRenderToolkit.PROJECTION_MATRIX);
         final var modelViewMatrix = state.get(GanderRenderToolkit.MODEL_VIEW_MATRIX);
 
-        final var poseStack = graphics.pose();
-        poseStack.pushPose();
-        poseStack.mulPose(modelViewMatrix);
-
-        // TODO 21.5 Port - Static Geometry Overlay Phase
+        // TODO 21.6 Port - Static Geometry Overlay Phase
 //        for (RenderType renderType : STATIC_GEOMETRY) {
 //            for(var section : bakedLevel.sections().values()) {
 //                BlockRenderer.renderSectionLayer(
@@ -74,14 +61,15 @@ public final class BakedLevelOverlayPipeline {
 //                    projectionMatrix);
 //            }
 //        }
-
-        poseStack.popPose();
     }
 
+    // TODO: Check F5 View Mode
+    private static Vector3f getCorrectedRenderOrigin(PipelineState state) {
+        final var mc = Minecraft.getInstance();
+        final var partialTicks = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
-    private static Vector3f getCorrectedRenderOrigin(PipelineState state, float partialTicks) {
         var origin = new Vector3f(state.getOrDefault(GanderRenderToolkit.RENDER_ORIGIN, new Vector3f()));
-        var player = Objects.requireNonNull(Minecraft.getInstance().player);
+        var player = Objects.requireNonNull(mc.player);
         return new Vector3f(
             Mth.lerp(partialTicks, (float) (origin.x() - player.xOld), (float) (origin.x() - player.getX())),
             Mth.lerp(partialTicks, (float) (origin.y() - player.yOld), (float) (origin.y() - player.getY())),
@@ -89,16 +77,17 @@ public final class BakedLevelOverlayPipeline {
         );
     }
 
-    public static void blockEntitiesPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
+    public static void blockEntitiesPass(PipelineState state) {
+        final var mc = Minecraft.getInstance();
+        final var partialTicks = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
         final var camera = state.get(GanderRenderToolkit.CAMERA);
         final var camPos = camera.getPosition().toVector3f();
         final var bakedLevel = state.get(GanderRenderToolkit.BAKED_LEVEL);
         final var blockEntities = state.get(GanderRenderToolkit.BLOCK_ENTITY_POSITIONS);
 
-        var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
+        var renderOrigin = getCorrectedRenderOrigin(state);
 
-        final var mc = Minecraft.getInstance();
         final var bufferSource = mc.renderBuffers().bufferSource();
         final var blockEntityRenderDispatcher = mc.getBlockEntityRenderDispatcher();
 
@@ -107,7 +96,7 @@ public final class BakedLevelOverlayPipeline {
 
         final var renderOffset = new Vector3f(renderOrigin).sub(camPos);
 
-        final var poseStack = graphics.pose();
+        final var poseStack = new PoseStack();
         poseStack.pushPose();
         poseStack.translate(renderOffset.x, renderOffset.y, renderOffset.z);
         Arrays.stream(blockEntities)
@@ -120,7 +109,7 @@ public final class BakedLevelOverlayPipeline {
     }
 
     private static void renderSingleBlockEntity(float partialTick, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
-                                         BlockEntity blockEnt, BlockEntityRenderDispatcher blockEntityRenderDispatcher) {
+                                                BlockEntity blockEnt, BlockEntityRenderDispatcher blockEntityRenderDispatcher) {
         poseStack.pushPose();
         final var offset = Vec3.atLowerCornerOf(blockEnt.getBlockPos());
         poseStack.translate(offset.x, offset.y, offset.z);
@@ -128,37 +117,4 @@ public final class BakedLevelOverlayPipeline {
         poseStack.popPose();
     }
 
-    public static void translucentGeometryPass(PipelineState state, GuiGraphics graphics, float partialTicks) {
-        final var camera = state.get(GanderRenderToolkit.CAMERA);
-        var renderOrigin = getCorrectedRenderOrigin(state, partialTicks);
-        final var camPos = camera.getPosition().toVector3f();
-        final var bakedLevel = state.get(GanderRenderToolkit.BAKED_LEVEL);
-        final var projectionMatrix = state.get(GanderRenderToolkit.PROJECTION_MATRIX);
-        final var modelViewMatrix = state.get(GanderRenderToolkit.MODEL_VIEW_MATRIX);
-
-        final var poseStack = graphics.pose();
-        poseStack.pushPose();
-        poseStack.mulPose(modelViewMatrix);
-
-        // TODO 21.5 Port - Translucency Phase?
-//        bakedLevel.sections().forEach((chunkPos, section) -> {
-//            BlockRenderer.renderSectionLayer(
-//                section.fluidBuffers(),
-//                Function.identity(),
-//                RenderType.translucent(),
-//                poseStack,
-//                camPos, renderOrigin,
-//                projectionMatrix);
-//
-//            BlockRenderer.renderSectionLayer(
-//                section.gpuBuffers(),
-//                Function.identity(),
-//                RenderType.translucent(),
-//                poseStack,
-//                camPos, renderOrigin,
-//                projectionMatrix);
-//        });
-
-        poseStack.pushPose();
-    }
 }

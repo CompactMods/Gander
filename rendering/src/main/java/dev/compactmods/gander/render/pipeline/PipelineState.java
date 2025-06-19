@@ -4,7 +4,14 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 
 public class PipelineState {
 
-    public record Item<T>(Class<T> type) {}
+    public record Item<T>(Class<T> type) {
+
+        public static <T1> Item<T1> of(Class<?> type) {
+            //noinspection unchecked
+            return new Item<>((Class<T1>) type);
+        }
+
+    }
 
     private final Reference2ObjectOpenHashMap<Item<?>, Object> properties = new Reference2ObjectOpenHashMap<>();
 

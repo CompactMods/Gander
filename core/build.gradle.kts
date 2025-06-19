@@ -24,7 +24,7 @@ java {
 }
 
 neoForge {
-    version = neoforged.versions.neoforge
+    version = neoforged.versions.neoforge.get()
 
     parchment {
         minecraftVersion = libs.versions.parchmentMC

@@ -1,6 +1,7 @@
 package dev.compactmods.gander.render.pipeline.phase;
 
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 
 import java.util.function.Predicate;
 
@@ -9,7 +10,7 @@ public interface IPipelinePhaseCollectionBuilder {
 
     IPipelinePhaseCollectionBuilder addGeometryUploadPhase(PipelineGeometryUploadPhase phase);
 
-    IPipelinePhaseCollectionBuilder addGeometryUploadPhase(Predicate<RenderType> predicate, PipelineGeometryUploadPhase phase);
+    IPipelinePhaseCollectionBuilder addGeometryUploadPhase(Predicate<ChunkSectionLayerGroup> predicate, PipelineGeometryUploadPhase phase);
 
     /**
      * Called before all geometry upload phases.

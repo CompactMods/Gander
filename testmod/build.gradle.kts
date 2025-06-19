@@ -45,7 +45,7 @@ var atProjects = listOf(project(":rendering"))
 val renderNurseCfg by configurations.creating
 
 neoForge {
-    version = neoforged.versions.neoforge
+    version = neoforged.versions.neoforge.get()
 
     this.mods.create(modId) {
         modSourceSets.add(sourceSets.main)
@@ -206,9 +206,8 @@ tasks.withType<ProcessResources>().configureEach {
         expand(
             "minecraft_version" to mojang.versions.minecraft.get(),
             "neo_version" to neoforged.versions.neoforge.get(),
-            "minecraft_version_range" to prop("minecraft_version_range"),
-            "neo_version_range" to prop("neo_version_range"),
-            "loader_version_range" to prop("loader_version_range"),
+            "minecraft_version_range" to mojang.versions.minecraftRange.get(),
+            "neo_version_range" to neoforged.versions.neoforgeRange.get(),
             "mod_id" to modId,
             "mod_name" to prop("mod_name"),
             "mod_license" to prop("mod_license"),

@@ -36,7 +36,7 @@ java {
 }
 
 neoForge {
-    version = neoforged.versions.neoforge
+    version = neoforged.versions.neoforge.get()
 
     accessTransformers {
         file(project.file("src/main/resources/META-INF/accesstransformer.cfg"))

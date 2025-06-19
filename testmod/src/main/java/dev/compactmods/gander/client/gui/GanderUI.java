@@ -79,9 +79,9 @@ public class GanderUI extends Screen {
 
 
         if (this.sceneSource != null) {
-            graphics.pose().pushPose();
+            graphics.pose().pushMatrix();
             graphics.drawCenteredString(font, sceneSource, width / 2, 10, DyeColor.WHITE.getFireworkColor());
-            graphics.pose().popPose();
+            graphics.pose().popMatrix();
         }
 
         // Active camera rotation
@@ -102,21 +102,6 @@ public class GanderUI extends Screen {
 ////        FluidRenderer.renderFluidBox(fs, 1, 1, 1, 3, 5, 2.75f, minecraft.renderBuffers().bufferSource(), graphics.pose(), LightTexture.FULL_BLOCK, true);
 //
 //        pose.popPose();
-
-//        renderDebugBlock(graphics);
-    }
-
-    private void renderDebugBlock(GuiGraphics graphics) {
-        final var pose = graphics.pose();
-        pose.pushPose();
-        pose.translate(100, 300, 100);
-        pose.rotateAround(Axis.XN.rotationDegrees(25), 0.5F, 0.0F, 0.5F);
-        pose.rotateAround(Axis.YP.rotationDegrees(45), 0.5F, 0.0F, 0.5F);
-        pose.scale(100, -100, 100);
-        minecraft.getBlockRenderer()
-            .renderSingleBlock(Blocks.SCULK_SENSOR.defaultBlockState(), pose, minecraft.renderBuffers().bufferSource(), LightTexture.FULL_BLOCK, OverlayTexture.NO_OVERLAY, minecraft.level, BlockPos.ZERO);
-
-        pose.popPose();
     }
 
     @Override

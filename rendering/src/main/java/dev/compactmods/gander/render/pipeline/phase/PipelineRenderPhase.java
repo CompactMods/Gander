@@ -6,6 +6,6 @@ import net.minecraft.client.gui.GuiGraphics;
 @FunctionalInterface
 public interface PipelineRenderPhase extends PipelinePhase {
 
-    void render(PipelineState state, GuiGraphics graphics);
+    void render(PipelineState state);
 
 }

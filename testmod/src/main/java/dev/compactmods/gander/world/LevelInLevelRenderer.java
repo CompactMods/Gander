@@ -11,6 +11,7 @@ import dev.compactmods.gander.render.pipeline.impl.BakedLevelOverlayPipeline;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import net.minecraft.client.gui.GuiGraphics;
 
+import net.minecraft.client.gui.render.state.GuiRenderState;
 import net.minecraft.core.BlockPos;
 
 import net.minecraft.util.Mth;
@@ -55,7 +56,7 @@ public record LevelInLevelRenderer(UUID id, PipelineState state) {
     }
 
     public void onRenderStage(RenderLevelStageEvent evt) {
-        final var graphics = new GuiGraphics(Minecraft.getInstance(), Minecraft.getInstance().renderBuffers().bufferSource());
+        final var graphics = new GuiGraphics(Minecraft.getInstance(), new GuiRenderState());
 
         final var renderTypeForStage = RenderTypes.GEOMETRY_STAGES.get(evt.getStage());
         final var partialTick = evt.getPartialTick().getGameTimeDeltaPartialTick(true);

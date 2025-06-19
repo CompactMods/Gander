@@ -4,19 +4,20 @@ import dev.compactmods.gander.render.pipeline.PipelineState;
 import net.minecraft.client.gui.GuiGraphics;
 
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 
 import java.util.function.Predicate;
 
-public record PredicateWrappedGeometryUploadPhase(Predicate<RenderType> predicate, PipelineGeometryUploadPhase phase) implements PipelineGeometryUploadPhase {
+public record PredicateWrappedGeometryUploadPhase(Predicate<ChunkSectionLayerGroup> predicate, PipelineGeometryUploadPhase phase) implements PipelineGeometryUploadPhase {
 
     @Override
-    public boolean shouldRun(RenderType type) {
+    public boolean shouldRun(ChunkSectionLayerGroup layer) {
         if(predicate == null) return true;
-        return predicate.test(type);
+        return predicate.test(layer);
     }
 
     @Override
-    public void upload(PipelineState state, GuiGraphics graphics, float partialTicks) {
-        phase.upload(state, graphics, partialTicks);
+    public void upload(PipelineState state) {
+        phase.upload(state);
     }
 }

@@ -9,6 +9,7 @@ import net.minecraft.Util;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayerGroup;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 
@@ -16,13 +17,13 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class RenderTypes {
 
-    public static final Map<RenderLevelStageEvent.Stage, RenderType> GEOMETRY_STAGES
-        = RenderType.chunkBufferLayers()
-        .stream()
-        .collect(Collectors.toMap(RenderLevelStageEvent.Stage::fromRenderType, Function.identity()));
+    public static final Map<RenderLevelStageEvent.Stage, ChunkSectionLayerGroup> GEOMETRY_STAGES
+        = Stream.of(ChunkSectionLayerGroup.values())
+            .collect(Collectors.toMap(RenderLevelStageEvent.Stage::fromChunkLayerGroup, Function.identity()));
 
     //	protected static final RenderStateShard BLOCK_SHADER =
 //			new RenderStateShard.ShaderStateShard(GameRenderer:);
