@@ -74,10 +74,6 @@ public class GanderUI extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-
-        this.renderBackground(graphics, mouseX, mouseY, partialTicks);
-
-
         if (this.sceneSource != null) {
             graphics.pose().pushMatrix();
             graphics.drawCenteredString(font, sceneSource, width / 2, 10, DyeColor.WHITE.getFireworkColor());
