@@ -3,6 +3,8 @@ package dev.compactmods.gander.client.gui;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import dev.compactmods.gander.GanderTestMod;
+import dev.compactmods.gander.level.VirtualLevels;
 import net.minecraft.world.phys.AABB;
 
 import org.apache.commons.lang3.function.Consumers;
@@ -48,16 +50,14 @@ public class ScreenOpener {
 	public static void forStructureData(Component source, StructureTemplate data) {
 		openGanderUI(ui -> {
             var bounds = AABB.of(data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO));
-            var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess(), true, (newLevel) -> {
-                newLevel.refreshBlockEntityModels();
 
-                var bakedLevel = LevelBakery.bakeVertices(newLevel, bounds, new Vector3f());
+            var virtualLevel = VirtualLevels.containingStructure(data, Minecraft.getInstance().level.registryAccess());
+            virtualLevel.addBlockUpdateListener((level) -> {
+                level.refreshBlockEntityModels();
+
+                var bakedLevel = LevelBakery.bakeVertices(level, bounds, new Vector3f());
                 ui.setScene(bakedLevel);
             });
-
-			virtualLevel.setBounds(bounds);
-			data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings().setKnownShape(true), RandomSource.create(), Block.UPDATE_CLIENTS);
-            virtualLevel.refreshBlockEntityModels();
 
 			var bakedLevel = LevelBakery.bakeVertices(virtualLevel, bounds, new Vector3f());
 			ui.setSceneSource(source);

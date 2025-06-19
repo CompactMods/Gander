@@ -4,7 +4,9 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 
+import dev.compactmods.gander.GanderTestMod;
 import dev.compactmods.gander.level.VirtualLevel;
+import dev.compactmods.gander.level.VirtualLevels;
 import dev.compactmods.gander.level.chunk.VirtualChunkGenerator;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -50,7 +52,7 @@ public class GanderCommandHelper {
 
         RegistryAccess regAccess = ctx.getSource().registryAccess();
 
-        VirtualLevel level = new VirtualLevel(regAccess, false);
+        VirtualLevel level = VirtualLevels.emptyServer(regAccess);
 
         final var theVoid = structure.value().biomes().getRandomElement(level.random)
             .orElseGet(() -> regAccess.holderOrThrow(Biomes.PLAINS));
@@ -206,7 +208,7 @@ public class GanderCommandHelper {
         finalStructure.fillFromWorld(source.getLevel(),
             BlockPos.containing(area.getMinPosition()),
             new Vec3i(Mth.floor(area.getXsize()), Mth.floor(area.getYsize()), Mth.floor(area.getZsize())),
-            false, null);
+            false, List.of(Blocks.AIR));
 
         return finalStructure;
     }

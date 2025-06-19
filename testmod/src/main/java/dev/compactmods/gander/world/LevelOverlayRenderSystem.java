@@ -2,6 +2,7 @@ package dev.compactmods.gander.world;
 
 import dev.compactmods.gander.GanderTestMod;
 
+import dev.compactmods.gander.level.VirtualLevels;
 import net.minecraft.world.phys.AABB;
 
 import org.joml.Vector3f;
@@ -24,10 +25,7 @@ public class LevelOverlayRenderSystem
 
         try {
             var bounds = AABB.of(data.getBoundingBox(new StructurePlaceSettings(), BlockPos.ZERO));
-            var virtualLevel = new VirtualLevel(Minecraft.getInstance().level.registryAccess(), true);
-
-            virtualLevel.setBounds(bounds);
-            data.placeInWorld(virtualLevel, BlockPos.ZERO, BlockPos.ZERO, new StructurePlaceSettings().setKnownShape(true), RandomSource.create(), Block.UPDATE_CLIENTS);
+            var virtualLevel = VirtualLevels.containingStructure(data, Minecraft.getInstance().level.registryAccess());
 
 		    var bakedLevel = LevelBakery.bakeVertices(virtualLevel, bounds, new Vector3f());
 

@@ -1,5 +1,6 @@
 package dev.compactmods.gander.level;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -90,30 +91,26 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 	private AABB bounds;
 	private VirtualEntitySystem entities;
 	private final Holder<Biome> biome;
-    private final Consumer<VirtualLevel> onBlockUpdate;
+    private final List<Consumer<VirtualLevel>> onBlockUpdate;
     private final ModelDataManager modelDataManager;
     private final Long2ReferenceMap<BlockEntity> blockEntities;
 
-    public VirtualLevel(RegistryAccess access, boolean isClientside) {
-        this(access, isClientside, newLevel -> {});
-    }
-
-	public VirtualLevel(RegistryAccess access, boolean isClientside, Consumer<VirtualLevel> onBlockUpdate) {
+	protected VirtualLevel(RegistryAccess access, boolean isClientside) {
 		this(
 				VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
 				access.holderOrThrow(BuiltinDimensionTypes.OVERWORLD),
 				isClientside, false,
-				0, 0, onBlockUpdate);
+				0, 0);
 	}
 
-	private VirtualLevel(WritableLevelData pLevelData, ResourceKey<Level> pDimension,
+	protected VirtualLevel(WritableLevelData pLevelData, ResourceKey<Level> pDimension,
                          RegistryAccess pRegistryAccess, Holder<DimensionType> pDimensionTypeRegistration,
                          boolean pIsClientSide, boolean pIsDebug, long pBiomeZoomSeed,
-                         int pMaxChainedNeighborUpdates, Consumer<VirtualLevel> onBlockUpdate) {
+                         int pMaxChainedNeighborUpdates) {
 		super(pLevelData, pDimension, pRegistryAccess, pDimensionTypeRegistration, pIsClientSide, pIsDebug,
 				pBiomeZoomSeed, pMaxChainedNeighborUpdates);
 		this.access = pRegistryAccess;
-        this.onBlockUpdate = onBlockUpdate;
+        this.onBlockUpdate = new ArrayList<>();
         this.chunkSource = new VirtualChunkSource(this);
 //		this.blocks = new VirtualBlockSystem(this);
         this.lightEngine = new VirtualLightEngine(pos -> 15, skyPos -> 15, () -> this);
@@ -124,6 +121,10 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
         this.modelDataManager = new ModelDataManager(this);
         this.blockEntities = new Long2ReferenceOpenHashMap<>();
 	}
+
+    public void addBlockUpdateListener(Consumer<VirtualLevel> listener) {
+        this.onBlockUpdate.add(listener);
+    }
 
 	public Holder<Biome> getBiome() {
 		return biome;
@@ -339,7 +340,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	@Override
 	public void sendBlockUpdated(BlockPos pPos, BlockState pOldState, BlockState pNewState, int pFlags) {
-        this.onBlockUpdate.accept(this);
+        this.onBlockUpdate.forEach(c -> c.accept(this));
 	}
 
 	@Override
@@ -403,7 +404,7 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
 	@Override
 	public ServerLevel getLevel() {
-		// TODO
+		// TODO - Virtual Server Level implementation?
 		return null;
 	}
 
