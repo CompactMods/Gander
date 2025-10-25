@@ -27,8 +27,13 @@ public class GanderTestCommand {
         var size = Commands.argument("radius", IntegerArgumentType.integer(5, 15))
             .executes(GanderTestCommand::makeSizedPlatform);
 
-        size.then(Commands.argument("block", BlockStateArgument.block(buildContext))
-            .executes(GanderTestCommand::makeSizedPlatformWithBorderBlock));
+        var sizeDefaultFloor = Commands.argument("border", BlockStateArgument.block(buildContext))
+            .executes(GanderTestCommand::makeSizedPlatformWithBorderBlock);
+
+        sizeDefaultFloor.then(Commands.argument("floor", BlockStateArgument.block(buildContext))
+            .executes(GanderTestCommand::makeSizedPlatformWithBorderAndFloorBlock));
+
+        size.then(sizeDefaultFloor);
         platform.then(size);
 
         final var testCmdRoot = Commands.literal("test");
@@ -36,22 +41,6 @@ public class GanderTestCommand {
             .then(platform);
 
         root.then(testCmdRoot);
-    }
-
-    private static int makeSizedPlatformWithBorderBlock(CommandContext<CommandSourceStack> ctx) {
-        final var src = ctx.getSource();
-        final var level = src.getLevel();
-
-        final var radius = IntegerArgumentType.getInteger(ctx, "radius");
-        final var ringBlock = BlockStateArgument.getBlock(ctx, "block").getState();
-
-        final var center = BlockPos.containing(src.getPosition()).below();
-        final var minCorner = center.offset(-radius, 0, -radius);
-        final var maxCorner = center.offset(radius, 0, radius);
-
-        generateTestPlatform(minCorner, maxCorner, level, center, radius, ringBlock);
-
-        return 0;
     }
 
     private static int makeSizedPlatform(CommandContext<CommandSourceStack> ctx) {
@@ -63,14 +52,47 @@ public class GanderTestCommand {
         final var minCorner = center.offset(-radius, 0, -radius);
         final var maxCorner = center.offset(radius, 0, radius);
 
-        generateTestPlatform(minCorner, maxCorner, level, center, radius, Blocks.WHITE_CONCRETE.defaultBlockState());
+        generateTestPlatform(minCorner, maxCorner, level, center, radius, Blocks.WHITE_CONCRETE.defaultBlockState(), Blocks.BLACK_STAINED_GLASS.defaultBlockState());
 
         return 0;
     }
 
-    private static void generateTestPlatform(BlockPos minCorner, BlockPos maxCorner, ServerLevel level, BlockPos center, int radius, BlockState ringBlock) {
+    private static int makeSizedPlatformWithBorderBlock(CommandContext<CommandSourceStack> ctx) {
+        final var src = ctx.getSource();
+        final var level = src.getLevel();
+
+        final var radius = IntegerArgumentType.getInteger(ctx, "radius");
+        final var ringBlock = BlockStateArgument.getBlock(ctx, "border").getState();
+
+        final var center = BlockPos.containing(src.getPosition()).below();
+        final var minCorner = center.offset(-radius, 0, -radius);
+        final var maxCorner = center.offset(radius, 0, radius);
+
+        generateTestPlatform(minCorner, maxCorner, level, center, radius, ringBlock, Blocks.BLACK_STAINED_GLASS.defaultBlockState());
+
+        return 0;
+    }
+
+    private static int makeSizedPlatformWithBorderAndFloorBlock(CommandContext<CommandSourceStack> ctx) {
+        final var src = ctx.getSource();
+        final var level = src.getLevel();
+
+        final var radius = IntegerArgumentType.getInteger(ctx, "radius");
+        final var ringBlock = BlockStateArgument.getBlock(ctx, "border").getState();
+        final var floorBlock = BlockStateArgument.getBlock(ctx, "floor").getState();
+
+        final var center = BlockPos.containing(src.getPosition()).below();
+        final var minCorner = center.offset(-radius, 0, -radius);
+        final var maxCorner = center.offset(radius, 0, radius);
+
+        generateTestPlatform(minCorner, maxCorner, level, center, radius, ringBlock, floorBlock);
+
+        return 0;
+    }
+
+    private static void generateTestPlatform(BlockPos minCorner, BlockPos maxCorner, ServerLevel level, BlockPos center, int radius, BlockState ringBlock, BlockState floorBlock) {
         BlockPos.betweenClosed(minCorner, maxCorner)
-            .forEach(pos -> level.setBlock(pos, Blocks.BLACK_STAINED_GLASS.defaultBlockState(), Block.UPDATE_ALL));
+            .forEach(pos -> level.setBlock(pos, floorBlock, Block.UPDATE_ALL));
 
         WorldMath.blockPosRing(center, radius)
             .map(BlockPos::immutable)
