@@ -35,7 +35,7 @@ java {
 }
 
 neoForge {
-    version = neoforged.versions.neoforge.get()
+    version = "21.10.32-beta"
 
     parchment {
         minecraftVersion = libs.versions.parchmentMC

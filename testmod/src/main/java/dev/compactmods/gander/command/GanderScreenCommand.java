@@ -30,6 +30,8 @@ import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.util.Collections;
+
 public class GanderScreenCommand {
 
     public static final SuggestionProvider<CommandSourceStack> ANY_STRUCTURE = (ctx, builder)
@@ -136,7 +138,7 @@ public class GanderScreenCommand {
         finalStructure.fillFromWorld(source.getLevel(),
             BlockPos.containing(source.getPosition().subtract(distance, distance, distance)),
             new Vec3i(distance * 2, distance * 2, distance * 2),
-            false, null);
+            false, Collections.emptyList());
 
         final var nearbyPlayers = source.getLevel()
                 .getPlayers(player -> player.position()

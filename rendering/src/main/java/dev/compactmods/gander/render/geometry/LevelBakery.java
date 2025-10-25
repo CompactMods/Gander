@@ -50,7 +50,7 @@ public class LevelBakery {
                     .compile(sectionPos, renderChunk, sorting, bufferPack);
 
                 final var bakedSection = new BakedLevelSection(bufferPack,
-                    compileResults.renderedLayers,
+                    compileResults,
                     sectionAABB);
 
                 bakedSections.put(sectionPos.asLong(), bakedSection);

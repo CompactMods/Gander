@@ -90,9 +90,7 @@ public final class BakedLevelOverlayPipeline {
 
         final var bufferSource = mc.renderBuffers().bufferSource();
         final var blockEntityRenderDispatcher = mc.getBlockEntityRenderDispatcher();
-
-        // TODO: maybe we should raycast in the virtual level for these, rather than pulling from the real level?
-        blockEntityRenderDispatcher.prepare(bakedLevel.originalLevel(), camera, mc.hitResult);
+        blockEntityRenderDispatcher.prepare(camera);
 
         final var renderOffset = new Vector3f(renderOrigin).sub(camPos);
 
@@ -110,11 +108,12 @@ public final class BakedLevelOverlayPipeline {
 
     private static void renderSingleBlockEntity(float partialTick, PoseStack poseStack, MultiBufferSource.BufferSource bufferSource,
                                                 BlockEntity blockEnt, BlockEntityRenderDispatcher blockEntityRenderDispatcher) {
-        poseStack.pushPose();
-        final var offset = Vec3.atLowerCornerOf(blockEnt.getBlockPos());
-        poseStack.translate(offset.x, offset.y, offset.z);
-        blockEntityRenderDispatcher.render(blockEnt, partialTick, poseStack, bufferSource);
-        poseStack.popPose();
+//        poseStack.pushPose();
+//        final var offset = Vec3.atLowerCornerOf(blockEnt.getBlockPos());
+//        poseStack.translate(offset.x, offset.y, offset.z);
+//        blockEntityRenderDispatcher.getRenderer(blockEnt)
+//            .submit(partialTick, poseStack, bufferSource);
+//        poseStack.popPose();
     }
 
 }

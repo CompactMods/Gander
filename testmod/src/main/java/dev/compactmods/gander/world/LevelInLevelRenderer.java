@@ -5,7 +5,6 @@ import java.util.UUID;
 import dev.compactmods.gander.core.camera.SceneCamera;
 import dev.compactmods.gander.level.TickingLevel;
 
-import dev.compactmods.gander.render.RenderTypes;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.pipeline.impl.BakedLevelOverlayPipeline;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
@@ -55,20 +54,20 @@ public record LevelInLevelRenderer(UUID id, PipelineState state) {
         return new LevelInLevelRenderer(UUID.randomUUID(), initialState);
     }
 
-    public void onRenderStage(RenderLevelStageEvent evt) {
-        final var graphics = new GuiGraphics(Minecraft.getInstance(), new GuiRenderState());
-
-        final var renderTypeForStage = RenderTypes.GEOMETRY_STAGES.get(evt.getStage());
-        final var partialTick = evt.getPartialTick().getGameTimeDeltaPartialTick(true);
-
-//        if (renderTypeForStage != null) {
-//            state.set(GanderRenderToolkit.PROJECTION_MATRIX, evt.getProjectionMatrix());
-//            state.set(GanderRenderToolkit.MODEL_VIEW_MATRIX, evt.getModelViewMatrix());
+//    public void onRenderStage(RenderLevelStageEvent evt) {
+//        final var graphics = new GuiGraphics(Minecraft.getInstance(), new GuiRenderState());
 //
-//            BakedLevelOverlayPipeline.INSTANCE.renderPass(state, renderTypeForStage, graphics,
-//                evt.getFrustum(), partialTick);
-//        }
-    }
+//        final var renderTypeForStage = RenderTypes.GEOMETRY_STAGES.get(evt.getStage());
+//        final var partialTick = evt.getPartialTick().getGameTimeDeltaPartialTick(true);
+//
+////        if (renderTypeForStage != null) {
+////            state.set(GanderRenderToolkit.PROJECTION_MATRIX, evt.getProjectionMatrix());
+////            state.set(GanderRenderToolkit.MODEL_VIEW_MATRIX, evt.getModelViewMatrix());
+////
+////            BakedLevelOverlayPipeline.INSTANCE.renderPass(state, renderTypeForStage, graphics,
+////                evt.getFrustum(), partialTick);
+////        }
+//    }
 
     public void onClientTick(ClientTickEvent.Post event) {
         final var level = state.get(GanderRenderToolkit.BAKED_LEVEL);

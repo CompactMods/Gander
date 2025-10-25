@@ -36,7 +36,7 @@ public record OpenGanderUiForStructureRequest(Component sceneSource, StructureTe
 	);
 
 	public static final IPayloadHandler<OpenGanderUiForStructureRequest> HANDLER = (pkt, ctx) -> {
-		if(FMLEnvironment.dist.isClient())
+		if(FMLEnvironment.getDist().isClient())
 			ctx.enqueueWork(() -> ScreenOpener.forStructureData(pkt.sceneSource, pkt.data));
 	};
 

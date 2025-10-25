@@ -7,6 +7,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
 
@@ -30,7 +31,7 @@ public record RenderInWorldForDeferredStructureRequest(ResourceLocation structur
 	}
 
 	public static final IPayloadHandler<RenderInWorldForDeferredStructureRequest> HANDLER = (pkt, ctx) -> {
-		if(FMLEnvironment.dist.isClient())
-			ctx.enqueueWork(() -> PacketDistributor.sendToServer(new StructureSceneDataRequest(pkt.structureId, true, pkt.renderLocation)));
+		if(FMLEnvironment.getDist().isClient())
+			ctx.enqueueWork(() -> ClientPacketDistributor.sendToServer(new StructureSceneDataRequest(pkt.structureId, true, pkt.renderLocation)));
 	};
 }

@@ -13,10 +13,10 @@ public class GanderGeometryHelper {
     }
 
     public static void setup() {
-        final var mc = Minecraft.getInstance();
-
-        SECTION_COMPILER = new SectionCompiler(mc.getBlockRenderer(), mc.getBlockEntityRenderDispatcher());
-
-        IS_INITIALIZED = true;
+        if(!IS_INITIALIZED) {
+            final var mc = Minecraft.getInstance();
+            SECTION_COMPILER = new SectionCompiler(mc.getBlockRenderer(), mc.getBlockEntityRenderDispatcher());
+            IS_INITIALIZED = true;
+        }
     }
 }

@@ -44,6 +44,8 @@ var atProjects = listOf(project(":rendering"))
 
 val renderNurseCfg by configurations.creating
 
+val RENDERDOC_DIR = "/home/nano/code/renderdoc/lib/librenderdoc.so"
+
 neoForge {
     version = neoforged.versions.neoforge.get()
 
@@ -54,7 +56,7 @@ neoForge {
     accessTransformers {
         atProjects.forEach {
             val f = it.file("src/main/resources/META-INF/accesstransformer.cfg")
-            if(f.exists())
+            if (f.exists())
                 from(f)
         }
 
@@ -73,11 +75,11 @@ neoForge {
             systemProperty("forge.logging.console.level", "debug")
             if (!System.getenv().containsKey("CI")) {
                 // JetBrains Runtime Hotswap
-                 jvmArgument("-XX:+AllowEnhancedClassRedefinition")
+                jvmArgument("-XX:+AllowEnhancedClassRedefinition")
             }
         }
 
-        create("client") {
+        register("client") {
             client()
             gameDirectory.set(file("runs/client"))
 
@@ -86,7 +88,7 @@ neoForge {
             programArguments.addAll("--height", "1080")
         }
 
-        create("clientAuthed") {
+        register("clientAuthed") {
             client()
 
             gameDirectory.set(file("runs/client"))
@@ -105,8 +107,8 @@ neoForge {
 //        }
         }
 
-        if(System.getenv("RENDERDOC_LIB") != null) {
-            create("renderDoc") {
+//        if (System.getenv("RENDERDOC_LIB") != null) {
+            register("renderDoc") {
                 client()
                 gameDirectory.set(file("runs/client"))
 
@@ -114,22 +116,22 @@ neoForge {
                 programArguments.addAll("--width", "1920")
                 programArguments.addAll("--height", "1080")
 
-                systemProperty("neoforge.rendernurse.renderdoc.library", System.getenv("RENDERDOC_LIB"))
+                systemProperty("neoforge.rendernurse.renderdoc.library", RENDERDOC_DIR)
 
-                if(org.gradle.internal.os.OperatingSystem.current().isLinux) {
-                    environment("LD_PRELOAD", System.getenv("RENDERDOC_LIB"))
-                } else {
-                    // parses out the render nurse jar path and adds as `-javaagent:${path}`
+//                if (org.gradle.internal.os.OperatingSystem.current().isLinux) {
+//                    environment("LD_PRELOAD", "librenderdoc.so")
+//                } else {
+//                     parses out the render nurse jar path and adds as `-javaagent:${path}`
                     jvmArguments.addAll(renderNurseCfg.incoming.files.elements.map { it.map { "-javaagent:${it.asFile.absolutePath}" } })
                     jvmArguments.addAll(
                         "--enable-preview",
                         "--enable-native-access=ALL-UNNAMED"
                     )
-                }
+//                }
             }
-        }
+//        }
 
-        create("server") {
+        register("server") {
             server()
             gameDirectory.set(file("runs/server"))
         }
@@ -207,7 +209,7 @@ tasks.withType<ProcessResources>().configureEach {
             "minecraft_version" to mojang.versions.minecraft.get(),
             "neo_version" to neoforged.versions.neoforge.get(),
             "minecraft_version_range" to mojang.versions.minecraftRange.get(),
-            "neo_version_range" to neoforged.versions.neoforgeRange.get(),
+            "neo_version_range" to neoforged.versions.neoforge.get(),
             "mod_id" to modId,
             "mod_name" to prop("mod_name"),
             "mod_license" to prop("mod_license"),

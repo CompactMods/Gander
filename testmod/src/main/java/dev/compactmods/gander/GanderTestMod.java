@@ -5,6 +5,12 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import dev.compactmods.gander.render.screen.GanderPictureInPictureRenderState;
+import dev.compactmods.gander.render.screen.GanderPictureInPictureRenderer;
+import net.neoforged.bus.api.Event;
+
+import net.neoforged.neoforge.client.event.RegisterPictureInPictureRenderersEvent;
+
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -46,6 +52,7 @@ public class GanderTestMod {
 		modEventBus.addListener(GanderTestMod::onPacketRegistration);
 		CommonEvents.register(modEventBus);
 
+        modEventBus.addListener(this::registerPIP);
 //        NeoForge.EVENT_BUS.addListener((RenderLevelStageEvent renderStage) -> LIL_RENDERERS.values()
 //            .forEach(lil -> lil.onRenderStage(renderStage)));
 
@@ -54,7 +61,11 @@ public class GanderTestMod {
 //                .forEach(lil -> lil.onClientTick(event)));
 	}
 
-	public static ResourceLocation asResource(String path) {
+    private void registerPIP(RegisterPictureInPictureRenderersEvent event) {
+        event.register(GanderPictureInPictureRenderState.class, GanderPictureInPictureRenderer::new);
+    }
+
+    public static ResourceLocation asResource(String path) {
 		return ResourceLocation.fromNamespaceAndPath(ID, path);
 	}
 

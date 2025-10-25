@@ -1,11 +1,7 @@
 package dev.compactmods.gander.render.pipeline.impl;
 
-import java.util.OptionalDouble;
-import java.util.OptionalInt;
-
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -18,9 +14,6 @@ import dev.compactmods.gander.render.screen.GanderScreenPipelinePhases;
 import dev.compactmods.gander.render.screen.GanderScreenToolkit;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Mth;
 
 public class BakedLevelScreenRenderPipeline {
@@ -65,31 +58,15 @@ public class BakedLevelScreenRenderPipeline {
 
         GanderScreenToolkit.backupProjectionMatrix(state);
 
-        // Setup Render Target
-        var mainTarget = mc.getMainRenderTarget();
-//        translucencyChain.clear();
-//        translucencyChain.prepareBackgroundColor(mainTarget);
-//        renderTarget.bindWrite(true);
-
         return true;
     }
 
     private static void render(PipelineState state) {
         final var mc = Minecraft.getInstance();
 
-        final var projectionMatrix = state.get(GanderRenderToolkit.PROJECTION_MATRIX);
-        final var renderTarget = state.get(GanderRenderToolkit.RENDER_TARGET);
         final var renderBounds = state.get(GanderRenderToolkit.RENDER_BOUNDS);
-//        final var translucencyChain = state.get(GanderRenderToolkit.TRANSLUCENCY_CHAIN);
-
-//        translucencyChain.process();
-
-//        mc.getMainRenderTarget().bindWrite(true);
 
         RenderSystem.assertOnRenderThread();
-//        GlStateManager._colorMask(true, true, true, false);
-//        GlStateManager._disableDepthTest();
-//        GlStateManager._depthMask(false);
 
         var guiScale = mc.getWindow().getGuiScale();
 
@@ -99,36 +76,6 @@ public class BakedLevelScreenRenderPipeline {
             Mth.floor((renderBounds.width()) * guiScale),
             Mth.floor((renderBounds.height()) * guiScale)
         );
-
-        Minecraft minecraft = Minecraft.getInstance();
-//        ShaderInstance shaderinstance = (ShaderInstance) Objects.requireNonNull(minecraft.gameRenderer.blitShader, "Blit shader not loaded");
-//        shaderinstance.setSampler("DiffuseSampler", renderTarget.getColorTextureId());
-//        shaderinstance.apply();
-
-
-        var bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLIT_SCREEN);
-        bufferbuilder.addVertex(0.0F, 0.0F, 0.0F);
-        bufferbuilder.addVertex(1.0F, 0.0F, 0.0F);
-        bufferbuilder.addVertex(1.0F, 1.0F, 0.0F);
-        bufferbuilder.addVertex(0.0F, 1.0F, 0.0F);
-        try (final var mesh = bufferbuilder.build()) {
-
-            final var buffer = RenderSystem.getDevice()
-                .createBuffer(() -> "Gander Render Buffer", GpuBuffer.USAGE_VERTEX, mesh.vertexBuffer());
-
-//            try (RenderPass renderpass = RenderSystem.getDevice()
-//                .createCommandEncoder()
-//                .createRenderPass(renderTarget.getColorTexture(), OptionalInt.empty(), renderTarget.getDepthTexture(), OptionalDouble.empty())) {
-//
-//
-//                renderpass.setPipeline(RenderPipelines.GUI);
-//                renderpass.setVertexBuffer(0, buffer);
-//                renderpass.draw(0, 10);
-//            }
-        }
-
-//        BufferBuilder bufferbuilder = RenderSystem.renderThreadTesselator().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.BLIT_SCREEN);
-
     }
 
     private static boolean teardown(PipelineState state) {

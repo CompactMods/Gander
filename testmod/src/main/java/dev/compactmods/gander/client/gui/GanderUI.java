@@ -2,29 +2,20 @@ package dev.compactmods.gander.client.gui;
 
 import com.mojang.blaze3d.platform.InputConstants;
 
-import com.mojang.math.Axis;
-
-import dev.compactmods.gander.level.VirtualLevel;
 import dev.compactmods.gander.network.StructureSceneDataRequest;
 import dev.compactmods.gander.render.geometry.BakedLevel;
-import dev.compactmods.gander.render.toolkit.FluidRenderer;
 import dev.compactmods.gander.ui.widget.SpatialRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.core.BlockPos;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.CommonColors;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.material.Fluids;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 public class GanderUI extends Screen {
 
@@ -32,7 +23,7 @@ public class GanderUI extends Screen {
     private SpatialRenderer activeRenderer;
     private Component sceneSource;
 
-    private boolean singlePanel = false;
+    private boolean singlePanel = true;
 
     GanderUI() {
         super(Component.empty());
@@ -40,7 +31,7 @@ public class GanderUI extends Screen {
 
     GanderUI(StructureSceneDataRequest dataRequest) {
         this();
-        PacketDistributor.sendToServer(dataRequest);
+        ClientPacketDistributor.sendToServer(dataRequest);
     }
 
     @Override
@@ -54,10 +45,8 @@ public class GanderUI extends Screen {
     public void tick() {
         super.tick();
         if (this.scene != null) {
-            // TODO: :)
-            var level = ((VirtualLevel) scene.originalLevel());
-            level.tick(minecraft.getDeltaTracker().getRealtimeDeltaTicks());
-            // level.animateTick();
+            var level = scene.originalLevel();
+            level.tickBlockEntities();
         }
     }
 
@@ -101,13 +90,11 @@ public class GanderUI extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int x = Mth.floor(mouseX);
-        int y = Mth.floor(mouseY);
+    public boolean mouseClicked(MouseButtonEvent event, boolean p_434187_) {
         var renderClicked = renderables.stream()
             .filter(SpatialRenderer.class::isInstance)
             .map(SpatialRenderer.class::cast)
-            .filter(r -> r.getRenderArea().containsPoint(x, y))
+            .filter(r -> r.getRenderArea().containsPoint((int) event.x(), (int) event.y()))
             .findFirst();
 
         renderClicked.ifPresent(r -> this.activeRenderer = r);
@@ -123,40 +110,41 @@ public class GanderUI extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int code, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent event) {
         final float rotateSpeed = 1 / 12f;
 
-        if (code == InputConstants.KEY_R) {
+        int key = event.key();
+        if (key == InputConstants.KEY_R) {
             activeRenderer.camera().resetLook();
             activeRenderer.recalculateTranslucency();
             return true;
         }
 
-        if (code == InputConstants.KEY_UP) {
+        if (key == InputConstants.KEY_UP) {
             activeRenderer.camera().lookUp(rotateSpeed);
             activeRenderer.recalculateTranslucency();
             return true;
         }
 
-        if (code == InputConstants.KEY_DOWN) {
+        if (key == InputConstants.KEY_DOWN) {
             activeRenderer.camera().lookDown(rotateSpeed);
             activeRenderer.recalculateTranslucency();
             return true;
         }
 
-        if (code == InputConstants.KEY_LEFT) {
+        if (key == InputConstants.KEY_LEFT) {
             activeRenderer.camera().lookLeft(rotateSpeed);
             activeRenderer.recalculateTranslucency();
             return true;
         }
 
-        if (code == InputConstants.KEY_RIGHT) {
+        if (key == InputConstants.KEY_RIGHT) {
             activeRenderer.camera().lookRight(rotateSpeed);
             activeRenderer.recalculateTranslucency();
             return true;
         }
 
-        return super.keyPressed(code, scanCode, modifiers);
+        return super.keyPressed(event);
     }
 
     @Override

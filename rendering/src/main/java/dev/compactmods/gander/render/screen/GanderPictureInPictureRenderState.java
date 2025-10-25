@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.Supplier;
 
 public record GanderPictureInPictureRenderState(
+    GuiGraphics graphics,
     Supplier<PipelineState> stateSupplier,
     ScreenRectangle renderArea
 ) implements PictureInPictureRenderState {

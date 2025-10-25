@@ -32,27 +32,6 @@ public class GanderScreenToolkit {
         return true;
     }
 
-    public static boolean setupTranslucencyChain(PipelineState pipelineState) {
-        final var renderTarget = pipelineState.get(GanderRenderToolkit.RENDER_TARGET);
-
-//        final var translucencyChain = TranslucencyChain.builder()
-//            .addLayer(Gander.asResource("main"))
-//            .addLayer(Gander.asResource("entity"))
-//            .addLayer(Gander.asResource("water"))
-//            .addLayer(Gander.asResource("translucent"))
-//            .addLayer(Gander.asResource("item_entity"))
-//            .addLayer(Gander.asResource("particles"))
-//            .addLayer(Gander.asResource("clouds"))
-//            .addLayer(Gander.asResource("weather"))
-//            .build(renderTarget);
-//
-//        pipelineState.set(GanderRenderToolkit.TRANSLUCENCY_CHAIN, translucencyChain);
-
-//        final var renderTypeStore = new RenderTypeStore(translucencyChain);
-//        pipelineState.set(GanderRenderToolkit.RENDER_TYPE_STORE, renderTypeStore);
-        return true;
-    }
-
     public static void backupProjectionMatrix(PipelineState state) {
         state.set(GanderRenderToolkit.ORIGINAL_CPU_BUFFER_SLICE, RenderSystem.getProjectionMatrixBuffer());
         state.set(GanderRenderToolkit.ORIGINAL_PROJECTION_TYPE, RenderSystem.getProjectionType());

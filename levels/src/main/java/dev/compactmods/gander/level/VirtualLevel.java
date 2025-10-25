@@ -8,26 +8,35 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import dev.compactmods.gander.level.base.GanderEmptyLevelAccessor;
+import dev.compactmods.gander.level.base.GanderEmptyTickAccess;
+import dev.compactmods.gander.level.entity.VirtualEntityGetter;
 import dev.compactmods.gander.level.light.VirtualLightEngine;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceMap;
 import it.unimi.dsi.fastutil.longs.Long2ReferenceOpenHashMap;
+import net.minecraft.core.particles.ExplosionParticleInfo;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.util.Mth;
+import net.minecraft.util.random.WeightedList;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.crafting.RecipeAccess;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ExplosionDamageCalculator;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.entity.FuelValues;
+import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
+import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.AABB;
 
 import net.neoforged.neoforge.entity.PartEntity;
 import net.neoforged.neoforge.model.data.ModelData;
 import net.neoforged.neoforge.model.data.ModelDataManager;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -80,55 +89,58 @@ import net.minecraft.world.scores.Scoreboard;
 import net.minecraft.world.ticks.BlackholeTickAccess;
 import net.minecraft.world.ticks.LevelTickAccess;
 
-public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
+public class VirtualLevel extends Level implements ServerLevelAccessor,
+    GanderEmptyLevelAccessor, GanderEmptyTickAccess {
 
-	private final TickRateManager tickManager = new TickRateManager();
-	private final RegistryAccess access;
-	private final ChunkSource chunkSource;
+    private final WorldBorder worldBorder = new WorldBorder();
+    private final TickRateManager tickManager = new TickRateManager();
+    private final RegistryAccess access;
+    private final ChunkSource chunkSource;
     private final VirtualLightEngine lightEngine;
-//	private final VirtualBlockSystem blocks;
-	private final Scoreboard scoreboard;
-	private AABB bounds;
-	private VirtualEntitySystem entities;
-	private final Holder<Biome> biome;
+    private final VirtualEntityGetter entityGetter;
+    //	private final VirtualBlockSystem blocks;
+    private final Scoreboard scoreboard;
+    private AABB bounds;
+    private VirtualEntitySystem entities;
+    private final Holder<Biome> biome;
     private final List<Consumer<VirtualLevel>> onBlockUpdate;
     private final ModelDataManager modelDataManager;
     private final Long2ReferenceMap<BlockEntity> blockEntities;
 
-	protected VirtualLevel(RegistryAccess access, boolean isClientside) {
-		this(
-				VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
-				access.holderOrThrow(BuiltinDimensionTypes.OVERWORLD),
-				isClientside, false,
-				0, 0);
-	}
+    protected VirtualLevel(RegistryAccess access, boolean isClientside) {
+        this(
+            VirtualLevelUtils.LEVEL_DATA, Level.OVERWORLD, access,
+            access.holderOrThrow(BuiltinDimensionTypes.OVERWORLD),
+            isClientside, false,
+            0, 0);
+    }
 
-	protected VirtualLevel(WritableLevelData pLevelData, ResourceKey<Level> pDimension,
-                         RegistryAccess pRegistryAccess, Holder<DimensionType> pDimensionTypeRegistration,
-                         boolean pIsClientSide, boolean pIsDebug, long pBiomeZoomSeed,
-                         int pMaxChainedNeighborUpdates) {
-		super(pLevelData, pDimension, pRegistryAccess, pDimensionTypeRegistration, pIsClientSide, pIsDebug,
-				pBiomeZoomSeed, pMaxChainedNeighborUpdates);
-		this.access = pRegistryAccess;
+    protected VirtualLevel(WritableLevelData pLevelData, ResourceKey<Level> pDimension,
+                           RegistryAccess pRegistryAccess, Holder<DimensionType> pDimensionTypeRegistration,
+                           boolean pIsClientSide, boolean pIsDebug, long pBiomeZoomSeed,
+                           int pMaxChainedNeighborUpdates) {
+        super(pLevelData, pDimension, pRegistryAccess, pDimensionTypeRegistration, pIsClientSide, pIsDebug,
+            pBiomeZoomSeed, pMaxChainedNeighborUpdates);
+        this.access = pRegistryAccess;
         this.onBlockUpdate = new ArrayList<>();
+        this.entityGetter = new VirtualEntityGetter();
         this.chunkSource = new VirtualChunkSource(this);
-//		this.blocks = new VirtualBlockSystem(this);
         this.lightEngine = new VirtualLightEngine(pos -> 15, skyPos -> 15, () -> this);
-		this.scoreboard = new Scoreboard();
-		this.bounds = AABB.INFINITE;
-		this.entities = new VirtualEntitySystem();
-		this.biome = pRegistryAccess.holderOrThrow(Biomes.PLAINS);
+        this.scoreboard = new Scoreboard();
+        this.bounds = AABB.INFINITE;
+        this.entities = new VirtualEntitySystem();
+        this.biome = pRegistryAccess.holderOrThrow(Biomes.PLAINS);
         this.modelDataManager = new ModelDataManager(this);
         this.blockEntities = new Long2ReferenceOpenHashMap<>();
-	}
+    }
 
     public void addBlockUpdateListener(Consumer<VirtualLevel> listener) {
         this.onBlockUpdate.add(listener);
     }
 
-	public Holder<Biome> getBiome() {
-		return biome;
-	}
+    public Holder<Biome> getBiome() {
+        return biome;
+    }
 
     @Override
     public ModelData getModelData(BlockPos pos) {
@@ -141,10 +153,10 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
     }
 
     @Override
-	public PotionBrewing potionBrewing() {
-		// Minecraft, why?
-		return PotionBrewing.EMPTY;
-	}
+    public PotionBrewing potionBrewing() {
+        // Minecraft, why?
+        return PotionBrewing.EMPTY;
+    }
 
     @Override
     public FuelValues fuelValues() {
@@ -171,75 +183,139 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
     }
 
-	@Override
-	public ChunkSource getChunkSource() {
-		return chunkSource;
-	}
+    @Override
+    public ChunkSource getChunkSource() {
+        return chunkSource;
+    }
 
     @Override
-    public void levelEvent(@Nullable Entity entity, int i, BlockPos blockPos, int i1) {
+    public void setBlockEntity(BlockEntity blockEntity) {
+        super.setBlockEntity(blockEntity);
+        this.blockEntities.put(blockEntity.getBlockPos().asLong(), blockEntity);
+    }
+
+    //
+    @Override
+    public void removeBlockEntity(final BlockPos pPos) {
+        super.removeBlockEntity(pPos);
+        this.untrackBlockEntity(pPos);
+    }
+
+    @Override
+    public void setRespawnData(LevelData.RespawnData respawnData) {
 
     }
 
-//    public VirtualBlockSystem blockSystem() {
-//		return this.blocks;
-//	}
+    @Override
+    public LevelData.RespawnData getRespawnData() {
+        return null;
+    }
 
-//	@Override
-//	public boolean setBlock(BlockPos pPos, BlockState pNewState, int pFlags) {
-//		return this.setBlock(pPos, pNewState, 0, 512);
-//	}
-//
-//	@Override
-//	public boolean setBlock(BlockPos pos, BlockState state, int pFlags, int pRecursionLeft) {
-//		if (this.isOutsideBuildHeight(pos)) {
-//			return false;
-//		}
-//
-//		return blocks.blockAndFluidStorage().setBlock(pos, state, pFlags, pRecursionLeft);
-//	}
-//
-//	@Override
-//	public boolean setBlockAndUpdate(BlockPos pPos, BlockState pState) {
-//		return this.setBlock(pPos, pState, Block.UPDATE_NONE);
-//	}
-//
-	@Override
-	public void setBlockEntity(BlockEntity blockEntity) {
-		super.setBlockEntity(blockEntity);
-        this.blockEntities.put(blockEntity.getBlockPos().asLong(), blockEntity);
-	}
-//
-	@Override
-	public void removeBlockEntity(final BlockPos pPos) {
-		super.removeBlockEntity(pPos);
-        this.untrackBlockEntity(pPos);
-	}
-//
-//	@Nullable
-//	@Override
-//	public BlockEntity getBlockEntity(BlockPos pPos) {
-//		if (!bounds.contains(Vec3.atCenterOf(pPos)))
-//			return null;
-//
-//		return blocks.blockAndFluidStorage().getBlockEntity(pPos);
-//	}
-//
-//	@Override
-//	public BlockState getBlockState(BlockPos pPos) {
-//		if (!bounds.contains(Vec3.atCenterOf(pPos)))
-//			return Blocks.AIR.defaultBlockState();
-//
-//		return blocks.blockAndFluidStorage().getBlockState(pPos);
-//	}
-//
-//	@Override
-//	public @NotNull FluidState getFluidState(BlockPos pos) {
-//		if (!bounds.contains(Vec3.atCenterOf(pos)))
-//			return Fluids.EMPTY.defaultFluidState();
-//
-//		return blocks.blockAndFluidStorage().getFluidState(pos);
-//	}
+    public void animateTick() {
+        animateBlockTick(WorldMath.randomPosInAABB(random, bounds));
+    }
+
+    protected void animateBlockTick(BlockPos pBlockPos) {
+        BlockState blockstate = this.getBlockState(pBlockPos);
+        blockstate.getBlock().animateTick(blockstate, this, pBlockPos, random);
+        FluidState fluidstate = this.getFluidState(pBlockPos);
+        if (!fluidstate.isEmpty()) {
+            fluidstate.animateTick(this, pBlockPos, random);
+        }
+
+        if (!blockstate.isCollisionShapeFullBlock(this, pBlockPos)) {
+            this.getBiome(pBlockPos)
+                .value()
+                .getAmbientParticle()
+                .filter(aps -> aps.canSpawn(random))
+                .ifPresent((p_264703_) -> {
+                    this.addParticle(p_264703_.getOptions(), (double) pBlockPos.getX() + this.random.nextDouble(), (double) pBlockPos.getY() + this.random.nextDouble(), (double) pBlockPos.getZ() + this.random.nextDouble(), 0.0D, 0.0D, 0.0D);
+                });
+        }
+    }
+
+    private <T extends BlockEntity> void tickBlockEntity(T blockEntity, BlockEntityTicker<T> ticker) {
+        ticker.tick(this, blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity);
+    }
+
+    @Override
+    public RegistryAccess registryAccess() {
+        return access;
+    }
+
+    @Override
+    public Holder<Biome> getUncachedNoiseBiome(int pX, int pY, int pZ) {
+        return biome;
+    }
+
+    @Override
+    public int getSeaLevel() {
+        return 0;
+    }
+
+    @Override
+    public float getShade(Direction pDirection, boolean pShade) {
+        return 1f;
+    }
+
+    @Override
+    public void sendBlockUpdated(BlockPos pPos, BlockState pOldState, BlockState pNewState, int pFlags) {
+        this.onBlockUpdate.forEach(c -> c.accept(this));
+    }
+
+    @Override
+    public Entity getEntity(int pId) {
+        return entities.getEntity(pId);
+    }
+
+    @Override
+    public Collection<PartEntity<?>> dragonParts() {
+        return List.of();
+    }
+
+    @Override
+    public TickRateManager tickRateManager() {
+        return tickManager;
+    }
+
+    @Override
+    public @Nullable MapItemSavedData getMapData(MapId mapId) {
+        return null;
+    }
+
+    @Override
+    public void destroyBlockProgress(int i, BlockPos blockPos, int i1) {
+
+    }
+
+    @Override
+    public Scoreboard getScoreboard() {
+        return scoreboard;
+    }
+
+    @Override
+    public RecipeAccess recipeAccess() {
+        return null;
+    }
+
+    @Override
+    protected LevelEntityGetter<Entity> getEntities() {
+        return null;
+    }
+
+    @Override
+    public FeatureFlagSet enabledFeatures() {
+        return FeatureFlags.REGISTRY.allFlags();
+    }
+
+    public void setBounds(AABB bounds) {
+        this.bounds = bounds;
+    }
+
+    @Override
+    public @NotNull LevelLightEngine getLightEngine() {
+        return this.lightEngine;
+    }
 
     @Override
     public void playSeededSound(@Nullable Entity entity, double v, double v1, double v2, Holder<SoundEvent> holder, SoundSource soundSource, float v3, float v4, long l) {
@@ -251,181 +327,20 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
     }
 
-    public void animateTick() {
-		animateBlockTick(WorldMath.randomPosInAABB(random, bounds));
-	}
-
-	@Override
-	public void tick(final float deltaTime) {
-		tickBlockEntities();
-	}
-
-	protected void animateBlockTick(BlockPos pBlockPos) {
-		BlockState blockstate = this.getBlockState(pBlockPos);
-		blockstate.getBlock().animateTick(blockstate, this, pBlockPos, random);
-		FluidState fluidstate = this.getFluidState(pBlockPos);
-		if (!fluidstate.isEmpty()) {
-			fluidstate.animateTick(this, pBlockPos, random);
-		}
-
-		if (!blockstate.isCollisionShapeFullBlock(this, pBlockPos)) {
-			this.getBiome(pBlockPos)
-					.value()
-					.getAmbientParticle()
-					.filter(aps -> aps.canSpawn(random))
-					.ifPresent((p_264703_) -> {
-						this.addParticle(p_264703_.getOptions(), (double) pBlockPos.getX() + this.random.nextDouble(), (double) pBlockPos.getY() + this.random.nextDouble(), (double) pBlockPos.getZ() + this.random.nextDouble(), 0.0D, 0.0D, 0.0D);
-					});
-		}
-	}
-
-//	@Override
-//	protected void tickBlockEntities() {
-//		if (tickRateManager().runsNormally()) {
-//			blocks.blockAndFluidStorage().blockEntityPositions()
-//					.filter(this::shouldTickBlocksAt)
-//					.forEach(entityPos -> {
-//						var blockEntity = blocks.blockAndFluidStorage().getBlockEntity(entityPos);
-//						if (blockEntity != null) {
-//							var ticker = blocks.blockAndFluidStorage().getBlockState(entityPos).getTicker(this, blockEntity.getType());
-//
-//							if (ticker != null)
-//								tickBlockEntity(blockEntity, (BlockEntityTicker<BlockEntity>) ticker);
-//						}
-//					});
-//		}
-//	}
-
     @Override
-    public void explode(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionDamageCalculator explosionDamageCalculator, double v, double v1, double v2, float v3, boolean b, ExplosionInteraction explosionInteraction, ParticleOptions particleOptions, ParticleOptions particleOptions1, Holder<SoundEvent> holder) {
+    public void explode(@Nullable Entity entity, @Nullable DamageSource damageSource, @Nullable ExplosionDamageCalculator explosionDamageCalculator, double v, double v1, double v2, float v3, boolean b, ExplosionInteraction explosionInteraction, ParticleOptions particleOptions, ParticleOptions particleOptions1, WeightedList<ExplosionParticleInfo> weightedList, Holder<SoundEvent> holder) {
 
     }
 
-    private <T extends BlockEntity> void tickBlockEntity(T blockEntity, BlockEntityTicker<T> ticker) {
-		ticker.tick(this, blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity);
-	}
-
     @Override
-	public void gameEvent(Entity pEntity, Holder<GameEvent> pEvent, BlockPos pPos) {
-	}
-
-	@Override
-	public void gameEvent(Holder<GameEvent> evt, Vec3 origin, GameEvent.Context ctx) {
-	}
-
-	@Override
-	public RegistryAccess registryAccess() {
-		return access;
-	}
-
-	@Override
-	public List<? extends Player> players() {
-		return List.of();
-	}
-
-	@Override
-	public Holder<Biome> getUncachedNoiseBiome(int pX, int pY, int pZ) {
-		return biome;
-	}
-
-    @Override
-    public int getSeaLevel() {
-        return 0;
+    public String gatherChunkSourceStats() {
+        return "";
     }
 
     @Override
-	public float getShade(Direction pDirection, boolean pShade) {
-		return 1f;
-	}
-
-	@Override
-	public void sendBlockUpdated(BlockPos pPos, BlockState pOldState, BlockState pNewState, int pFlags) {
-        this.onBlockUpdate.forEach(c -> c.accept(this));
-	}
-
-	@Override
-	public String gatherChunkSourceStats() {
-		return null;
-	}
-
-	@Override
-	public Entity getEntity(int pId) {
-		return entities.getEntity(pId);
-	}
-
-    @Override
-    public Collection<PartEntity<?>> dragonParts() {
-        return List.of();
+    public int getBrightness(LightLayer pLightType, BlockPos pBlockPos) {
+        return 15;
     }
-
-    @Override
-	public TickRateManager tickRateManager() {
-		return tickManager;
-	}
-
-	@Override
-	public MapItemSavedData getMapData(MapId pMapName) {
-		return null;
-	}
-
-	@Override
-	public void destroyBlockProgress(int pBreakerId, BlockPos pPos, int pProgress) {
-	}
-
-	@Override
-	public Scoreboard getScoreboard() {
-		return scoreboard;
-	}
-
-    @Override
-    public RecipeAccess recipeAccess() {
-        return null;
-    }
-
-	@Override
-	protected LevelEntityGetter<Entity> getEntities() {
-		return null;
-	}
-
-	@Override
-	public LevelTickAccess<Block> getBlockTicks() {
-		return BlackholeTickAccess.emptyLevelList();
-	}
-
-	@Override
-	public LevelTickAccess<Fluid> getFluidTicks() {
-		return BlackholeTickAccess.emptyLevelList();
-	}
-
-	@Override
-	public FeatureFlagSet enabledFeatures() {
-		return FeatureFlags.REGISTRY.allFlags();
-	}
-
-	@Override
-	public ServerLevel getLevel() {
-		// TODO - Virtual Server Level implementation?
-		return null;
-	}
-
-	public void setBounds(AABB bounds) {
-		this.bounds = bounds;
-	}
-
-	@Override
-	public @NotNull LevelLightEngine getLightEngine() {
-		return this.lightEngine;
-	}
-
-	@Override
-	public int getBrightness(LightLayer pLightType, BlockPos pBlockPos) {
-		return 15;
-	}
-
-	@Override
-	public long getSeed() {
-		return 0;
-	}
 
     public AABB getBounds() {
         return bounds;
@@ -444,5 +359,20 @@ public class VirtualLevel extends Level implements WorldGenLevel, TickingLevel {
 
     public void untrackBlockEntity(BlockPos pos) {
         this.blockEntities.remove(pos.asLong());
+    }
+
+    @Override
+    public List<? extends Player> players() {
+        return entityGetter.players();
+    }
+
+    @Override
+    public WorldBorder getWorldBorder() {
+        return worldBorder;
+    }
+
+    @Override
+    public ServerLevel getLevel() {
+        return null;
     }
 }

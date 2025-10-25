@@ -5,6 +5,7 @@ import dev.compactmods.gander.render.geometry.BakedLevel;
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import dev.compactmods.gander.render.screen.GanderPictureInPictureRenderState;
 import dev.compactmods.gander.render.screen.GanderPictureInPictureRenderer;
+import dev.compactmods.gander.render.screen.GanderScreenToolkit;
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import dev.compactmods.gander.render.pipeline.impl.BakedLevelScreenRenderPipeline;
 
@@ -63,7 +64,8 @@ public class SpatialRenderer implements Renderable {
             this.state = BakedLevelScreenRenderPipeline.INSTANCE.setup(this::setupInitialState);
         }
 
-        var pipState = new GanderPictureInPictureRenderState(() -> this.state, renderArea);
+        var pipState = new GanderPictureInPictureRenderState(graphics, () -> this.state, renderArea);
+        graphics.submitPictureInPictureRenderState(pipState);
     }
 
     private void setupInitialState(PipelineState state) {

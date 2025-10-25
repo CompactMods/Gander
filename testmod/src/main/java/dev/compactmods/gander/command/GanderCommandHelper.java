@@ -118,24 +118,25 @@ public class GanderCommandHelper {
         );
         var structureManager = new StructureManager(level, new WorldOptions(seed, true, false), structureCheck);
 
-        ChunkPos.rangeClosed(startChunk, endChunk)
-            .forEach(
-                chunkPos -> structureStart.placeInChunk(
-                    level,
-                    structureManager,
-                    chunkGenerator,
-                    level.getRandom(),
-                    new BoundingBox(
-                        chunkPos.getMinBlockX(),
-                        boundingbox.minY(),
-                        chunkPos.getMinBlockZ(),
-                        chunkPos.getMaxBlockX(),
-                        boundingbox.maxY(),
-                        chunkPos.getMaxBlockZ()
-                    ),
-                    chunkPos
-                )
-            );
+        // FIXME
+//        ChunkPos.rangeClosed(startChunk, endChunk)
+//            .forEach(
+//                chunkPos -> structureStart.placeInChunk(
+//                    level,
+//                    structureManager,
+//                    chunkGenerator,
+//                    level.getRandom(),
+//                    new BoundingBox(
+//                        chunkPos.getMinBlockX(),
+//                        boundingbox.minY(),
+//                        chunkPos.getMinBlockZ(),
+//                        chunkPos.getMaxBlockX(),
+//                        boundingbox.maxY(),
+//                        chunkPos.getMaxBlockZ()
+//                    ),
+//                    chunkPos
+//                )
+//            );
 
         final var finalStructure = new StructureTemplate();
         finalStructure.fillFromWorld(level, new BlockPos(
@@ -180,7 +181,7 @@ public class GanderCommandHelper {
                 logger.debug("Generating debug chunk: {}, {}", x, z);
 
                 var chunk = level.getChunk(x, z);
-                generator.applyBiomeDecoration(level, chunk, null);
+//                generator.applyBiomeDecoration(level, chunk, null);
             }
         }
 

@@ -42,7 +42,7 @@ public record RenderInWorldForStructureRequest(Component sceneSource, StructureT
 	);
 
 	public static final IPayloadHandler<RenderInWorldForStructureRequest> HANDLER = (pkt, ctx) -> {
-		if(FMLEnvironment.dist.isClient())
+		if(FMLEnvironment.getDist().isClient())
 			ctx.enqueueWork(() -> {
                 LevelOverlayRenderSystem.createAndAddRenderer(pkt.sceneSource, pkt.data, pkt.renderLocation);
             });

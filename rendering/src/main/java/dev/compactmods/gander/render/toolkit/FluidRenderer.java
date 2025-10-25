@@ -1,9 +1,11 @@
 package dev.compactmods.gander.render.toolkit;
 
-import java.util.function.Function;
-
+import dev.compactmods.gander.core.Gander;
+import net.minecraft.Util;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.client.resources.model.AtlasIds;
 
 import org.joml.Quaternionf;
 
@@ -11,7 +13,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.PoseStack.Pose;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
-import dev.compactmods.gander.render.RenderTypes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -20,9 +21,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.Direction.AxisDirection;
 import net.minecraft.core.Vec3i;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -33,8 +32,19 @@ import net.neoforged.neoforge.fluids.FluidType;
 @SuppressWarnings("unused")
 public class FluidRenderer {
 
+    private static final RenderType FLUID = Util.make(() -> {
+        final var builder = RenderType.CompositeState.builder()
+            .setTextureState(RenderStateShard.BLOCK_SHEET_MIPPED)
+            .setLightmapState(RenderStateShard.LIGHTMAP)
+            .setOverlayState(RenderStateShard.OVERLAY)
+            .createCompositeState(true);
+
+        return RenderType.create(Gander.asResource("fluid").toString(), 256,
+            false, true, RenderPipelines.TRANSLUCENT_MOVING_BLOCK, builder);
+    });
+
 	public static VertexConsumer getFluidBuilder(MultiBufferSource buffer) {
-		return buffer.getBuffer(RenderTypes.getFluid());
+		return buffer.getBuffer(FLUID);
 	}
 
 	public static void renderFluidStream(FluidStack fluidStack, Direction direction, float radius, float progress,
@@ -74,9 +84,9 @@ public class FluidRenderer {
         final var flowTexture = clientFluid.getFlowingTexture(fluidStack);
         final var stillTexture = clientFluid.getStillTexture(fluidStack);
 
-        final var atlas = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS);
-        final var flowSprite = atlas.apply(flowTexture);
-        final var stillSprite = atlas.apply(stillTexture);
+        final var atlas = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(TextureAtlas.LOCATION_BLOCKS);
+        final var flowSprite = atlas.getSprite(flowTexture);
+        final var stillSprite = atlas.getSprite(stillTexture);
 
 		for (int i = 0; i < 4; i++) {
 			ms.pushPose();
@@ -107,9 +117,9 @@ public class FluidRenderer {
 		Fluid fluid = fluidStack.getFluid();
 		IClientFluidTypeExtensions clientFluid = IClientFluidTypeExtensions.of(fluid);
 		FluidType fluidAttributes = fluid.getFluidType();
-		TextureAtlasSprite fluidTexture = Minecraft.getInstance()
-				.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
-				.apply(clientFluid.getStillTexture(fluidStack));
+
+        final var atlas = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(TextureAtlas.LOCATION_BLOCKS);
+		TextureAtlasSprite fluidTexture = atlas.getSprite(clientFluid.getStillTexture(fluidStack));
 
 		int color = clientFluid.getTintColor(fluidStack);
 		int blockLightIn = (light >> 4) & 0xF;
