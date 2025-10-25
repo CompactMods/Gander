@@ -3,7 +3,6 @@ package dev.compactmods.gander.render.screen;
 import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
-import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
 import com.mojang.blaze3d.platform.Lighting;
@@ -12,7 +11,6 @@ import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import com.mojang.math.Axis;
 
 import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import net.minecraft.client.Minecraft;
@@ -23,18 +21,18 @@ import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.block.model.ItemTransform;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
+import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.block.RenderShape;
+import net.neoforged.neoforge.common.util.TransformationHelper;
 
 public class GanderPictureInPictureRenderer extends PictureInPictureRenderer<GanderPictureInPictureRenderState> {
 
-    private static final float RENDER_SIZE = 8f;
+    private static final float RENDER_SIZE = 16f;
     private static final ItemTransform DEFAULT_TRANSFORM = new ItemTransform(
         new Vector3f(30, 225, 0), new Vector3f(), new Vector3f(0.625F, 0.625F, 0.625F)
     );
-    private static final Quaternionfc LIGHT_FIX_ROT = Axis.YP.rotationDegrees(285);
-    private static final RandomSource RANDOM = RandomSource.create();
 
     public GanderPictureInPictureRenderer(MultiBufferSource.BufferSource buffers) {
         super(buffers);
@@ -53,53 +51,54 @@ public class GanderPictureInPictureRenderer extends PictureInPictureRenderer<Gan
         final var bakedLevel = pipelineState.get(GanderRenderToolkit.BAKED_LEVEL);
         final var mc = Minecraft.getInstance();
         final var blocks = mc.getBlockRenderer();
+        final var camera = pipelineState.get(GanderRenderToolkit.CAMERA);
         final var blockRenderer = blocks.getModelRenderer();
+        final var blockEntities = mc.getBlockEntityRenderDispatcher();
 
         FeatureRenderDispatcher featureRenderer = mc.gameRenderer.getFeatureRenderDispatcher();
         SubmitNodeStorage nodeStorage = featureRenderer.getSubmitNodeStorage();
 
         mc.gameRenderer.getLighting().setupFor(Lighting.Entry.ITEMS_3D);
 
-        pose.pushPose();
-        {
-            pose.scale(RENDER_SIZE * renderState.scale(), -RENDER_SIZE * renderState.scale(), -RENDER_SIZE * renderState.scale());
+        final var center = bakedLevel.blockBoundaries().getCenter();
 
-//            graphics.renderItem(new ItemStack(Items.GOLD_INGOT), 0, 0);
+        pose.mulPose(TransformationHelper.quatFromXYZ(new Vector3f(30, 45, 180), true));
+
+        final var camState = new CameraRenderState();
+
+        for (var pos : BlockPos.betweenClosed(bakedLevel.blockBoundaries())) {
             pose.pushPose();
-            {
-                DEFAULT_TRANSFORM.apply(false, pose.last());
+            pose.translate(center.reverse());
+            pose.translate(pos.getX(), pos.getY(), pos.getZ());
 
-                for (var pos : BlockPos.betweenClosed(bakedLevel.blockBoundaries())) {
-//                    pose.translate(pos.getX() / RENDER_SIZE, pos.getY() / RENDER_SIZE, pos.getZ() / RENDER_SIZE);
+            // record BlockSubmit(PoseStack.Pose pose, BlockState state, int lightCoords, int overlayCoords, int outlineColor)
+            final var state = bakedLevel.originalLevel().getBlockState(pos);
+//            if(state.isAir())
+//                continue;
 
-                    boolean translate = RANDOM.nextBoolean();
-                    pose.translate(0, 1 / 32f, 0);
+            final var shape = state.getRenderShape();
 
-                    final var state = bakedLevel.originalLevel().getBlockState(pos);
-                    var model = blocks.getBlockModel(state);
+            // TODO: Some entities (like dragon heads) are both model and get rendered via BER submission
+            // This causes duplicate geometry
+            if(shape == RenderShape.MODEL)
+                nodeStorage.submitBlock(pose, state, 15728880, OverlayTexture.NO_OVERLAY, 0);
 
-                    // record BlockSubmit(PoseStack.Pose pose, BlockState state, int lightCoords, int overlayCoords, int outlineColor)
-                    nodeStorage.submitBlock(pose, state, 15728880, OverlayTexture.NO_OVERLAY, 0);
-
-//                    List<BlockModelPart> modelParts = model.collectParts(bakedLevel.originalLevel(), pos, state, RANDOM);
-//                    RANDOM.setSeed(state.getSeed(BlockPos.ZERO));
-//                    blockRenderer.tesselateBlock(
-//                        bakedLevel.originalLevel(),
-//                        modelParts,
-//                        state,
-//                        pos,
-//                        pose,
-//                        chunkLayer -> bufferSource.getBuffer(chunkLayer == ChunkSectionLayer.SOLID ? Sheets.solidBlockSheet() : RenderTypeHelper.getEntityRenderType(chunkLayer)),
-//                        false,
-//                        OverlayTexture.NO_OVERLAY
-//                    );
+            if(state.hasBlockEntity()) {
+                var ent = bakedLevel.originalLevel().getBlockEntity(pos);
+                if(ent != null) {
+                    var renderer = blockEntities.getRenderer(ent);
+                    if (renderer != null) {
+                        var renderEntState = renderer.createRenderState();
+                        renderer.extractRenderState(ent, renderEntState, 0, camera.getPosition(), null);
+                        renderer.submit(renderEntState, pose, nodeStorage, camState);
+                    }
                 }
             }
             pose.popPose();
         }
-        pose.popPose();
 
         featureRenderer.renderAllFeatures();
+
     }
 
     @Override

@@ -1,26 +1,22 @@
 package dev.compactmods.gander.ui.widget;
 
-import dev.compactmods.gander.core.camera.SceneCamera;
-import dev.compactmods.gander.render.geometry.BakedLevel;
-import dev.compactmods.gander.render.pipeline.PipelineState;
-import dev.compactmods.gander.render.screen.GanderPictureInPictureRenderState;
-import dev.compactmods.gander.render.screen.GanderPictureInPictureRenderer;
-import dev.compactmods.gander.render.screen.GanderScreenToolkit;
-import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
-import dev.compactmods.gander.render.pipeline.impl.BakedLevelScreenRenderPipeline;
+import org.jetbrains.annotations.NotNull;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import dev.compactmods.gander.core.camera.SceneCamera;
+import dev.compactmods.gander.render.geometry.BakedLevel;
+import dev.compactmods.gander.render.pipeline.PipelineState;
+import dev.compactmods.gander.render.pipeline.impl.BakedLevelScreenRenderPipeline;
+import dev.compactmods.gander.render.screen.GanderPictureInPictureRenderState;
+import dev.compactmods.gander.render.screen.GanderPictureInPictureRenderer;
+import dev.compactmods.gander.render.toolkit.GanderRenderToolkit;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.GuiGraphics;
-
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.navigation.ScreenPosition;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-
 import net.minecraft.core.BlockPos;
-
-import org.jetbrains.annotations.NotNull;
 
 public class SpatialRenderer implements Renderable {
     private final ScreenRectangle renderArea;

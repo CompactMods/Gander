@@ -1,13 +1,13 @@
 package dev.compactmods.gander.render.screen;
 
+import java.util.function.Supplier;
+
+import org.jetbrains.annotations.Nullable;
+
 import dev.compactmods.gander.render.pipeline.PipelineState;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.state.pip.PictureInPictureRenderState;
-
-import org.jetbrains.annotations.Nullable;
-
-import java.util.function.Supplier;
 
 public record GanderPictureInPictureRenderState(
     GuiGraphics graphics,
@@ -38,7 +38,7 @@ public record GanderPictureInPictureRenderState(
 
     @Override
     public float scale() {
-        return 1;
+        return 16f;
     }
 
     @Override
